@@ -1,5 +1,6 @@
 import { useNarration } from './narration.js'
 import { GuidePortrait } from './PaintedFriend.jsx'
+import { FriendLook } from './FriendLook.jsx'
 import { GuardianGate } from './GuardianGate.jsx'
 import React, { useId, useLayoutEffect, useRef, useState } from 'react'
 import { FriendStudio } from './FriendStudio.jsx'
@@ -58,19 +59,20 @@ function Icon({ name, size = 22 }) {
   )
 }
 
-function MenuRow({ icon, children, onClick }) {
+function MenuRow({ icon, children, onClick, detail }) {
   return (
     <button type="button" className="forest-panel-row" onClick={onClick}>
       <span className="forest-panel-row-icon">
         <Icon name={icon} />
       </span>
       <span className="forest-panel-row-title">{children}</span>
+      {detail && <span className="forest-panel-row-detail">{detail}</span>}
       <Icon name="next" size={16} />
     </button>
   )
 }
 
-function Guardian({ onOpen }) {
+function Guardian({ onOpen, cardPortrait }) {
   return (
     <div className="forest-panel-menu">
       <MenuRow icon="paw" onClick={() => onOpen('friends')}>
@@ -85,11 +87,14 @@ function Guardian({ onOpen }) {
       <MenuRow icon="person" onClick={() => onOpen('report')}>
         학습 리포트
       </MenuRow>
+      <MenuRow icon="person" detail={cardPortrait === 'girl' ? '여자아이' : '남자아이'} onClick={() => onOpen('portrait')}>
+        표정 카드
+      </MenuRow>
     </div>
   )
 }
 
-function Account({ initialEmail, signup, onAccountDone }) {
+function Account({ initialEmail, signup, onAccountDone, onDraft }) {
   const [email, setEmail] = useState(initialEmail)
   const [error, setError] = useState('')
   const input = useRef(null)
@@ -98,7 +103,7 @@ function Account({ initialEmail, signup, onAccountDone }) {
   function submit(event) {
     event.preventDefault()
     if (!input.current.validity.valid) {
-      setError('이메일 주소를 확인해 주세요. 예: hello@example.com')
+      setError('이메일 주소를 확인해 주세요.')
       input.current.focus()
       return
     }
@@ -108,10 +113,9 @@ function Account({ initialEmail, signup, onAccountDone }) {
   return (
     <>
       <p className="forest-panel-note" id={fieldId + '-purpose'}>
-        아이가 어떤 감정을 배우고 산책을 마쳤는지 리포트로 받아 보세요.
+        {signup ? '이메일로 매일 학습 리포트를 보내드릴게요' : '학습 리포트를 받을 이메일을 입력해 주세요.'}
       </p>
       <form className="forest-account-form" noValidate onSubmit={submit}>
-        <label htmlFor={fieldId}>리포트를 받을 보호자 이메일</label>
         <input
           id={fieldId}
           ref={input}
@@ -120,20 +124,16 @@ function Account({ initialEmail, signup, onAccountDone }) {
           autoComplete="email"
           autoCapitalize="none"
           spellCheck="false"
-          placeholder="hello@example.com"
+          aria-label="보호자 이메일"
+          placeholder="이메일 주소"
           required
           maxLength={254}
           value={email}
           aria-invalid={!!error}
-          aria-describedby={[
-            fieldId + '-purpose',
-            fieldId + '-delivery',
-            error && fieldId + '-error',
-          ]
-            .filter(Boolean)
-            .join(' ')}
+          aria-describedby={error ? fieldId + '-purpose ' + fieldId + '-error' : fieldId + '-purpose'}
           onChange={(event) => {
             setEmail(event.target.value)
+            onDraft?.(event.target.value)
             setError('')
           }}
         />
@@ -142,12 +142,8 @@ function Account({ initialEmail, signup, onAccountDone }) {
             {error}
           </p>
         )}
-        <p className="report-delivery" id={fieldId + '-delivery'}>
-          이 체험판에서는 보호자 설정에서 메일 앱을 열어 보내요. 주소는 이 탭을 닫을 때까지
-          보관해요.
-        </p>
         <button type="submit" className="forest-panel-primary">
-          {signup ? '이 이메일로 시작하기' : '받을 주소 저장하기'} <Icon name="next" size={18} />
+          {signup ? '다음' : '저장'} <Icon name="next" size={18} />
         </button>
       </form>
 
@@ -251,6 +247,9 @@ const titles = {
   guardian: '보호자 설정',
   gate: '보호자 비밀번호',
   friends: '나의 숲 친구 만들기',
+  chooseFriend: '어떤 친구와 함께할까요?',
+  friendHello: '숲 친구의 인사',
+  portrait: '어떤 얼굴로 연습할까요?',
   account: '리포트 받을 주소',
   together: '부모님과 함께 있나요?',
   bringParent: '부모님을 불러 주세요',
@@ -269,20 +268,30 @@ export function Panel(props) {
 function PanelDialog({
   mode,
   onClose,
+  cardPortrait,
+  onCardPortrait,
   friend,
   friends = [],
   onFriend,
+  onChooseFirstFriend,
+  onStartPlacement,
   onRetest,
   onUnlock,
   onReview,
   records = [],
   onOpen,
   onAccountDone,
+  signupEmail,
+  onSignupDraft,
   recipient,
   returnFocusRef,
 }) {
+  const greeting = '안녕! 나는 ' + (friend.familiar || friend.name) + '야. 나랑 같이 놀자!'
+  const title = mode === 'friendHello' ? greeting : titles[mode]
   useNarration(mode === 'together' ? '반가워요! 지금 부모님과 함께 있나요?'
-    : mode === 'bringParent' ? '괜찮아요. 부모님을 부르고, 함께 시작해요.' : '')
+    : mode === 'bringParent' ? '괜찮아요. 부모님을 부르고, 함께 시작해요.'
+    : mode === 'chooseFriend' || mode === 'portrait' ? titles[mode]
+    : mode === 'friendHello' ? greeting : '')
   const dialog = useRef(null)
   const heading = useRef(null)
   const titleId = useId()
@@ -308,7 +317,7 @@ function PanelDialog({
   function wrapFocus(event) {
     if (event.key !== 'Tab') return
     const controls = Array.from(
-      dialog.current.querySelectorAll('button:enabled, input:enabled, a[href], [tabindex="0"]'),
+      dialog.current.querySelectorAll('button:enabled, input:enabled, select:enabled, a[href], [tabindex="0"]'),
     ).filter((control) => control.getClientRects().length > 0)
     if (!controls.length) return
     // Safari's default Tab order can skip buttons, including the first one after the heading.
@@ -334,7 +343,7 @@ function PanelDialog({
     >
       <div className="forest-panel-head">
         <h2 ref={heading} id={titleId} tabIndex="-1">
-          {titles[mode]}
+          {title}
         </h2>
         {mode !== 'rest' && (
           <button
@@ -347,6 +356,41 @@ function PanelDialog({
           </button>
         )}
       </div>
+      {mode === 'portrait' && (
+        <div className="forest-portrait-choices">
+          {['boy', 'girl'].map((portrait) => (
+            <button type="button" className="forest-panel-secondary" key={portrait}
+              onClick={() => onCardPortrait(portrait)}>
+              <img src={import.meta.env.BASE_URL + 'art/cards/' + (portrait === 'girl' ? 'girl-' : '') + 'joy.webp'} alt="" />
+              <span>{portrait === 'girl' ? '여자아이' : '남자아이'}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {mode === 'chooseFriend' && (
+        <div className="forest-friend-choices">
+          {friends.map((animal) => (
+            <button type="button" className="forest-panel-secondary" key={animal.id}
+              aria-label={animal.species + ' ' + animal.name}
+              onClick={() => onChooseFirstFriend(animal.id)}
+            >
+              <FriendLook friend={animal} alt="" />
+              <span>{animal.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {mode === 'friendHello' && (
+        <>
+          <GuidePortrait friend={friend} className="forest-greeting-friend" />
+          <button type="button" className="forest-panel-primary" onClick={onStartPlacement}>
+            함께 시작하기 <Icon name="next" size={18} />
+          </button>
+          <button type="button" className="forest-panel-link" onClick={() => onOpen('chooseFriend')}>
+            다른 친구 고르기
+          </button>
+        </>
+      )}
       {mode === 'friends' && <FriendStudio friend={friend} friends={friends} onFriend={onFriend} />}
       {(mode === 'together' || mode === 'bringParent') && (
         <GuidePortrait friend={friend} className="parent-prompt-guide" />
@@ -361,11 +405,12 @@ function PanelDialog({
         <button type="button" className="forest-panel-primary" onClick={() => onOpen('signup')}>부모님이 오셨어요</button>
       )}
       {mode === 'gate' && <GuardianGate onUnlock={onUnlock} />}
-      {mode === 'guardian' && <Guardian onOpen={onOpen} />}
+      {mode === 'guardian' && <Guardian {...{ onOpen, cardPortrait }} />}
       {(mode === 'account' || mode === 'signup') && (
         <Account
           key={mode}
-          initialEmail={recipient}
+          initialEmail={mode === 'signup' ? signupEmail : recipient}
+          onDraft={mode === 'signup' ? onSignupDraft : undefined}
           signup={mode === 'signup'}
           onAccountDone={onAccountDone}
         />

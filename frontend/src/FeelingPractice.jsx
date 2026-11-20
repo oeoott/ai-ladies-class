@@ -2,9 +2,8 @@ import './feeling-practice.css'
 
 export const feelingPractice = {
   joy: {
-    nextLabel: '화분 보러 가기',
-    meaning: '좋은 일이 생겨서 기분이 좋아요.',
-    example: '친구가 놀러 왔어요. 반가워서 웃어요.',
+    meaning: '기쁨은 좋은 일이 생겨서 기분이 좋은 거예요.',
+    example: '친구가 와서 활짝 웃었어요.',
     beforeTitle: '친구가 가꾸는 꽃이에요',
     before: '화분을 눌러 꽃봉오리에 물을 줘요.',
     result: '활짝 핀 꽃',
@@ -31,7 +30,6 @@ export const feelingPractice = {
     ],
   },
   sad: {
-    nextLabel: '그림 보러 가기',
     meaning: '보고 싶은 친구가 떠나면 슬플 수 있어요.',
     example: '친구가 집에 갔어요. 조금 더 놀고 싶어요.',
     beforeTitle: '비에 젖은 그림이에요',
@@ -60,7 +58,6 @@ export const feelingPractice = {
     ],
   },
   surprise: {
-    nextLabel: '상자 보러 가기',
     meaning: '뜻밖의 일이 생기면 깜짝 놀랄 수 있어요.',
     example: '빈 줄 알았던 상자에서 선물이 나왔어요.',
     beforeTitle: '숲길에 상자가 있어요',
@@ -89,7 +86,6 @@ export const feelingPractice = {
     ],
   },
   anger: {
-    nextLabel: '수레 보러 가기',
     meaning: '하고 싶은 일이 자꾸 안 되면 화가 날 수 있어요.',
     example: '내 차례인데 다른 친구가 먼저 갔어요.',
     beforeTitle: '돌 앞에 수레가 있어요',
@@ -144,10 +140,7 @@ export function PracticeObject({ feeling, revealed = false, onAct }) {
         aria-label={practice.action}
       >
         {picture}
-        <span className="practice-object-label">
-          {practice.action}
-          <span aria-hidden="true"> →</span>
-        </span>
+        <span className="practice-object-label">{practice.action}</span>
       </button>
     )
   }

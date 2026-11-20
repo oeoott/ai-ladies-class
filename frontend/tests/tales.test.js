@@ -5,10 +5,13 @@ import { forestTales } from '../src/forestTales.js'
 import { topics } from '../src/session.js'
 
 test('every learning topic has a WebP emotion card', async () => {
-  for (const { id } of topics) {
-    const card = await readFile(new URL('../public/art/cards/' + id + '.webp', import.meta.url))
-    assert.equal(card.toString('ascii', 0, 4), 'RIFF', id)
-    assert.equal(card.toString('ascii', 8, 12), 'WEBP', id)
+  for (const prefix of ['', 'girl-']) {
+    for (const { id } of topics) {
+      const name = prefix + id
+      const card = await readFile(new URL('../public/art/cards/' + name + '.webp', import.meta.url))
+      assert.equal(card.toString('ascii', 0, 4), 'RIFF', name)
+      assert.equal(card.toString('ascii', 8, 12), 'WEBP', name)
+    }
   }
 })
 

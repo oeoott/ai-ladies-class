@@ -1,10 +1,10 @@
-import { NarrationActive, useNarration } from './narration.js'
+import { NarrationActive, NarrationVoice, useNarration } from './narration.js'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Check, Pause, PawPrint, ShieldCheck, Sparkles, Sprout } from 'lucide-react'
+import { ArrowLeft, Pause, PawPrint, ShieldCheck, Sprout } from 'lucide-react'
 import { ForestEntrance } from './ForestEntrance.jsx'
 import { GuidePortrait } from './PaintedFriend.jsx'
 import { JourneyProgress } from './JourneyProgress.jsx'
-import { LevelTest, Lesson } from './Activities.jsx'
+import { CardPortrait, LevelTest, Lesson } from './Activities.jsx'
 import { Panel } from './Panels.jsx'
 import {
   STORAGE_KEY,
@@ -14,6 +14,8 @@ import {
   forToday,
   readSession,
   reviewSticker,
+  nextStickerTopic,
+  startNextStickerLesson,
   topics,
   withRecordedStickers,
 } from './session.js'
@@ -65,7 +67,15 @@ function SceneTools({ onGuard, onRest, learning }) {
   )
 }
 
-function Stamp({ record, onReview }) {
+function Stamp({ record, onReview, nextTopic, onNext }) {
+  if (!record && nextTopic) {
+    return (
+      <button type="button" className="stamp stamp-next" onClick={onNext} aria-label={nextTopic.label + ' 학습 시작'}>
+        <span>{nextTopic.label}</span>
+        <span className="stamp-next-label">다음 학습</span>
+      </button>
+    )
+  }
   if (!record) {
     return <span className="stamp" aria-hidden="true"><PawPrint /></span>
   }
@@ -89,14 +99,15 @@ function LessonReady({ friend, onStart }) {
   )
 }
 
-function Reward({ page, friend, topic, records, onBook, onFinish, onReview }) {
-  useNarration(page === 'stickers' ? '다시 해 보고 싶은 스티커를 눌러 보세요.' : '끝까지 함께했네요. 스티커를 보러 갈까요?')
+function Reward({ page, friend, topic, records, onBook, onFinish, onReview, nextTopic, onNext }) {
+  const completionTitle = '동화 놀이를 마쳤어요'
+  useNarration(page === 'stickers' ? '다음 학습을 시작하거나, 스티커를 눌러 다시 해 봐요.' : completionTitle + '. 스티커를 보러 갈까요?')
   const title = useRef(null)
   useEffect(() => {
     title.current?.focus({ preventScroll: true })
   }, [page])
   const isBook = page === 'stickers'
-  const lastSheet = Math.max(0, Math.ceil(records.length / 5) - 1)
+  const lastSheet = Math.max(0, Math.ceil((records.length + Number(Boolean(nextTopic))) / 5) - 1)
   const [sheet, setSheet] = useState(lastSheet)
   const pageStart = sheet * 5
   const group = records.slice(pageStart, pageStart + 5)
@@ -107,10 +118,11 @@ function Reward({ page, friend, topic, records, onBook, onFinish, onReview }) {
           <h1 ref={title} tabIndex="-1">
             마음숲 스티커판
           </h1>
-          <p>스티커를 눌러 다시 해 봐요.</p>
+          <p>다음 학습을 시작하거나, 스티커를 눌러 다시 해 봐요.</p>
           <div className="stamp-board">
             {Array.from({ length: 5 }, (_, i) => (
-              <Stamp key={i} record={group[i]} onReview={onReview} />
+              <Stamp key={i} record={group[i]} onReview={onReview}
+                nextTopic={pageStart + i === records.length ? nextTopic : null} onNext={onNext} />
             ))}
           </div>
           {lastSheet > 0 && (
@@ -123,14 +135,13 @@ function Reward({ page, friend, topic, records, onBook, onFinish, onReview }) {
           <span className="stamp-count">지금까지 모은 스티커 {records.length}개</span>
           <button type="button" className="primary" onClick={onFinish}>
             산책 마치기
-            <Check aria-hidden="true" />
           </button>
         </>
       ) : (
         <>
           <div className="praise-note">
             <h1 ref={title} tabIndex="-1">
-              끝까지 함께 걸었어요!
+              {completionTitle}
             </h1>
             <p>
               {friend.familiar}와 {topic.phrase}을 알아보고 이야기를 나눴어요.
@@ -139,7 +150,6 @@ function Reward({ page, friend, topic, records, onBook, onFinish, onReview }) {
           <GuidePortrait className="reward-friend" friend={friend} />
           <button type="button" className="primary" onClick={onBook}>
             스티커판 보기
-            <Sparkles aria-hidden="true" />
           </button>
         </>
       )}
@@ -160,6 +170,8 @@ function App() {
     }
   })
   const entry = useRef('welcome')
+  const signupDraft = useRef(null)
+  const history = useRef([])
   const { page } = session
   const baseFriend = friends.find((f) => f.id === session.friendId) || friends[0]
   const name = session.friendNickname || baseFriend.name
@@ -211,7 +223,37 @@ function App() {
     window.scrollTo(0, 0)
   }, [page, session.step, showEntrance])
 
+  function move(values) {
+    const { page, placement, step, activity, retestReturn, onboarded, level } = session
+    const phaseChanged = ['practicePhase', 'mirrorPhase', 'phase', 'bookPage', 'completed']
+      .some((field) => activity?.[field] !== values.activity?.[field])
+    if ((values.page && values.page !== page) || ('step' in values && step !== values.step)
+      || ('activity' in values && (phaseChanged || values.activity === null))
+      || ('placement' in values && (placement?.index !== values.placement?.index
+        || placement?.introduced !== values.placement?.introduced))) {
+      history.current.push({ page, placement, step, activity, retestReturn, onboarded, level })
+    }
+    patch(values)
+  }
+  function previousScene() {
+    const previous = history.current.pop()
+    if (previous) {
+      patch(previous)
+      return
+    }
+    if (page === 'placement' && session.retestReturn) {
+      patch({ page: session.retestReturn, placement: null, retestReturn: null })
+      return
+    }
+    if (page === 'placement' && !session.onboarded) {
+      patch({ page: 'welcome', placement: null })
+      open('friendHello', 'onboarding')
+      return
+    }
+    setHasEntered(false)
+  }
   function retest() {
+    history.current = []
     const returnPage = page === 'placement' ? session.retestReturn : session.onboarded ? page : null
     patch({ page: 'placement', placement: null, retestReturn: returnPage })
     setPanel(null)
@@ -221,6 +263,7 @@ function App() {
     setPanel(mode)
   }
   function enterForest() {
+    history.current = []
     setHasEntered(true)
     const next = beginWalk(session)
     setSession(next)
@@ -246,8 +289,16 @@ function App() {
     patch(appearance)
     setPanel('guardian')
   }
+  function chooseFirstFriend(id) {
+    patch({ friendId: id, friendCharm: null, friendHeadwear: null, friendNickname: '' })
+    setPanel('friendHello')
+  }
+  function startPlacement() {
+    patch({ page: 'placement', placement: null })
+    setPanel(null)
+  }
   function afterTest(level) {
-    patch({
+    move({
       onboarded: true,
       level,
       page: session.retestReturn || 'ready',
@@ -264,7 +315,7 @@ function App() {
   }
 
   return (
-    <>
+    <NarrationVoice.Provider value={friend.id}>
       {!showEntrance && (
         <a href="#main-content" className="skip-link">
           본문으로 가기
@@ -297,36 +348,56 @@ function App() {
           />
           {page === 'lesson' && <JourneyProgress friend={friend} step={session.step} />}
           <NarrationActive.Provider value={!panel}>
-          <div className="scene-content">
-            {page === 'placement' && (
-              <LevelTest progress={session} onUpdate={patch} onDone={afterTest} />
-            )}
-            {page === 'ready' && (
-              <LessonReady friend={friend} onStart={() => patch({ page: 'lesson', step: 0, activity: null })} />
-            )}
-            {page === 'lesson' && (
-              <Lesson
-                progress={session}
-                onUpdate={patch}
-                onComplete={() => setSession(finishWalk)}
-                friend={friend}
-                topic={topic}
-                active={!panel}
-              />
-            )}
-            {(page === 'praise' || page === 'stickers') && (
-              <Reward
-                page={page}
-                friend={friend}
-                topic={topic}
-                records={session.records}
-                onReview={(record) => setSession((current) => reviewSticker(current, record))}
-                onBook={() => patch({ page: 'stickers' })}
-                onFinish={() => setSession((current) => forToday({ ...current, page: 'welcome' }))}
-              />
-            )}
-          </div>
+            <div className="scene-content">
+              <CardPortrait.Provider value={session.cardPortrait}>
+                  {page === 'placement' && (
+                    <LevelTest progress={session} onUpdate={move} onDone={afterTest} friend={friend} active={!panel} />
+                  )}
+                  {page === 'ready' && (
+                    <LessonReady friend={friend} onStart={() => move({ page: 'lesson', step: 0, activity: null })} />
+                  )}
+                  {page === 'lesson' && (
+                    <Lesson
+                      progress={session}
+                      onUpdate={move}
+                      onComplete={() => {
+                        history.current = []
+                        setSession(finishWalk)
+                      }}
+                      friend={friend}
+                      topic={topic}
+                      active={!panel}
+                    />
+                  )}
+                  {(page === 'praise' || page === 'stickers') && (
+                    <Reward
+                      page={page}
+                      friend={friend}
+                      topic={topic}
+                      records={session.records}
+                      nextTopic={session.onboarded ? nextStickerTopic(session) : null}
+                      onNext={() => {
+                        history.current = []
+                        setSession((current) => startNextStickerLesson(current))
+                      }}
+                      onReview={(record) => {
+                        history.current = []
+                        setSession((current) => reviewSticker(current, record))
+                      }}
+                      onBook={() => patch({ page: 'stickers' })}
+                      onFinish={() => setSession((current) => forToday({ ...current, page: 'welcome' }))}
+                    />
+                  )}
+              </CardPortrait.Provider>
+            </div>
           </NarrationActive.Provider>
+          {(learning || page === 'ready') && (
+            <div className="scene-back">
+              <button className="scene-tool" type="button" onClick={previousScene} aria-label="이전">
+                <ArrowLeft aria-hidden="true" />
+              </button>
+            </div>
+          )}
           <div className="scene-footer">
             <SceneTools
               learning={learning}
@@ -338,13 +409,16 @@ function App() {
       )}
       <Panel
         mode={panel}
-        onUnlock={() => {
-          if (entry.current === 'onboarding') {
-            patch({ page: 'placement', placement: null })
-            setPanel(null)
-          } else setPanel('guardian')
+        cardPortrait={session.cardPortrait}
+        onCardPortrait={(cardPortrait) => {
+          patch({ cardPortrait })
+          setPanel(entry.current === 'onboarding' ? 'chooseFriend' : 'guardian')
         }}
+        onUnlock={() => setPanel(entry.current === 'onboarding' ? 'portrait' : 'guardian')}
+        onChooseFirstFriend={chooseFirstFriend}
+        onStartPlacement={startPlacement}
         onReview={(record) => {
+          history.current = []
           setSession((current) => reviewSticker(current, record, true))
           setPanel(null)
         }}
@@ -355,10 +429,12 @@ function App() {
         records={session.records}
         onOpen={setPanel}
         recipient={recipient}
+        signupEmail={signupDraft.current ?? recipient}
+        onSignupDraft={(email) => { signupDraft.current = email }}
         onAccountDone={completeAccount}
         onRetest={retest}
       />
-    </>
+    </NarrationVoice.Provider>
   )
 }
 export default App

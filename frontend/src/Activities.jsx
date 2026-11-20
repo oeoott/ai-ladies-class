@@ -1,12 +1,12 @@
-import { Volume2 } from 'lucide-react'
-import { narrate, useNarration } from './narration.js'
-import React, { useEffect, useRef, useState, useId } from 'react'
+import { useNarration } from './narration.js'
+import React, { createContext, useContext, useEffect, useRef, useState, useId } from 'react'
 import { startFacePreview } from './facePreview.js'
 import { feelingPractice, PracticeObject } from './FeelingPractice.jsx'
-import { PaintedFriend } from './PaintedFriend.jsx'
+import { GuidePortrait, PaintedFriend } from './PaintedFriend.jsx'
 import './activities.css'
 import { TaleActions, TaleScene } from './ForestTale.jsx'
 import { forestTales } from './forestTales.js'
+import { StoryVoice } from './StoryVoice.jsx'
 
 const FEELINGS = {
   joy: {
@@ -96,28 +96,10 @@ function withFriend(name) {
   const code = name.charCodeAt(name.length - 1) - 0xac00
   return name + (code >= 0 && code < 11172 && code % 28 !== 0 ? '과' : '와')
 }
-function Arrow() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.1"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M4 12h15m-6-6 6 6-6 6" />
-    </svg>
-  )
-}
 function Action({ children, ...props }) {
   return (
     <button type="button" className="edu-primary" {...props}>
       {children}
-      <Arrow />
     </button>
   )
 }
@@ -136,11 +118,15 @@ function Choice({ selected, children, ...props }) {
     </button>
   )
 }
+export const CardPortrait = createContext('boy')
+
 function EmotionCard({ feeling, alt = FEELINGS[feeling].clue }) {
+  const portrait = useContext(CardPortrait)
+  const prefix = portrait === 'girl' ? 'girl-' : ''
   return (
     <img
       className="edu-emotion-card"
-      src={import.meta.env.BASE_URL + 'art/cards/' + feeling + '.webp'}
+      src={import.meta.env.BASE_URL + 'art/cards/' + prefix + feeling + '.webp'}
       width="626"
       height="626"
       alt={alt}
@@ -170,7 +156,7 @@ function FaceDetail({ feeling }) {
     </div>
   )
 }
-function Board({ kicker, title, description, illustration, children, voiceLine = description || title, focusKey = title }) {
+function Board({ title, description, illustration, guide, className = '', children, voiceLine = description || title, focusKey = title }) {
   useNarration(voiceLine)
   const heading = useRef(null)
   const id = useId()
@@ -180,32 +166,26 @@ function Board({ kicker, title, description, illustration, children, voiceLine =
   }, [focusKey])
   const prompt = (
     <div className="edu-header">
-      {kicker && <span className="edu-kicker">
-        <i aria-hidden="true" />
-        {kicker}
-      </span>}
       <h1 id={id} tabIndex="-1" ref={heading}>
         {title}
       </h1>
       {description && <p>{description}</p>}
-      {window.speechSynthesis && (
-        <button className="edu-listen-button" type="button" aria-label="안내 다시 듣기" onClick={() => narrate(voiceLine)}>
-          <Volume2 aria-hidden="true" size={21} />
-        </button>
-      )}
+    </div>
+  )
+  const paper = (
+    <div className="edu-paper">
+      {prompt}
+      {children && <div className="edu-task">{children}</div>}
     </div>
   )
   return (
     <section
-      className={'edu-board ' + (illustration ? 'edu-spread' : 'edu-preparation')}
+      className={`edu-board ${illustration ? 'edu-spread' : 'edu-preparation'} ${className}`.trim()}
       aria-labelledby={id}
     >
       {illustration ? (
         <>
-          <div className="edu-paper">
-            {prompt}
-            <div className="edu-task">{children}</div>
-          </div>
+          {guide ? <div className="edu-board-guide">{guide}{paper}</div> : paper}
           {illustration}
         </>
       ) : (
@@ -217,25 +197,53 @@ function Board({ kicker, title, description, illustration, children, voiceLine =
     </section>
   )
 }
+function EmotionIntroduction({ feeling, friend, active, meaning, example, onNext }) {
+  const heading = useRef(null)
+  const id = useId()
+  useNarration(meaning + ' ' + example, onNext)
+  useEffect(() => {
+    heading.current?.focus({ preventScroll: true })
+    window.scrollTo(0, 0)
+  }, [feeling])
+
+  return (
+    <section className="edu-board edu-intro" aria-labelledby={id}>
+      <figure className="edu-figure">
+        <EmotionCard feeling={feeling} />
+      </figure>
+      <div className="edu-intro-guide">
+        <GuidePortrait friend={friend} active={active} />
+        <div className="edu-paper">
+          <div className="edu-header">
+            <h1 id={id} ref={heading} tabIndex="-1">{FEELINGS[feeling].label}</h1>
+          </div>
+          <p>{meaning}</p>
+          <p>{example}</p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 const PLACEMENT = [
   {
     target: 'joy',
     alternatives: ['joy', 'sad'],
-    introduction: '좋은 일이 생겨 기분이 좋아요.',
-    example: '친구가 와서 활짝 웃었어요.',
-    prompt: '기쁜 얼굴을 눌러요.',
+    meaning: feelingPractice.joy.meaning,
+    example: feelingPractice.joy.example,
+    prompt: '기쁜 얼굴을 눌러 보아요.',
     hint: '웃으면서 입꼬리가 올라간 얼굴을 찾아봐요.',
   },
   {
     target: 'surprise',
     alternatives: ['anger', 'surprise'],
-    introduction: '갑자기 무언가 나타나면 깜짝 놀라요.',
+    meaning: '갑자기 무언가 나타나면 깜짝 놀라요.',
     example: '나비가 갑자기 날아와 눈이 동그래졌어요.',
-    prompt: '놀란 얼굴을 눌러요.',
+    prompt: '놀란 얼굴을 눌러 보아요.',
     hint: '눈과 입이 동그래진 얼굴을 찾아봐요.',
   },
 ]
-export function LevelTest({ progress, onUpdate, onDone }) {
+export function LevelTest({ progress, onUpdate, onDone, friend, active }) {
   const state = progress.placement || {}
   const idx = state.index === 1 ? 1 : 0
   const item = PLACEMENT[idx]
@@ -258,46 +266,40 @@ export function LevelTest({ progress, onUpdate, onDone }) {
   }
   if (!state.introduced && !state.choice) {
     return (
-      <Board
-        title={FEELINGS[item.target].label}
-        description={item.introduction}
-        voiceLine={item.introduction + ' ' + item.example}
-        illustration={
-          <figure className="edu-figure">
-            <EmotionCard feeling={item.target} />
-          </figure>
-        }
-      >
-        <p className="edu-story">
-          {item.example}
-        </p>
-        <Action onClick={() => onUpdate({ placement: { ...state, index: idx, introduced: true } })}>
-          얼굴 찾아보기
-        </Action>
-      </Board>
+      <EmotionIntroduction
+        feeling={item.target}
+        friend={friend}
+        active={active}
+        meaning={item.meaning}
+        example={item.example}
+        onNext={() => onUpdate({ placement: { ...state, index: idx, introduced: true } })}
+      />
     )
   }
   return (
-    <Board title={item.prompt}>
-      <div className="edu-placement">
-        {item.alternatives.map((key) => (
-          <button
-            type="button"
-            key={key}
-            aria-pressed={state.choice === key}
-            aria-label={FEELINGS[key].clue}
-            disabled={solved}
-            className={'edu-picture-choice' + (state.choice === key ? ' is-selected' : '')}
-            onClick={() => choose(key)}
-          >
-            <EmotionCard feeling={key} alt="" />
-            {state.choice === key && (
-              <span className="edu-picture-check" aria-hidden="true">
-                ✓
-              </span>
-            )}
-          </button>
-        ))}
+    <Board title={item.prompt} voiceLine={state.choice && !solved ? item.hint : item.prompt}>
+      <div className="edu-placement-prompt">
+        <div className="edu-placement">
+          {item.alternatives.map((key) => (
+            <button
+              type="button"
+              key={key}
+              aria-pressed={state.choice === key}
+              aria-label={FEELINGS[key].clue}
+              disabled={solved}
+              className={'edu-picture-choice' + (state.choice === key ? ' is-selected' : '')}
+              onClick={() => choose(key)}
+            >
+              <EmotionCard feeling={key} alt="" />
+              {state.choice === key && (
+                <span className="edu-picture-check" aria-hidden="true">
+                  ✓
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+        <GuidePortrait friend={friend} className="edu-placement-guide" active={active} />
       </div>
       <div className="edu-action-row">
         <p role="status">
@@ -322,17 +324,14 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
   )
   if (phase === 'intro') {
     return (
-      <Board
-        title={fact.label}
-        description={practice.meaning}
-        voiceLine={practice.meaning + ' ' + practice.example}
-        illustration={card}
-      >
-        <p className="edu-prompt">
-          {practice.example}
-        </p>
-        <Action onClick={() => update({ practicePhase: 'experiment' })}>{practice.nextLabel}</Action>
-      </Board>
+      <EmotionIntroduction
+        feeling={feeling}
+        friend={friend}
+        active={active}
+        meaning={practice.meaning}
+        example={practice.example}
+        onNext={() => update({ practicePhase: 'experiment' })}
+      />
     )
   }
   if (phase === 'experiment' || phase === 'discovery') {
@@ -342,12 +341,12 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
         title={revealed ? practice.afterTitle : practice.beforeTitle}
         description={revealed ? practice.reaction : practice.before}
         voiceLine={revealed ? practice.reaction + ' ' + practice.cueQuestion : practice.before}
+        guide={revealed && <GuidePortrait friend={friend} active={active} />}
         illustration={
           <div className="edu-figure practice-field">
             {revealed ? <FaceDetail feeling={feeling} /> : (
               <figure className="practice-field-friend">
                 <Portrait friend={friend} feeling="neutral" active={active} gesture="listen" />
-                <figcaption>{friend.name}의 안내</figcaption>
               </figure>
             )}
             <PracticeObject
@@ -409,12 +408,14 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
   return (
     <Board
       title="어떤 마음일까요?"
+      className="edu-word-choice"
       description={
         expanded
           ? '맞는 말을 하나나 두 개 골라요.'
           : '맞는 말 하나를 골라요.'
       }
       illustration={card}
+      guide={<GuidePortrait friend={friend} active={active} />}
     >
       <div
         className={expanded ? 'edu-choices edu-multiple' : 'edu-choices'}
@@ -541,6 +542,7 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
       <Board
         title={chosen ? '친구가 이렇게 답했어요' : '내 마음을 전해 봐요'}
         description={chosen ? chosen.practice : '말이나 몸짓을 골라요.'}
+        guide={<GuidePortrait friend={friend} active={active} />}
         illustration={
           <figure className="edu-figure">
             <EmotionCard feeling={feeling} />
@@ -549,7 +551,7 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
       >
         {chosen ? (
           <>
-            <p className="edu-prompt">
+            <p className="edu-response-copy">
               {chosen.answer}
             </p>
             <Action onClick={next}>연습 마치기</Action>
@@ -564,7 +566,6 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
                 onClick={() => update({ mirrorPhase: 'response', mirrorChoice: index })}
               >
                 {way.action}
-                <Arrow />
               </button>
             ))}
           </div>
@@ -576,36 +577,21 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
     <Board
       title="표정을 따라 해 봐요"
       voiceLine={fact.motion}
+      guide={<GuidePortrait friend={friend} active={active} />}
       illustration={
-        <figure className="edu-figure">
+        <figure className="edu-figure edu-mirror-figure">
           {demonstration % 2 ? <FaceDetail feeling={feeling} /> : <EmotionCard feeling={feeling} />}
-          <figcaption className="edu-model-caption">
-            {fact.label} 표정
-            <button
-              type="button"
-              className="edu-replay"
-              onClick={() => setDemonstration((n) => n + 1)}
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M4 10a8 8 0 1 1 1.8 7M4 4v6h6" />
-              </svg>
-              {demonstration % 2 ? '얼굴 전체 보기' : '표정 크게 보기'}
-            </button>
-          </figcaption>
+          <button
+            type="button"
+            className="edu-secondary"
+            onClick={() => setDemonstration((n) => n + 1)}
+          >
+            {demonstration % 2 ? '얼굴 전체 보기' : '표정 크게 보기'}
+          </button>
         </figure>
       }
     >
-      <p className="edu-prompt">
+      <p className="edu-response-copy">
         {fact.motion}
       </p>
       {camera.status === 'on' && (
@@ -613,31 +599,26 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
           <video ref={camera.video} muted autoPlay playsInline aria-label="이 기기의 내 모습" />
         </div>
       )}
-      <div className="edu-device-options">
+      <div className="edu-mirror-actions">
         {camera.status === 'on' || camera.status === 'waiting' ? (
           <button className="edu-secondary" type="button" onClick={camera.off}>
             {camera.status === 'waiting' ? '카메라 요청 취소' : '카메라 끄기'}
           </button>
         ) : (
           <button className="edu-secondary" type="button" onClick={camera.start}>
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-            >
-              <rect x="3" y="7" width="18" height="13" rx="3" />
-              <path d="m7 7 2-3h6l2 3" />
-              <circle cx="12" cy="13" r="3" />
-            </svg>
             {camera.status === 'unavailable' ? '카메라 다시 켜기' : '카메라로 내 모습 보기'}
           </button>
         )}
+        <Action
+          onClick={() => {
+            camera.off()
+            update({ mirrorPhase: 'express' })
+          }}
+        >
+          표정 연습 마쳤어요
+        </Action>
       </div>
-      <p role="status" className="edu-note">
+      <p role="status" className="edu-note edu-camera-status">
         {camera.status === 'on'
           ? camera.facePresent
             ? '얼굴이 화면에 보여요.'
@@ -646,92 +627,24 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
             ? '카메라를 열고 있어요.'
             : camera.status === 'unavailable'
               ? '카메라가 꺼져 있어요. 그림을 봐요.'
-              : '카메라 없이 그림만 봐도 돼요.'}
+              : null}
       </p>
-      <Action
-        onClick={() => {
-          camera.off()
-          update({ mirrorPhase: 'express' })
-        }}
-      >
-        표정 연습 마쳤어요
-      </Action>
     </Board>
   )
 }
-const pictograms = {
-  plane: <path d="m2 12 20-8-7 17-4-7-9-2Zm9 2 10-9" />,
-  heart: <path d="M20 5c-3-2-6-1-8 2-2-3-5-4-8-2-4 3-2 8 2 11l6 5 6-5c4-3 6-8 2-11Z" />,
-  cloud: <path d="M6 18a4 4 0 0 1-1-8 6 6 0 0 1 11.5-1A4.5 4.5 0 1 1 18 18Z" />,
-  tree: <path d="M12 2 5 11h4l-6 7h8v4h2v-4h8l-6-7h4Z" />,
-  bench: (
-    <>
-      <path d="M3 15h18v3H3zM5 18v3m14-3v3M5 6h14v5H5zM7 11v4m10-4v4" />
-    </>
-  ),
-  blocks: (
-    <>
-      <rect x="2" y="13" width="9" height="8" rx="1.5" />
-      <rect x="13" y="13" width="9" height="8" rx="1.5" />
-      <path d="m12 2 5 8H7Z" />
-    </>
-  ),
-  butterfly: (
-    <>
-      <path d="M12 13C3-2-3 10 8 13c-7 0-5 10 2 4l2-3 2 3c7 6 9-4 2-4C27 10 21-2 12 13Z" />
-      <path d="M12 13v5" />
-    </>
-  ),
-  eye: (
-    <>
-      <path d="M2 12q10-14 20 0-10 14-20 0Z" />
-      <circle cx="12" cy="12" r="3" />
-    </>
-  ),
-  hand: (
-    <path d="M6 13V6a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-8a1.5 1.5 0 0 1 3 0v8-6a1.5 1.5 0 0 1 3 0v5.5l1-2a1.6 1.6 0 0 1 3 1.3l-3.4 7.5a6 6 0 0 1-5.5 3.6h-1a7 7 0 0 1-6-4l-3-5.4c-1.2-2.1 1-3.8 2.4-2Z" />
-  ),
-  talk: <path d="M21 11a8 8 0 0 1-8 8H9l-5 3 1-5A8 8 0 1 1 21 11Zm-14 0h8" />,
-}
-const replyIcons = {
-  joy: ['plane', 'heart', 'cloud', 'tree'],
-  sad: ['heart', 'blocks', 'bench', 'blocks'],
-  surprise: ['butterfly', 'heart', 'eye', 'bench'],
-  anger: ['hand', 'talk', 'talk', 'bench'],
-}
-function Pictogram({ name }) {
-  return (
-    <svg
-      width="23"
-      height="23"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.65"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      {pictograms[name]}
-    </svg>
-  )
-}
-
-function StoryQuestion({ fact, feeling, isExtra, onReply }) {
+function StoryQuestion({ fact, isExtra, onReply, active }) {
+  const choices = isExtra ? fact.extra : fact.choices
   return (
     <>
       <p className="edu-prompt">{isExtra ? fact.again : fact.ask}</p>
       <div className="edu-choices" role="group" aria-label="친구에게 보낼 말">
-        {(isExtra ? fact.extra : fact.choices).map((text, index) => (
+        {choices.map((text, index) => (
           <button key={text} type="button" className="edu-reply" onClick={() => onReply(index)}>
-            <span className="edu-picto">
-              <Pictogram name={replyIcons[feeling][(isExtra ? 2 : 0) + index]} />
-            </span>
-            <span>{text}</span>
-            <Arrow />
+            {text}
           </button>
         ))}
       </div>
+      <StoryVoice choices={choices} onReply={onReply} active={active} />
     </>
   )
 }
@@ -778,7 +691,6 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
   if (afterChoice) expression = outcome.expression
   return (
     <Board
-      kicker={phase === 'book' ? (page + 1) + ' / ' + pages.length : undefined}
       title={title}
       voiceLine={phase === 'book' ? pages[page].replaceAll('{친구}', '숲 친구')
         : phase === 'situation' ? tale.explanation
@@ -846,7 +758,7 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
         <StoryQuestion
           fact={conversation}
           isExtra={isExtra}
-          feeling={feeling}
+          active={active}
           onReply={(choice) =>
             update(isExtra ? { phase: 'ending', extraChoice: choice } : { phase: 'reply', choice })
           }
@@ -882,9 +794,8 @@ export function Lesson({ progress, onUpdate, onComplete, friend, topic, active =
   }
   if (state.completed) {
     return (
-      <Board title={(step + 1) + '번 학습을 마쳤어요'} illustration={<figure className="edu-figure"><Portrait friend={friend} feeling="neutral" active={active} /></figure>}>
+      <Board title={step === 0 ? '감정 탐색을 마쳤어요' : '표정 거울을 마쳤어요'} illustration={<figure className="edu-figure"><Portrait friend={friend} feeling="neutral" active={active} /></figure>}>
         <Action onClick={() => onUpdate({ step: step + 1, activity: null })}>다음 학습 시작</Action>
-        <button className="edu-link" type="button" onClick={() => onUpdate({ activity: null })}>다시하기</button>
       </Board>
     )
   }

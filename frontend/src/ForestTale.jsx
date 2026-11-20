@@ -1,36 +1,13 @@
-import { Blocks, Eye, Flower2, Leaf, Mail, MessageCircle, Wind } from 'lucide-react'
 import './forest-tale.css'
-
-const actionIcons = {
-  wind: Wind,
-  mail: Mail,
-  bench: Leaf,
-  blocks: Blocks,
-  eye: Eye,
-  flower: Flower2,
-  talk: MessageCircle,
-  leaves: Leaf,
-}
 
 export function TaleActions({ actions, onChoose }) {
   return (
     <div className="edu-choices" role="group" aria-label="이야기 속에서 할 행동">
-      {actions.map(({ label, icon }, index) => {
-        const Icon = actionIcons[icon]
-        return (
-          <button
-            key={label}
-            type="button"
-            className="edu-reply tale-action"
-            onClick={() => onChoose(index)}
-          >
-            <span className="edu-picto">
-              <Icon size={22} aria-hidden="true" />
-            </span>
-            {label}
-          </button>
-        )
-      })}
+      {actions.map(({ label }, index) => (
+        <button key={label} type="button" className="edu-reply tale-action" onClick={() => onChoose(index)}>
+          {label}
+        </button>
+      ))}
     </div>
   )
 }

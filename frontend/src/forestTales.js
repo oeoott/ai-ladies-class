@@ -12,7 +12,6 @@ export const forestTales = {
     actions: [
       {
         label: '언덕으로 날려요',
-        icon: 'wind',
         expression: 'joy',
         title: '언덕에 닿았어요',
         event: '편지가 언덕에 닿자 친구들이 손을 흔들었어요.',
@@ -20,7 +19,6 @@ export const forestTales = {
       },
       {
         label: '우체통에 넣어요',
-        icon: 'mail',
         expression: 'joy',
         title: '우체통에 도착했어요',
         event: '우체통에서 편지를 꺼낸 친구가 활짝 웃었어요.',
@@ -51,7 +49,6 @@ export const forestTales = {
     actions: [
       {
         label: '곁에서 쉴까?',
-        icon: 'bench',
         expression: 'sad',
         title: '나란히 쉬었어요',
         event: '두 친구는 돗자리에 앉아 물소리를 들었어요.',
@@ -59,7 +56,6 @@ export const forestTales = {
       },
       {
         label: '함께 다시 쌓을까?',
-        icon: 'blocks',
         expression: 'joy',
         title: '등불이 다시 켜졌어요',
         event: '둘이 블록을 쌓자 등불이 켜졌어요.',
@@ -90,7 +86,6 @@ export const forestTales = {
     actions: [
       {
         label: '돌담에서 바라봐요',
-        icon: 'eye',
         expression: 'neutral',
         title: '돌담 너머로 보았어요',
         event: '돌담 옆에 서니 나비의 날개가 잘 보여요.',
@@ -98,7 +93,6 @@ export const forestTales = {
       },
       {
         label: '꽃을 내밀어요',
-        icon: 'flower',
         expression: 'neutral',
         title: '나비가 꽃에 앉았어요',
         event: '꽃을 내밀자 나비가 사뿐 앉았어요.',
@@ -129,7 +123,6 @@ export const forestTales = {
     actions: [
       {
         label: '내 차례라고 말해요',
-        icon: 'talk',
         expression: 'neutral',
         title: '차례를 말로 알렸어요',
         event: '“내가 먼저 왔어.” 구름이가 옆으로 비켜 줬어요.',
@@ -137,7 +130,6 @@ export const forestTales = {
       },
       {
         label: '나뭇잎 차례표를 놓아요',
-        icon: 'leaves',
         expression: 'neutral',
         title: '차례표가 생겼어요',
         event: '은행잎 두 장을 놓고 차례대로 섰어요.',

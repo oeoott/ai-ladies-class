@@ -17,9 +17,6 @@
   height: auto;
   max-height: clamp(220px, 52vh, 520px);
 }
-.practice-field-friend figcaption {
-  margin: 8px 0 0;
-}
 .practice-object {
   width: 100%;
   display: grid;
@@ -47,10 +44,10 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-height: 48px;
+  min-height: var(--forest-touch);
   padding: 5px 15px;
   border: 1px solid #d6c098;
-  border-radius: 999px;
+  border-radius: var(--forest-pill-radius);
   background: #fff7dd;
   font-size: clamp(0.9rem, 1.5vw, 1.1rem);
   font-weight: 650;
@@ -61,7 +58,7 @@
   border-color: #124c32;
   background: #286847;
   box-shadow: 0 3px 0 #16472e;
-  color: #fffdf3;
+  color: var(--forest-action-ink);
   font-weight: 750;
 }
 .practice-object-button:focus-visible {

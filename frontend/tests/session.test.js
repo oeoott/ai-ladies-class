@@ -7,11 +7,34 @@ import {
   finishWalk,
   readSession,
   reviewSticker,
+  nextStickerTopic,
+  startNextStickerLesson,
   withRecordedStickers,
 } from '../src/session.js'
 
 const date = '2026-11-20'
 const tomorrow = '2026-11-21'
+
+test('the first empty sticker opens the next lesson without duplicating a daily award', () => {
+  const book = {
+    ...emptySession(date),
+    onboarded: true,
+    page: 'stickers',
+    topicId: 'surprise',
+    records: [{ date, topic: '놀람' }],
+  }
+  assert.equal(nextStickerTopic(book).id, 'sad')
+  const preview = startNextStickerLesson(book, date)
+  assert.equal(preview.page, 'lesson')
+  assert.equal(preview.step, 0)
+  assert.equal(preview.reviewTopicId, 'sad')
+  assert.deepEqual(finishWalk(readSession(JSON.stringify(preview), date)).records, book.records)
+
+  const nextDay = startNextStickerLesson(book, tomorrow)
+  assert.equal(nextDay.topicId, 'sad')
+  assert.equal(nextDay.day, tomorrow)
+  assert.deepEqual(finishWalk(nextDay).records.at(-1), { date: tomorrow, topic: '슬픔' })
+})
 
 test('a fresh or unreadable saved walk starts quietly with the lion and joy', () => {
   for (const value of [null, 'not-json', '{}', '{"version":1,"day":"bad"}']) {
@@ -23,6 +46,7 @@ test('a made friend keeps its name and accessories across sessions and replays',
     ...emptySession(date),
     onboarded: true,
     friendId: 'rabbit',
+    cardPortrait: 'girl',
     friendCharm: 'star',
     friendHeadwear: 'sky-hat',
     friendNickname: '여름',
@@ -30,11 +54,12 @@ test('a made friend keeps its name and accessories across sessions and replays',
   const restored = readSession(JSON.stringify(made), date)
   assert.deepEqual(restored, made)
   const replay = beginWalk({ ...finishWalk(restored), page: 'welcome' }, tomorrow)
-  for (const field of ['friendId', 'friendCharm', 'friendHeadwear', 'friendNickname']) {
+  for (const field of ['friendId', 'cardPortrait', 'friendCharm', 'friendHeadwear', 'friendNickname']) {
     assert.equal(replay[field], made[field])
   }
   const old = readSession(JSON.stringify({ version: 1, day: date, friendId: 'bear' }), date)
   assert.equal(old.friendId, 'bear')
+  assert.equal(old.cardPortrait, 'boy')
   assert.equal(old.friendCharm, null)
   assert.equal(old.friendHeadwear, null)
   assert.equal(old.friendNickname, '')

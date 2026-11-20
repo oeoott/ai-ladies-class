@@ -25,6 +25,7 @@ export function emptySession(day = localDay()) {
     reviewReturn: null,
     page: 'welcome',
     friendId: 'lion',
+    cardPortrait: 'boy',
     friendCharm: null,
     friendHeadwear: null,
     friendNickname: '',
@@ -71,6 +72,7 @@ export function readSession(raw, today = localDay()) {
       topicId: topicIds.includes(saved.topicId) ? saved.topicId : 'joy',
       reviewTopicId: ['lesson', 'placement'].includes(saved.page) && topicIds.includes(saved.reviewTopicId)
         ? saved.reviewTopicId : null,
+      cardPortrait: saved.cardPortrait === 'girl' ? 'girl' : 'boy',
       friendId: ['lion', 'rabbit', 'bear'].includes(saved.friendId) ? saved.friendId : 'lion',
       friendCharm: ['leaf', 'star', 'flower'].includes(saved.friendCharm)
         ? saved.friendCharm
@@ -140,6 +142,24 @@ export function reviewSticker(session, record, fromGuardian = false) {
     ? { page, step, activity, placement, retestReturn }
     : null)
   return { ...session, page: 'lesson', step: 0, activity: null, placement: null, retestReturn: null, reviewTopicId: topic.id, reviewReturn }
+}
+
+export function nextStickerTopic(session) {
+  const latest = session.records.reduce((last, record) =>
+    !last || record.date >= last.date ? record : last, null)
+  if (!latest) return topics.find((topic) => topic.id === session.topicId)
+  const index = topics.findIndex((topic) => topic.label === latest.topic)
+  return topics[(index + 1) % topics.length]
+}
+
+export function startNextStickerLesson(session, today = localDay()) {
+  if (session.page !== 'stickers' || !session.onboarded) return session
+  const topic = nextStickerTopic(session)
+  if (session.records.some((record) => record.date === today)) {
+    return reviewSticker(session, { topic: topic.label })
+  }
+  const current = forToday({ ...session, page: 'welcome', reviewTopicId: null, reviewReturn: null }, today)
+  return beginWalk({ ...current, topicId: topic.id }, today)
 }
 
 export function finishWalk(session) {

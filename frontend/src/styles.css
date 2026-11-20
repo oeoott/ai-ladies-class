@@ -1,3 +1,5 @@
+@import './design-tokens.css';
+
 @font-face {
   font-family: ForestJua;
   src: url('./assets/Jua-Regular.woff') format('woff');
@@ -85,7 +87,7 @@ svg {
     max(var(--scene-edge), env(safe-area-inset-right))
     max(clamp(14px, 2.4vh, 32px), env(safe-area-inset-bottom))
     max(var(--scene-edge), env(safe-area-inset-left));
-  background: #c3e4e2;
+  background: var(--forest-sky);
 }
 .scene-landscape {
   position: absolute;
@@ -135,13 +137,13 @@ svg {
   gap: 8px;
 }
 .scene-tool {
-  min-height: 48px;
+  min-height: var(--forest-touch);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
   padding: 8px 15px;
-  background: #fff8e7;
+  background: var(--forest-toolbar);
   color: #304f3e;
   border: 1px solid #9c9274;
   border-radius: 24px;
@@ -355,4 +357,26 @@ svg {
   .has-route > .journey-progress { grid-row: 2; }
   .has-route > .scene-content { grid-row: 3; }
   .immersive-scene.has-route { grid-template-rows: auto auto 1fr; }
+}
+
+.scene-back {
+  grid-area: 1 / 1;
+  justify-self: start;
+  align-self: start;
+}
+
+.scene-back .scene-tool {
+  width: 48px;
+  padding-inline: 0;
+}
+
+.stamp.stamp-next {
+  color: var(--forest-action);
+  border-color: currentColor;
+  background: #edf3e5;
+  font-weight: 750;
+}
+
+.stamp-next-label {
+  font-size: 0.77rem;
 }
