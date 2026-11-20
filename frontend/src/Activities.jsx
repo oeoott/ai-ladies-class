@@ -169,10 +169,10 @@ function Board({ kicker, title, description, illustration, children, focusKey = 
   }, [focusKey])
   const prompt = (
     <div className="edu-header">
-      <span className="edu-kicker">
+      {kicker && <span className="edu-kicker">
         <i aria-hidden="true" />
         {kicker}
-      </span>
+      </span>}
       <h1 id={id} tabIndex="-1" ref={heading}>
         {title}
       </h1>
@@ -311,8 +311,7 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
   if (phase === 'intro') {
     return (
       <Board
-        kicker="첫째 걸음 · 마음 알아보기"
-        title={practice.subject + ' 어떤 마음일까요?'}
+        title={fact.label}
         description={practice.meaning}
         illustration={card}
       >
@@ -320,9 +319,9 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
           {practice.example}
         </p>
         <p className="edu-note">
-          그림 속 얼굴을 살펴봐요. {fact.clue}
+          {fact.clue}
         </p>
-        <Action onClick={() => update({ practicePhase: 'experiment' })}>숲에서 해 보기</Action>
+        <Action onClick={() => update({ practicePhase: 'experiment' })}>{practice.nextLabel}</Action>
       </Board>
     )
   }
@@ -330,7 +329,6 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
     const revealed = phase === 'discovery'
     return (
       <Board
-        kicker={revealed ? '첫째 걸음 · 표정 단서 찾기' : '첫째 걸음 · 숲속 실험'}
         title={revealed ? practice.afterTitle : practice.beforeTitle}
         description={revealed ? practice.reaction : practice.before}
         illustration={
@@ -411,7 +409,6 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
   }
   return (
     <Board
-      kicker="첫째 걸음 · 감정 그림"
       title="어떤 마음일까요?"
       description={
         expanded

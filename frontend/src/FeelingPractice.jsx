@@ -2,9 +2,9 @@ import './feeling-practice.css'
 
 export const feelingPractice = {
   joy: {
-    subject: '기쁨은',
-    meaning: '좋은 일이 생겼을 때 느끼는 반가운 마음이에요.',
-    example: '기다리던 친구가 놀러 오면 웃음이 날 수 있어요.',
+    nextLabel: '화분 보러 가기',
+    meaning: '좋은 일이 생겨서 기분이 좋아요.',
+    example: '친구가 놀러 왔어요. 반가워서 웃어요.',
     beforeTitle: '친구가 가꾸는 꽃이에요',
     before: '화분을 눌러 꽃봉오리에 물을 줘요.',
     result: '활짝 핀 꽃',
@@ -31,9 +31,9 @@ export const feelingPractice = {
     ],
   },
   sad: {
-    subject: '슬픔은',
-    meaning: '소중한 것을 잃거나 그리운 사람을 보고 싶을 때 느낄 수 있는 마음이에요.',
-    example: '함께 놀던 친구와 헤어질 때 눈물이 나기도 해요.',
+    nextLabel: '그림 보러 가기',
+    meaning: '보고 싶은 친구가 떠나면 슬플 수 있어요.',
+    example: '친구가 집에 갔어요. 조금 더 놀고 싶어요.',
     beforeTitle: '비에 젖은 그림이에요',
     before: '접힌 종이를 눌러 친구가 그린 그림을 펴 봐요.',
     result: '빗물에 번진 그림',
@@ -60,9 +60,9 @@ export const feelingPractice = {
     ],
   },
   surprise: {
-    subject: '놀람은',
-    meaning: '생각하지 못한 일이 갑자기 일어날 때 느끼는 마음이에요.',
-    example: '빈 줄 알았던 상자에서 선물이 나오면 눈이 동그래질 수 있어요.',
+    nextLabel: '상자 보러 가기',
+    meaning: '뜻밖의 일이 생기면 깜짝 놀랄 수 있어요.',
+    example: '빈 줄 알았던 상자에서 선물이 나왔어요.',
     beforeTitle: '숲길에 상자가 있어요',
     before: '초록 상자를 눌러 안에 무엇이 있는지 봐요.',
     result: '상자 속 종이학',
@@ -89,9 +89,9 @@ export const feelingPractice = {
     ],
   },
   anger: {
-    subject: '화남은',
-    meaning: '하고 싶은 일이 자꾸 막히거나 억울할 때 느낄 수 있는 마음이에요.',
-    example: '오래 기다린 내 차례에 누군가 끼어들면 화가 날 수 있어요.',
+    nextLabel: '수레 보러 가기',
+    meaning: '하고 싶은 일이 자꾸 안 되면 화가 날 수 있어요.',
+    example: '내 차례인데 다른 친구가 먼저 갔어요.',
     beforeTitle: '돌 앞에 수레가 있어요',
     before: '빨간 수레를 눌러 앞으로 밀어 봐요.',
     result: '돌에 막힌 수레',
