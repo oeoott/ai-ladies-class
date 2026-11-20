@@ -17,6 +17,27 @@ test('a fresh or unreadable saved walk starts quietly with the lion and joy', ()
     assert.deepEqual(readSession(value, date), emptySession(date))
   }
 })
+test('a made friend keeps its name and accessories across sessions and replays', () => {
+  const made = {
+    ...emptySession(date),
+    onboarded: true,
+    friendId: 'rabbit',
+    friendCharm: 'star',
+    friendHeadwear: 'sky-hat',
+    friendNickname: '여름',
+  }
+  const restored = readSession(JSON.stringify(made), date)
+  assert.deepEqual(restored, made)
+  const replay = beginWalk({ ...finishWalk(restored), page: 'welcome' }, tomorrow)
+  for (const field of ['friendId', 'friendCharm', 'friendHeadwear', 'friendNickname']) {
+    assert.equal(replay[field], made[field])
+  }
+  const old = readSession(JSON.stringify({ version: 1, day: date, friendId: 'bear' }), date)
+  assert.equal(old.friendId, 'bear')
+  assert.equal(old.friendCharm, null)
+  assert.equal(old.friendHeadwear, null)
+  assert.equal(old.friendNickname, '')
+})
 test('a level test or lesson resumes with its choices even on a later day', () => {
   const placement = {
     ...emptySession(date),

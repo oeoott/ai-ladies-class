@@ -110,7 +110,7 @@
 }
 .edu-figure .edu-portrait {
   height: clamp(265px, 54vh, 550px);
-  filter: drop-shadow(0 3px 1px #fff7d8) drop-shadow(0 7px 5px #42352135);
+  filter: drop-shadow(0 3px 3px #42352129);
 }
 .edu-figure figcaption {
   width: fit-content;
@@ -499,6 +499,11 @@
   }
   .edu-character-head {
     transform-origin: 50% 88%;
+  }
+  /* Each raster eye or smile is clipped by a stationary feature-sized SVG viewport. */
+  .edu-painted-patch {
+    transform-box: view-box;
+    transform-origin: center;
   }
   .edu-character-paw {
     transform-box: view-box;

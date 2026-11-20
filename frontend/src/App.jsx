@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Check, Pause, PawPrint, ShieldCheck, Sparkles, Sprout } from 'lucide-react'
 import { ForestEntrance } from './ForestEntrance.jsx'
+import { FriendLook } from './FriendLook.jsx'
 import { JourneyProgress } from './JourneyProgress.jsx'
 import { LevelTest, Lesson } from './Activities.jsx'
 import { Panel } from './Panels.jsx'
@@ -16,6 +17,7 @@ import {
 } from './session.js'
 
 const asset = (file) => import.meta.env.BASE_URL + file
+const recipientKey = 'maeum-forest.report-recipient.v1'
 const friends = [
   { id: 'lion', name: '라온', familiar: '라온이', species: '사자' },
   { id: 'rabbit', name: '보리', familiar: '보리', species: '토끼' },
@@ -116,7 +118,7 @@ function Reward({ page, friend, topic, records, onBook, onFinish }) {
               {friend.familiar}와 {topic.phrase}을 알아보고 이야기를 나눴어요.
             </p>
           </div>
-          <img className="reward-friend" src={friend.image} alt="" />
+          <FriendLook className="reward-friend" friend={friend} alt="" />
           <button type="button" className="primary" onClick={onBook}>
             스티커판 보기
             <Sparkles aria-hidden="true" />
@@ -132,10 +134,28 @@ function App() {
   const [hasEntered, setHasEntered] = useState(false)
   const [panel, setPanel] = useState(null)
   const [storageUnavailable, setStorageUnavailable] = useState(false)
+  const [recipient, setRecipient] = useState(() => {
+    try {
+      return sessionStorage.getItem(recipientKey) || ''
+    } catch {
+      return ''
+    }
+  })
   const entry = useRef('welcome')
   const speaker = typeof window !== 'undefined' ? window.speechSynthesis : null
   const { page } = session
-  const friend = friends.find((f) => f.id === session.friendId) || friends[0]
+  const baseFriend = friends.find((f) => f.id === session.friendId) || friends[0]
+  const name = session.friendNickname || baseFriend.name
+  const last = name.charCodeAt(name.length - 1) - 0xac00
+  const familiar = last >= 0 && last < 11172 && last % 28 !== 0 ? name + '이' : name
+  const friend = {
+    ...baseFriend,
+    name,
+    familiar,
+    charm: session.friendCharm,
+    headwear: session.friendHeadwear,
+    nickname: session.friendNickname,
+  }
   const topic = topics.find((t) => t.id === session.topicId) || topics[0]
   const showEntrance = !hasEntered || page === 'welcome'
   const learning = !showEntrance && (page === 'lesson' || page === 'placement')
@@ -241,13 +261,29 @@ function App() {
     setHasEntered(true)
     const next = beginWalk(session)
     setSession(next)
-    if (next.page === 'welcome') open('account', 'onboarding')
+    if (next.page === 'welcome') open(recipient ? 'friends' : 'signup', 'onboarding')
   }
-  function chooseFriend(id) {
+  function completeAccount(email) {
+    setRecipient(email)
+    try {
+      if (email) sessionStorage.setItem(recipientKey, email)
+      else sessionStorage.removeItem(recipientKey)
+    } catch {
+      // The address still works for the current visit when tab storage is unavailable.
+    }
+    setPanel(entry.current === 'onboarding' ? 'friends' : 'report')
+  }
+  function chooseFriend(id, { charm, headwear, nickname }) {
+    const appearance = {
+      friendId: id,
+      friendCharm: charm,
+      friendHeadwear: headwear,
+      friendNickname: nickname,
+    }
     patch(
       entry.current === 'onboarding'
-        ? { friendId: id, page: 'placement', placement: null }
-        : { friendId: id },
+        ? { ...appearance, page: 'placement', placement: null }
+        : appearance,
     )
     setPanel(entry.current === 'guardian' ? 'guardian' : null)
   }
@@ -290,12 +326,17 @@ function App() {
         />
       )}
       {!showEntrance && (
-        <main id="main-content" className="immersive-scene" tabIndex="-1">
+        <main
+          id="main-content"
+          className={'immersive-scene' + (page === 'lesson' ? ' has-route' : '')}
+          tabIndex="-1"
+        >
           <img
             className={'scene-landscape' + (inTale ? ' tale-landscape' : '')}
             src={asset(landscape)}
             alt=""
           />
+          {page === 'lesson' && <JourneyProgress friend={friend} step={session.step} />}
           <div className="scene-content">
             {page === 'placement' && (
               <LevelTest
@@ -328,7 +369,6 @@ function App() {
             )}
           </div>
           <div className="scene-footer">
-            {page === 'lesson' && <JourneyProgress friend={friend} step={session.step} />}
             <SceneTools
               learning={learning}
               onGuard={() => open('guardian', 'guardian')}
@@ -345,7 +385,8 @@ function App() {
         onFriend={chooseFriend}
         records={session.records}
         onOpen={setPanel}
-        onAccountDone={() => setPanel(entry.current === 'onboarding' ? 'friends' : 'guardian')}
+        recipient={recipient}
+        onAccountDone={completeAccount}
         onRetest={retest}
       />
     </>

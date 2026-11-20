@@ -1,9 +1,9 @@
 import React, { useId, useLayoutEffect, useRef, useState } from 'react'
+import { FriendStudio } from './FriendStudio.jsx'
 import './panels.css'
 
 const paths = {
   close: <path d="m6 6 12 12M18 6 6 18" />,
-  prev: <path d="m14.5 5.5-6 6.5 6 6.5" />,
   next: <path d="m9.5 5.5 6 6.5-6 6.5" />,
   paw: (
     <>
@@ -55,65 +55,6 @@ function Icon({ name, size = 22 }) {
   )
 }
 
-function FriendPicker({ friend, friends, onFriend }) {
-  const [id, setId] = useState(friend?.id)
-  const index = Math.max(
-    0,
-    friends.findIndex((item) => item.id === id),
-  )
-  const current = friends[index]
-  if (!current)
-    return (
-      <p className="forest-panel-note" role="status">
-        친구 그림을 준비하고 있어요.
-      </p>
-    )
-  const choose = (offset) => setId(friends[(index + offset + friends.length) % friends.length].id)
-  return (
-    <>
-      <div className={'forest-friend-portrait variant-' + current.id}>
-        {friends.length > 1 && (
-          <button
-            className="forest-panel-iconbtn prev"
-            type="button"
-            onClick={() => choose(-1)}
-            aria-label="이전 친구"
-          >
-            <Icon name="prev" />
-          </button>
-        )}
-        <div className="forest-friend-center" aria-live="polite" aria-atomic="true">
-          <img key={current.id} src={current.image} alt="" />
-          <span className="forest-friend-label">
-            {current.species} <strong>{current.name}</strong>
-          </span>
-        </div>
-        {friends.length > 1 && (
-          <button
-            className="forest-panel-iconbtn next"
-            type="button"
-            onClick={() => choose(1)}
-            aria-label="다음 친구"
-          >
-            <Icon name="next" />
-          </button>
-        )}
-      </div>
-      <div
-        className="forest-friend-count"
-        aria-label={`전체 ${friends.length}명 중 ${index + 1}번째 친구`}
-      >
-        {friends.map((item, i) => (
-          <i key={item.id} className={i === index ? 'chosen' : ''} />
-        ))}
-      </div>
-      <button className="forest-panel-primary" type="button" onClick={() => onFriend(current.id)}>
-        이 친구와 함께하기 <Icon name="next" size={18} />
-      </button>
-    </>
-  )
-}
-
 function MenuRow({ icon, children, detail, onClick }) {
   return (
     <button type="button" className="forest-panel-row" onClick={onClick}>
@@ -131,7 +72,7 @@ function Guardian({ friend, onOpen }) {
   return (
     <div className="forest-panel-menu">
       <MenuRow icon="paw" detail={friend?.name} onClick={() => onOpen('friends')}>
-        학습 친구 바꾸기
+        숲 친구 꾸미기
       </MenuRow>
       <MenuRow icon="book" onClick={() => onOpen('retest')}>
         준비 산책 다시 하기
@@ -139,48 +80,56 @@ function Guardian({ friend, onOpen }) {
       <MenuRow icon="stamp" onClick={() => onOpen('records')}>
         스티커 기록
       </MenuRow>
-      <MenuRow icon="person" onClick={() => onOpen('account')}>
-        이메일 계정 체험
+      <MenuRow icon="person" onClick={() => onOpen('report')}>
+        학습 리포트
       </MenuRow>
     </div>
   )
 }
 
-function Account({ mode, onOpen, onAccountDone }) {
-  const [email, setEmail] = useState('forest@example.com')
+function Account({ initialEmail, signup, onAccountDone }) {
+  const [email, setEmail] = useState(initialEmail)
   const [error, setError] = useState('')
   const input = useRef(null)
   const fieldId = useId()
-  const isSignup = mode === 'signup'
+
   function submit(event) {
     event.preventDefault()
     if (!input.current.validity.valid) {
-      setError('이메일 주소에 @와 도메인을 넣어 주세요.')
+      setError('이메일 주소를 확인해 주세요. 예: hello@example.com')
       input.current.focus()
       return
     }
-    onAccountDone()
+    onAccountDone(input.current.value.trim())
   }
+
   return (
     <>
-      <p className="forest-panel-note">
-        예시 이메일로 {isSignup ? '회원가입' : '로그인'} 화면을 체험해요. 입력한 주소는 저장하거나
-        전송하지 않아요.
+      <p className="forest-panel-note" id={fieldId + '-purpose'}>
+        아이가 어떤 감정을 배우고 산책을 마쳤는지 리포트로 받아 보세요.
       </p>
       <form className="forest-account-form" noValidate onSubmit={submit}>
-        <label htmlFor={fieldId}>보호자 이메일</label>
+        <label htmlFor={fieldId}>리포트를 받을 보호자 이메일</label>
         <input
           id={fieldId}
           ref={input}
           type="email"
           inputMode="email"
-          autoComplete="off"
+          autoComplete="email"
           autoCapitalize="none"
           spellCheck="false"
+          placeholder="hello@example.com"
           required
+          maxLength={254}
           value={email}
           aria-invalid={!!error}
-          aria-describedby={error ? fieldId + '-error' : undefined}
+          aria-describedby={[
+            fieldId + '-purpose',
+            fieldId + '-delivery',
+            error && fieldId + '-error',
+          ]
+            .filter(Boolean)
+            .join(' ')}
           onChange={(event) => {
             setEmail(event.target.value)
             setError('')
@@ -191,22 +140,19 @@ function Account({ mode, onOpen, onAccountDone }) {
             {error}
           </p>
         )}
+        <p className="report-delivery" id={fieldId + '-delivery'}>
+          이 체험판에서는 보호자 설정에서 메일 앱을 열어 보내요. 주소는 이 탭을 닫을 때까지
+          보관해요.
+        </p>
         <button type="submit" className="forest-panel-primary">
-          {isSignup ? '회원가입 체험하기' : '로그인 체험하기'} <Icon name="next" size={18} />
+          {signup ? '이 이메일로 시작하기' : '받을 주소 저장하기'} <Icon name="next" size={18} />
         </button>
       </form>
-      <div className="forest-panel-actions">
-        <button type="button" className="forest-panel-secondary" onClick={onAccountDone}>
+      {signup && (
+        <button type="button" className="forest-panel-link" onClick={() => onAccountDone('')}>
           계정 없이 체험하기
         </button>
-        <button
-          type="button"
-          className="forest-panel-link"
-          onClick={() => onOpen(isSignup ? 'account' : 'signup')}
-        >
-          {isSignup ? '로그인 화면으로' : '회원가입 화면으로'}
-        </button>
-      </div>
+      )}
     </>
   )
 }
@@ -253,11 +199,62 @@ function RecordBook({ records, onOpen }) {
   )
 }
 
+function LearningReport({ records, recipient, onOpen }) {
+  const recent = [...records].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5)
+  const title = '마음숲 학습 리포트'
+  const rows = recent.map((record) => dateLabel(record.date) + ' · ' + record.topic + ' 산책 완료')
+  const body = [
+    title,
+    '',
+    '최근 마친 산책',
+    ...rows,
+    '',
+    '각 산책에서 감정을 알아보고 표정과 몸짓을 연습한 뒤, 동화 속에서 행동을 골라 보았어요.',
+  ].join('\n')
+  const mail =
+    'mailto:' +
+    encodeURIComponent(recipient).replace('%40', '@') +
+    '?subject=' +
+    encodeURIComponent(title) +
+    '&body=' +
+    encodeURIComponent(body)
+  return (
+    <>
+      {recent.length ? (
+        <>
+          <p className="forest-panel-note">최근 마친 산책 {recent.length}회의 기록이에요.</p>
+          <ul className="report-walks">
+            {rows.map((row) => (
+              <li key={row}>{row}</li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <p className="forest-panel-note">첫 산책을 마치면 이곳에서 학습 리포트를 보낼 수 있어요.</p>
+      )}
+      {recipient && (
+        <p className="report-recipient">
+          받을 주소 <strong>{recipient}</strong>
+        </p>
+      )}
+      {recipient && recent.length > 0 && (
+        <a className="forest-panel-primary report-mail" href={mail}>
+          메일 앱에서 리포트 열기
+        </a>
+      )}
+      <button type="button" className="forest-panel-secondary" onClick={() => onOpen('account')}>
+        {recipient ? '받을 주소 바꾸기' : '받을 이메일 입력하기'}
+      </button>
+    </>
+  )
+}
+
 const titles = {
   guardian: '보호자 설정',
-  friends: '함께할 친구를 골라요',
-  account: '보호자 로그인 체험',
-  signup: '보호자 회원가입 체험',
+  friends: '나의 숲 친구 만들기',
+  account: '리포트 받을 주소',
+  signup: '보호자 가입',
+  report: '학습 리포트',
   records: '스티커 기록',
   rest: '잠깐 쉬어 가요',
   retest: '준비 산책을 다시 할까요?',
@@ -277,7 +274,8 @@ function PanelDialog({
   onRetest,
   records = [],
   onOpen,
-  onAccountDone = onClose,
+  onAccountDone,
+  recipient,
   returnFocusRef,
 }) {
   const dialog = useRef(null)
@@ -344,11 +342,17 @@ function PanelDialog({
           </button>
         )}
       </div>
-      {mode === 'friends' && <FriendPicker friend={friend} friends={friends} onFriend={onFriend} />}
+      {mode === 'friends' && <FriendStudio friend={friend} friends={friends} onFriend={onFriend} />}
       {mode === 'guardian' && <Guardian friend={friend} onOpen={onOpen} />}
       {(mode === 'account' || mode === 'signup') && (
-        <Account key={mode} {...{ mode, onOpen, onAccountDone }} />
+        <Account
+          key={mode}
+          initialEmail={recipient}
+          signup={mode === 'signup'}
+          onAccountDone={onAccountDone}
+        />
       )}
+      {mode === 'report' && <LearningReport {...{ records, recipient, onOpen }} />}
       {mode === 'records' && <RecordBook records={records} onOpen={onOpen} />}
       {mode === 'retest' && (
         <>

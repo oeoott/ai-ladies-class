@@ -102,7 +102,7 @@
   pointer-events: none;
 }
 
-.journey-walker img {
+.journey-walker .friend-look {
   width: 2rem;
   height: 2rem;
   object-fit: contain;
@@ -147,7 +147,7 @@
     display: block;
   }
 
-  .journey-walker.is-walking img {
+  .journey-walker.is-walking .friend-look {
     animation: journey-footsteps var(--journey-travel) ease-in-out;
   }
 }

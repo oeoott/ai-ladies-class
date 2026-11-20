@@ -122,68 +122,6 @@
   gap: 3px;
   margin-top: 10px;
 }
-.forest-panel .forest-friend-portrait {
-  position: relative;
-  isolation: isolate;
-  display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) 48px;
-  align-items: center;
-  min-height: 206px;
-  padding: 16px 10px 12px;
-  border: 1px solid #c9ddd3;
-  border-radius: 22px;
-  background: linear-gradient(180deg, #e1f3f5 0%, #eef6e9 100%);
-}
-.forest-panel .forest-friend-center {
-  grid-column: 2;
-  display: grid;
-  justify-items: center;
-  gap: 10px;
-  text-align: center;
-}
-.forest-panel .forest-friend-center img {
-  display: block;
-  width: min(100%, 180px);
-  height: 152px;
-  object-fit: contain;
-}
-.forest-panel .forest-friend-label {
-  display: inline-block;
-  padding: 5px 14px;
-  border: 1px solid #c5dbcb;
-  color: #2d5846;
-  border-radius: 30px;
-  background: #fbfef6ed;
-  font-size: 15px;
-}
-.forest-panel .forest-friend-label strong {
-  font-weight: 780;
-}
-.forest-panel .forest-friend-portrait .prev {
-  grid-column: 1;
-  grid-row: 1;
-}
-.forest-panel .forest-friend-portrait .next {
-  grid-column: 3;
-  grid-row: 1;
-}
-.forest-panel .forest-friend-count {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin: 15px 0 23px;
-}
-.forest-panel .forest-friend-count i {
-  width: 7px;
-  height: 7px;
-  display: block;
-  border-radius: 8px;
-  background: #c0d2c3;
-}
-.forest-panel .forest-friend-count .chosen {
-  width: 18px;
-  background: #397657;
-}
 .forest-panel .forest-panel-menu {
   display: grid;
   gap: 8px;
@@ -246,6 +184,31 @@
 }
 .forest-panel .forest-account-form .forest-panel-primary {
   margin-top: 8px;
+}
+.report-delivery,
+.report-recipient {
+  color: var(--panel-muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+.report-walks {
+  margin: 0 0 18px;
+  padding-left: 1.25em;
+}
+.report-walks li + li {
+  margin-top: 6px;
+}
+.report-recipient {
+  margin-bottom: 16px;
+}
+.report-recipient strong {
+  display: block;
+  color: var(--panel-ink);
+  overflow-wrap: anywhere;
+}
+.report-mail {
+  margin-bottom: 10px;
+  text-decoration: none;
 }
 .forest-panel .forest-field-error {
   margin: 0;

@@ -139,6 +139,8 @@ function Portrait({ friend, feeling, closeUp = false, gesture, actionKey, active
   const clue = feeling === 'neutral' ? '편안하게 기다리고 있어요.' : FEELINGS[feeling].clue
   return (
     <PaintedFriend
+      charm={friend?.charm}
+      headwear={friend?.headwear}
       kind={kind}
       src={friend?.image || import.meta.env.BASE_URL + 'art/' + kind + '.webp'}
       label={`${friend?.name || '숲속 친구'}의 얼굴. ${clue}`}

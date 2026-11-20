@@ -1,0 +1,8 @@
+.friend-look {
+  display: block;
+  overflow: visible;
+  pointer-events: none;
+}
+.friend-charm {
+  filter: drop-shadow(0 1.1px 0.8px #5d443b55);
+}

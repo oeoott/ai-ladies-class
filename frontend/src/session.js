@@ -23,6 +23,9 @@ export function emptySession(day = localDay()) {
     topicId: 'joy',
     page: 'welcome',
     friendId: 'lion',
+    friendCharm: null,
+    friendHeadwear: null,
+    friendNickname: '',
     onboarded: false,
     level: 'basic',
     step: 0,
@@ -65,6 +68,14 @@ export function readSession(raw, today = localDay()) {
       page: pages.includes(saved.page) ? saved.page : 'welcome',
       topicId: topicIds.includes(saved.topicId) ? saved.topicId : 'joy',
       friendId: ['lion', 'rabbit', 'bear'].includes(saved.friendId) ? saved.friendId : 'lion',
+      friendCharm: ['leaf', 'star', 'flower'].includes(saved.friendCharm)
+        ? saved.friendCharm
+        : null,
+      friendHeadwear: ['sky-hat', 'flower-pin'].includes(saved.friendHeadwear)
+        ? saved.friendHeadwear
+        : null,
+      friendNickname:
+        typeof saved.friendNickname === 'string' ? saved.friendNickname.trim().slice(0, 12) : '',
       onboarded: saved.onboarded === true,
       level: saved.level === 'expand' ? 'expand' : 'basic',
       step: [0, 1, 2].includes(saved.step) ? saved.step : 0,

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
+import { FriendLook } from './FriendLook.jsx'
 import './entrance.css'
 
 const walkDuration = 780
@@ -53,16 +54,17 @@ export function ForestEntrance({ friend, finished, resuming = false, onEnter, hi
           className="entrance-walker"
           data-walk-ready={!!friend.walkImage && loadedWalkImage === friend.walkImage}
         >
-          <img
+          <FriendLook
             className="entrance-pose-front"
-            src={friend.image}
+            friend={friend}
             alt={`${friend.species} 친구 ${friend.name}`}
             fetchPriority="high"
           />
           {friend.walkImage && (
-            <img
+            <FriendLook
               className="entrance-pose-back"
-              src={friend.walkImage}
+              friend={friend}
+              walking
               alt=""
               aria-hidden="true"
               onLoad={() => setLoadedWalkImage(friend.walkImage)}

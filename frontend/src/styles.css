@@ -97,6 +97,14 @@ svg {
   object-position: center;
   pointer-events: none;
 }
+.immersive-scene.has-route {
+  grid-template-rows: auto 1fr auto;
+  row-gap: clamp(8px, 1.4vh, 16px);
+  padding-top: max(18px, env(safe-area-inset-top));
+}
+.immersive-scene > .journey-progress {
+  justify-self: center;
+}
 @media (orientation: portrait) {
   .tale-landscape {
     object-position: 18% center;

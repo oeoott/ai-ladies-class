@@ -111,7 +111,7 @@
   filter: blur(4px);
 }
 
-.entrance-walker img {
+.entrance-walker .friend-look {
   position: absolute;
   inset: 0;
   display: block;
@@ -169,7 +169,7 @@
   .forest-entrance.is-entering .entrance-walker {
     animation: enter-the-forest var(--entrance-walk-duration) ease-in-out both;
   }
-  .forest-entrance.is-entering .entrance-walker img {
+  .forest-entrance.is-entering .entrance-walker .friend-look {
     animation: forest-friend-footsteps var(--entrance-walk-duration) ease-in-out both;
   }
   .forest-entrance.is-entering [data-walk-ready='true'] .entrance-pose-front {

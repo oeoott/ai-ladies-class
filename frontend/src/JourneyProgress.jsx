@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FriendLook } from './FriendLook.jsx'
 import './journey.css'
 
 const stops = ['감정 탐색', '표정 거울', '동화 놀이']
@@ -34,13 +35,12 @@ export function JourneyProgress({ friend, step }) {
         onTransitionEnd={() => setWalking(false)}
         onTransitionCancel={() => setWalking(false)}
       >
-        <img className="journey-standing-pose" src={friend.image} alt="" draggable="false" />
+        <FriendLook className="journey-standing-pose" friend={friend} />
         {friend.walkImage && (
-          <img
+          <FriendLook
             className="journey-walking-pose"
-            src={friend.walkImage}
-            alt=""
-            draggable="false"
+            friend={friend}
+            walking
             onLoad={() => setLoadedPose(friend.walkImage)}
           />
         )}

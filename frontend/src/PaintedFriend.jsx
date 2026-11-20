@@ -1,4 +1,5 @@
 import React, { useId } from 'react'
+import { FriendCharm } from './FriendLook.jsx'
 
 // Coordinates are in pixels of the three original, transparent cover illustrations.
 const faces = {
@@ -53,6 +54,33 @@ const faces = {
   },
 }
 
+// Keep animation coordinates local to the feature. Its clipped window stays attached to the face.
+function FacePatch({ imageId, x, y, width, height, scale = 1, className }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${scale})`}>
+      <svg
+        x={-width / 2}
+        y={-height / 2}
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        overflow="hidden"
+      >
+        <g className={className + ' edu-painted-patch'}>
+          <svg
+            width={width}
+            height={height}
+            viewBox={`${x - width / 2} ${y - height / 2} ${width} ${height}`}
+            overflow="hidden"
+          >
+            <use href={'#' + imageId} />
+          </svg>
+        </g>
+      </svg>
+    </g>
+  )
+}
+
 function Eyes({ face, feeling, imageId, softEdge }) {
   const [rx, ry] = face.eyeR
   const id = useId()
@@ -60,7 +88,7 @@ function Eyes({ face, feeling, imageId, softEdge }) {
     <>
       {face.eyes.map(([x, y], index) => {
         const maskId = id + '-eye-' + index
-        // Sample the fur directly above the eye so a blink reveals the character's own coat.
+        // The clear fur between the eyes and above the nose has no lash or eyebrow marks.
         return (
           <React.Fragment key={index}>
             <mask
@@ -74,20 +102,17 @@ function Eyes({ face, feeling, imageId, softEdge }) {
               <ellipse cx={x} cy={y} rx={rx + 8} ry={ry + 8} fill={softEdge} />
             </mask>
             <g mask={'url(#' + maskId + ')'}>
-              <use href={'#' + imageId} y={2 * ry + 5} />
+              <use href={'#' + imageId} x={(index === 0 ? -1 : 1) * (2 * rx + 6)} y={ry + 4} />
             </g>
-            <g transform={`translate(${x} ${y}) scale(${feeling === 'surprise' ? 1.16 : 1})`}>
-              <svg
-                className="edu-character-eyes"
-                x={-rx - 3}
-                y={-ry - 3}
-                width={2 * rx + 6}
-                height={2 * ry + 6}
-                viewBox={[x - rx - 3, y - ry - 3, 2 * rx + 6, 2 * ry + 6].join(' ')}
-              >
-                <use href={'#' + imageId} />
-              </svg>
-            </g>
+            <FacePatch
+              imageId={imageId}
+              x={x}
+              y={y}
+              width={2 * rx + 6}
+              height={2 * ry + 6}
+              scale={feeling === 'surprise' ? 1.16 : 1}
+              className="edu-character-eyes"
+            />
           </React.Fragment>
         )
       })}
@@ -154,16 +179,14 @@ function Mouth({ face, feeling, imageId, softEdge }) {
         <use href={'#' + imageId} y={-face.muzzleSample} />
       </g>
       {feeling === 'joy' ? (
-        <svg
+        <FacePatch
+          imageId={imageId}
+          x={x}
+          y={y + 3}
+          width={106}
+          height={50}
           className="edu-character-mouth"
-          x={x - 53}
-          y={y - 22}
-          width="106"
-          height="50"
-          viewBox={[x - 53, y - 22, 106, 50].join(' ')}
-        >
-          <use href={'#' + imageId} />
-        </svg>
+        />
       ) : (
         <g transform={`translate(${x} ${y})`}>
           <path
@@ -224,7 +247,18 @@ function WavingPose({ imageId, face }) {
   )
 }
 
-export function PaintedFriend({ kind, src, label, feeling, gesture, actionKey, active, closeUp }) {
+export function PaintedFriend({
+  kind,
+  src,
+  label,
+  feeling,
+  gesture,
+  actionKey,
+  active,
+  closeUp,
+  charm,
+  headwear,
+}) {
   const id = useId()
   const face = faces[kind]
   const imageId = id + '-original'
@@ -249,15 +283,7 @@ export function PaintedFriend({ kind, src, label, feeling, gesture, actionKey, a
           <stop offset="1" stopColor="white" stopOpacity="0" />
         </radialGradient>
       </defs>
-      {closeUp ? (
-        <>
-          <rect width="300" height="317" fill="#dcefea" />
-          <path d="M0 153q71-54 159-14t141 4v174H0Z" fill="#c8dfcd" />
-          <path d="M0 177q92 3 158-19t142 4v147H0Z" fill="#accdb4" />
-        </>
-      ) : (
-        <ellipse cx="138" cy="300" rx="57" ry="6" fill="#454a28" opacity=".18" />
-      )}
+      {!closeUp && <ellipse cx="138" cy="300" rx="57" ry="6" fill="#454a28" opacity=".18" />}
       <g transform={`translate(${insetLeft} ${insetTop}) scale(${scale})`}>
         <g key={actionKey} data-gesture={gesture} data-feeling={feeling}>
           <g className="edu-character-head">
@@ -269,6 +295,7 @@ export function PaintedFriend({ kind, src, label, feeling, gesture, actionKey, a
             <Eyes {...{ face, feeling, imageId, softEdge }} />
             <Brows {...{ face, feeling, imageId, softEdge }} />
             <Mouth {...{ face, feeling, imageId, softEdge }} />
+            <FriendCharm kind={kind} charm={charm} headwear={headwear} />
           </g>
         </g>
       </g>
