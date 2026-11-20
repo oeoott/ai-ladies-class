@@ -1,3 +1,5 @@
+import { Volume2 } from 'lucide-react'
+import { narrate, useNarration } from './narration.js'
 import React, { useEffect, useRef, useState, useId } from 'react'
 import { startFacePreview } from './facePreview.js'
 import { feelingPractice, PracticeObject } from './FeelingPractice.jsx'
@@ -168,7 +170,8 @@ function FaceDetail({ feeling }) {
     </div>
   )
 }
-function Board({ kicker, title, description, illustration, children, focusKey = title }) {
+function Board({ kicker, title, description, illustration, children, voiceLine = description || title, focusKey = title }) {
+  useNarration(voiceLine)
   const heading = useRef(null)
   const id = useId()
   useEffect(() => {
@@ -185,6 +188,11 @@ function Board({ kicker, title, description, illustration, children, focusKey = 
         {title}
       </h1>
       {description && <p>{description}</p>}
+      {window.speechSynthesis && (
+        <button className="edu-listen-button" type="button" aria-label="안내 다시 듣기" onClick={() => narrate(voiceLine)}>
+          <Volume2 aria-hidden="true" size={21} />
+        </button>
+      )}
     </div>
   )
   return (
@@ -253,6 +261,7 @@ export function LevelTest({ progress, onUpdate, onDone }) {
       <Board
         title={FEELINGS[item.target].label}
         description={item.introduction}
+        voiceLine={item.introduction + ' ' + item.example}
         illustration={
           <figure className="edu-figure">
             <EmotionCard feeling={item.target} />
@@ -316,6 +325,7 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
       <Board
         title={fact.label}
         description={practice.meaning}
+        voiceLine={practice.meaning + ' ' + practice.example}
         illustration={card}
       >
         <p className="edu-prompt">
@@ -331,6 +341,7 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
       <Board
         title={revealed ? practice.afterTitle : practice.beforeTitle}
         description={revealed ? practice.reaction : practice.before}
+        voiceLine={revealed ? practice.reaction + ' ' + practice.cueQuestion : practice.before}
         illustration={
           <div className="edu-figure practice-field">
             {revealed ? <FaceDetail feeling={feeling} /> : (
@@ -541,7 +552,7 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
             <p className="edu-prompt">
               {chosen.answer}
             </p>
-            <Action onClick={next}>동화 속으로</Action>
+            <Action onClick={next}>연습 마치기</Action>
           </>
         ) : (
           <div className="edu-choices" role="group" aria-label="마음을 전하는 방법">
@@ -564,6 +575,7 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
   return (
     <Board
       title="표정을 따라 해 봐요"
+      voiceLine={fact.motion}
       illustration={
         <figure className="edu-figure">
           {demonstration % 2 ? <FaceDetail feeling={feeling} /> : <EmotionCard feeling={feeling} />}
@@ -768,6 +780,12 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
     <Board
       kicker={phase === 'book' ? (page + 1) + ' / ' + pages.length : undefined}
       title={title}
+      voiceLine={phase === 'book' ? pages[page].replaceAll('{친구}', '숲 친구')
+        : phase === 'situation' ? tale.explanation
+        : phase === 'consequence' && outcome ? outcome.event + ' ' + outcome.line
+        : phase === 'question' ? conversation.ask
+        : isExtra ? conversation.again
+        : phase === 'reply' || isEnding ? replyText : title}
       focusKey={phase + '-' + page}
       illustration={
         <TaleScene
@@ -860,7 +878,15 @@ export function Lesson({ progress, onUpdate, onComplete, friend, topic, active =
     onUpdate({ activity: { ...state, ...values } })
   }
   function next() {
-    onUpdate({ step: step + 1, activity: null })
+    update({ completed: true })
+  }
+  if (state.completed) {
+    return (
+      <Board title={(step + 1) + '번 학습을 마쳤어요'} illustration={<figure className="edu-figure"><Portrait friend={friend} feeling="neutral" active={active} /></figure>}>
+        <Action onClick={() => onUpdate({ step: step + 1, activity: null })}>다음 학습 시작</Action>
+        <button className="edu-link" type="button" onClick={() => onUpdate({ activity: null })}>다시하기</button>
+      </Board>
+    )
   }
   if (step === 0)
     return (

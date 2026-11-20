@@ -6,6 +6,7 @@ import {
   forToday,
   finishWalk,
   readSession,
+  reviewSticker,
   withRecordedStickers,
 } from '../src/session.js'
 
@@ -114,4 +115,30 @@ test('saving from an older tab preserves stickers earned in a second tab', () =>
   const reconciled = withRecordedStickers(first, next.records)
   assert.deepEqual(reconciled.records, next.records)
   assert.equal(withRecordedStickers(reconciled, next.records), reconciled)
+})
+
+test('an older sticker resumes its own lesson and returns without changing the daily walk', () => {
+  const first = finishWalk({ ...emptySession(date), onboarded: true })
+  const daily = beginWalk(first, tomorrow)
+  const done = finishWalk(daily)
+  const review = reviewSticker(done, first.records[0])
+  assert.equal(review.reviewTopicId, 'joy')
+  assert.equal(review.topicId, 'surprise')
+  assert.equal(review.step, 0)
+  const midway = { ...review, step: 1 }
+  const restored = beginWalk(readSession(JSON.stringify(midway), tomorrow), tomorrow)
+  assert.deepEqual(restored, midway)
+  const book = finishWalk(restored)
+  assert.equal(book.page, 'stickers')
+  assert.equal(book.reviewTopicId, null)
+  assert.deepEqual(book.records, done.records)
+  assert.equal(beginWalk(book, tomorrow).topicId, 'surprise')
+})
+
+test('guardian sticker review preserves the unfinished lesson after a reload', () => {
+  const daily = { ...beginWalk({ ...emptySession(date), onboarded: true }, date),
+    step: 2, activity: { phase: 'book', bookPage: 1 }, records: [{ date: '2026-11-19', topic: '슬픔' }] }
+  const review = reviewSticker(daily, daily.records[0], true)
+  assert.equal(review.reviewTopicId, 'sad')
+  assert.deepEqual(finishWalk(readSession(JSON.stringify(review), date)), daily)
 })

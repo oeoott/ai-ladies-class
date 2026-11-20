@@ -539,9 +539,6 @@
   .edu-portrait [data-gesture='model'] .edu-character-brow {
     animation: edu-draw-brows 1250ms ease-in-out;
   }
-  .edu-portrait [data-gesture='speak'] .edu-character-mouth {
-    animation: edu-mouth-words 1050ms ease-in-out;
-  }
   .edu-portrait [data-gesture='speak'] .edu-character-paw {
     animation: edu-raise-paw 1050ms ease-in-out;
   }
@@ -591,16 +588,6 @@
     transform: none;
   }
 }
-@keyframes edu-mouth-words {
-  24%,
-  69% {
-    transform: translateY(1px) scale(0.78, 1.32);
-  }
-  45%,
-  86% {
-    transform: scale(1.06, 0.55);
-  }
-}
 @keyframes edu-raise-paw {
   30% {
     transform: rotate(-2deg) scale(1.035);
@@ -631,3 +618,44 @@
 .face-detail-anger span { top: 25%; left: 12%; width: 76%; }
 .face-detail-surprise span { top: 33%; left: 13%; width: 74%; height: 48%; }
 .practice-field:has(.face-detail) { grid-template-columns: 2fr 1fr; }
+.edu-header { position: relative; padding-right: 42px; }
+.edu-header .edu-listen-button {
+  position: absolute;
+  right: -8px;
+  top: -8px;
+  padding: 0;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  color: #355f4b;
+  border: 0;
+}
+.edu-preparation .edu-header { padding-right: 52px; }
+.edu-preparation .edu-listen-button { right: 2px; top: 2px; }
+.speaking-mouth { visibility: hidden; }
+@media (prefers-reduced-motion: no-preference) {
+  .edu-portrait[data-active="true"] .edu-character-eyes {
+    animation: guide-blink 4.8s ease-in-out infinite;
+  }
+  [data-talking="true"] .edu-portrait[data-active="true"] .resting-mouth { visibility: hidden; }
+  [data-talking="true"] .edu-portrait[data-active="true"] .speaking-mouth { visibility: visible; }
+  [data-talking="true"] .edu-portrait[data-active="true"] .speaking-mouth > g {
+    transform-box: view-box;
+    transform-origin: 0 0;
+    animation: guide-articulate 440ms ease-in-out infinite;
+  }
+}
+@keyframes guide-blink {
+  0%, 14%, 18%, 100% { transform: scaleY(1); }
+  16% { transform: scaleY(.1); }
+}
+@keyframes guide-articulate {
+  0%, 100% { transform: scale(.93, .12); }
+  24% { transform: scale(.8, .98); }
+  52% { transform: scale(1, .25); }
+  76% { transform: scale(.94, .65); }
+}
+
+.forest-panel .parent-prompt-guide { height: clamp(85px, 19vh, 160px); margin: 0 auto 12px; }

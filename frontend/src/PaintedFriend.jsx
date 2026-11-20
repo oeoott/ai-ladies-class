@@ -175,47 +175,55 @@ function Mouth({ face, feeling, imageId, softEdge }) {
       <g mask={'url(#' + id + ')'}>
         <use href={'#' + imageId} y={-face.muzzleSample} />
       </g>
-      {feeling === 'joy' ? (
-        <FacePatch
-          imageId={imageId}
-          x={x}
-          y={y + 3}
-          width={106}
-          height={50}
-          className="edu-character-mouth"
-        />
-      ) : (
-        <g transform={`translate(${x} ${y})`}>
-          <path
-            d="M0 -16 Q1 -10 0 -7"
-            fill="none"
-            stroke={face.ink}
-            strokeWidth="4"
-            strokeLinecap="round"
+      <g className="resting-mouth">
+        {feeling === 'joy' ? (
+          <FacePatch
+            imageId={imageId}
+            x={x}
+            y={y + 3}
+            width={106}
+            height={50}
+            className="edu-character-mouth"
           />
-          {feeling === 'surprise' ? (
-            <g className="edu-character-mouth">
-              <ellipse cy="13" rx="12" ry="17" fill={face.ink} />
-              <path d="M-7 21q7-7 14-1-5 7-13 4Z" fill="#c17859" />
-            </g>
-          ) : (
+        ) : (
+          <g transform={`translate(${x} ${y})`}>
             <path
-              className="edu-character-mouth"
-              d={
-                feeling === 'sad'
-                  ? 'M-29 13 Q-6 -9 3 -5 Q14 -7 29 11'
-                  : feeling === 'neutral'
-                    ? 'M-19 2 Q-8 4 0 -2 Q8 4 19 2'
-                    : 'M-24 3 Q-9 0 0 -3 Q10 0 23 1'
-              }
+              d="M0 -16 Q1 -10 0 -7"
               fill="none"
               stroke={face.ink}
-              strokeWidth="5"
+              strokeWidth="4"
               strokeLinecap="round"
             />
-          )}
+            {feeling === 'surprise' ? (
+              <g className="edu-character-mouth">
+                <ellipse cy="13" rx="12" ry="17" fill={face.ink} />
+                <path d="M-7 21q7-7 14-1-5 7-13 4Z" fill="#c17859" />
+              </g>
+            ) : (
+              <path
+                className="edu-character-mouth"
+                d={
+                  feeling === 'sad'
+                    ? 'M-29 13 Q-6 -9 3 -5 Q14 -7 29 11'
+                    : feeling === 'neutral'
+                      ? 'M-19 2 Q-8 4 0 -2 Q8 4 19 2'
+                      : 'M-24 3 Q-9 0 0 -3 Q10 0 23 1'
+                }
+                fill="none"
+                stroke={face.ink}
+                strokeWidth="5"
+                strokeLinecap="round"
+              />
+            )}
+          </g>
+        )}
+      </g>
+      <g transform={`translate(${x} ${y + 3})`} className="speaking-mouth">
+        <g>
+          <path d="M-24 0 Q0 6 24 0 Q20 26 0 26 Q-18 26 -24 0Z" fill="#663a2c" />
+          <path d="M-12 19 Q0 12 13 19 Q0 27 -12 19Z" fill="#bd7765" />
         </g>
-      )}
+      </g>
     </>
   )
 }
@@ -254,6 +262,8 @@ export function PaintedFriend({
   active,
   charm,
   headwear,
+  cover = false,
+  className = '',
 }) {
   const id = useId()
   const face = faces[kind]
@@ -264,8 +274,9 @@ export function PaintedFriend({
   const insetLeft = 133 - (face.width * scale) / 2
   return (
     <svg
-      className="edu-portrait"
-      viewBox="7 0 252 317"
+      className={('edu-portrait ' + className).trim()}
+      viewBox={cover ? `0 0 ${face.width} ${face.height}` : "7 0 252 317"}
+      preserveAspectRatio="xMidYMax meet"
       role="img"
       aria-labelledby={id}
       data-active={active}
@@ -279,8 +290,8 @@ export function PaintedFriend({
           <stop offset="1" stopColor="white" stopOpacity="0" />
         </radialGradient>
       </defs>
-      <ellipse cx="138" cy="300" rx="57" ry="6" fill="#454a28" opacity=".18" />
-      <g transform={`translate(${insetLeft} ${insetTop}) scale(${scale})`}>
+      {!cover && <ellipse cx="138" cy="300" rx="57" ry="6" fill="#454a28" opacity=".18" />}
+      <g transform={cover ? undefined : `translate(${insetLeft} ${insetTop}) scale(${scale})`}>
         <g key={actionKey} data-gesture={gesture} data-feeling={feeling}>
           <g className="edu-character-head">
             {gesture === 'speak' ? (
@@ -296,5 +307,13 @@ export function PaintedFriend({
         </g>
       </g>
     </svg>
+  )
+}
+
+export function GuidePortrait({ friend, className, active = true }) {
+  return (
+    <PaintedFriend cover kind={friend.id} src={friend.image} label={friend.name}
+      feeling="joy" active={active} charm={friend.charm} headwear={friend.headwear}
+      className={className} />
   )
 }

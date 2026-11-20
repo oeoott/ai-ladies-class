@@ -6,7 +6,7 @@ export const topics = [
   { id: 'anger', label: '화남', phrase: '화난 마음' },
 ]
 const topicIds = topics.map((topic) => topic.id)
-const pages = ['welcome', 'placement', 'lesson', 'praise', 'stickers']
+const pages = ['welcome', 'placement', 'ready', 'lesson', 'praise', 'stickers']
 
 export function localDay(now = new Date()) {
   return [
@@ -21,6 +21,8 @@ export function emptySession(day = localDay()) {
     version: 1,
     day,
     topicId: 'joy',
+    reviewTopicId: null,
+    reviewReturn: null,
     page: 'welcome',
     friendId: 'lion',
     friendCharm: null,
@@ -67,6 +69,8 @@ export function readSession(raw, today = localDay()) {
       day: saved.day,
       page: pages.includes(saved.page) ? saved.page : 'welcome',
       topicId: topicIds.includes(saved.topicId) ? saved.topicId : 'joy',
+      reviewTopicId: ['lesson', 'placement'].includes(saved.page) && topicIds.includes(saved.reviewTopicId)
+        ? saved.reviewTopicId : null,
       friendId: ['lion', 'rabbit', 'bear'].includes(saved.friendId) ? saved.friendId : 'lion',
       friendCharm: ['leaf', 'star', 'flower'].includes(saved.friendCharm)
         ? saved.friendCharm
@@ -89,6 +93,16 @@ export function readSession(raw, today = localDay()) {
           )
         : [],
     }
+    const back = saved.reviewReturn
+    if (state.reviewTopicId && back && pages.includes(back.page)) {
+      state.reviewReturn = {
+        page: back.page,
+        step: [0, 1, 2].includes(back.step) ? back.step : 0,
+        activity: back.activity && typeof back.activity === 'object' ? back.activity : null,
+        placement: back.placement && typeof back.placement === 'object' ? back.placement : null,
+        retestReturn: pages.includes(back.retestReturn) ? back.retestReturn : null,
+      }
+    }
     return forToday(state, today)
   } catch {
     return emptySession(today)
@@ -105,7 +119,7 @@ export function withRecordedStickers(session, savedRecords) {
 }
 
 export function beginWalk(session, today = localDay()) {
-  if (session.page === 'placement' || session.page === 'lesson') return session
+  if (['placement', 'ready', 'lesson'].includes(session.page)) return session
   const current = forToday({ ...session, page: 'welcome' }, today)
   if (!current.onboarded) return current
   return {
@@ -118,7 +132,20 @@ export function beginWalk(session, today = localDay()) {
   }
 }
 
+export function reviewSticker(session, record, fromGuardian = false) {
+  const topic = topics.find((item) => item.label === record.topic)
+  if (!topic) return session
+  const { page, step, activity, placement, retestReturn } = session
+  const reviewReturn = session.reviewReturn || (fromGuardian && !session.reviewTopicId
+    ? { page, step, activity, placement, retestReturn }
+    : null)
+  return { ...session, page: 'lesson', step: 0, activity: null, placement: null, retestReturn: null, reviewTopicId: topic.id, reviewReturn }
+}
+
 export function finishWalk(session) {
+  if (session.reviewTopicId) {
+    return { ...session, page: 'stickers', step: 2, activity: null, ...session.reviewReturn, reviewTopicId: null, reviewReturn: null }
+  }
   const topic = topics.find((entry) => entry.id === session.topicId)
   const records = session.records.some((record) => record.date === session.day)
     ? session.records

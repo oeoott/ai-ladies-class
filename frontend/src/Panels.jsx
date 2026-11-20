@@ -1,3 +1,6 @@
+import { useNarration } from './narration.js'
+import { GuidePortrait } from './PaintedFriend.jsx'
+import { GuardianGate } from './GuardianGate.jsx'
 import React, { useId, useLayoutEffect, useRef, useState } from 'react'
 import { FriendStudio } from './FriendStudio.jsx'
 import './panels.css'
@@ -55,30 +58,29 @@ function Icon({ name, size = 22 }) {
   )
 }
 
-function MenuRow({ icon, children, detail, onClick }) {
+function MenuRow({ icon, children, onClick }) {
   return (
     <button type="button" className="forest-panel-row" onClick={onClick}>
       <span className="forest-panel-row-icon">
         <Icon name={icon} />
       </span>
       <span className="forest-panel-row-title">{children}</span>
-      {detail && <span className="forest-panel-row-detail">{detail}</span>}
       <Icon name="next" size={16} />
     </button>
   )
 }
 
-function Guardian({ friend, onOpen }) {
+function Guardian({ onOpen }) {
   return (
     <div className="forest-panel-menu">
-      <MenuRow icon="paw" detail={friend?.name} onClick={() => onOpen('friends')}>
-        숲 친구 꾸미기
+      <MenuRow icon="paw" onClick={() => onOpen('friends')}>
+        숲 친구
       </MenuRow>
       <MenuRow icon="book" onClick={() => onOpen('retest')}>
-        준비 산책 다시 하기
+        학습 진단 다시 하기
       </MenuRow>
       <MenuRow icon="stamp" onClick={() => onOpen('records')}>
-        스티커 기록
+        스티커판
       </MenuRow>
       <MenuRow icon="person" onClick={() => onOpen('report')}>
         학습 리포트
@@ -148,11 +150,7 @@ function Account({ initialEmail, signup, onAccountDone }) {
           {signup ? '이 이메일로 시작하기' : '받을 주소 저장하기'} <Icon name="next" size={18} />
         </button>
       </form>
-      {signup && (
-        <button type="button" className="forest-panel-link" onClick={() => onAccountDone('')}>
-          계정 없이 체험하기
-        </button>
-      )}
+
     </>
   )
 }
@@ -167,11 +165,11 @@ function dateLabel(value) {
   }).format(date)
 }
 
-function RecordBook({ records, onOpen }) {
+function RecordBook({ records, onOpen, onReview }) {
   const ordered = [...records].sort((a, b) => String(b.date).localeCompare(String(a.date)))
   return (
     <>
-      <p className="forest-panel-note">이 기기에서 마친 마음 산책을 모았어요.</p>
+      <p className="forest-panel-note">스티커를 눌러 다시 해 봐요.</p>
       {ordered.length ? (
         <ul className="forest-stamp-list">
           {ordered.map((record, index) => (
@@ -179,7 +177,7 @@ function RecordBook({ records, onOpen }) {
               <span className="forest-stamp-icon">
                 <Icon name="leaf" size={20} />
               </span>
-              <span>{record.topic} 스티커</span>
+              <button type="button" className="forest-panel-link" aria-label={record.topic + ' 다시 하기 · ' + dateLabel(record.date)} onClick={() => onReview(record)}>{record.topic} 스티커</button>
               <time dateTime={record.date}>{dateLabel(record.date)}</time>
             </li>
           ))}
@@ -251,13 +249,16 @@ function LearningReport({ records, recipient, onOpen }) {
 
 const titles = {
   guardian: '보호자 설정',
+  gate: '보호자 비밀번호',
   friends: '나의 숲 친구 만들기',
   account: '리포트 받을 주소',
-  signup: '보호자 가입',
+  together: '부모님과 함께 있나요?',
+  bringParent: '부모님을 불러 주세요',
+  signup: '부모님 이메일',
   report: '학습 리포트',
-  records: '스티커 기록',
+  records: '스티커판',
   rest: '잠깐 쉬어 가요',
-  retest: '준비 산책을 다시 할까요?',
+  retest: '학습 진단을 다시 할까요?',
 }
 
 export function Panel(props) {
@@ -272,12 +273,16 @@ function PanelDialog({
   friends = [],
   onFriend,
   onRetest,
+  onUnlock,
+  onReview,
   records = [],
   onOpen,
   onAccountDone,
   recipient,
   returnFocusRef,
 }) {
+  useNarration(mode === 'together' ? '반가워요! 지금 부모님과 함께 있나요?'
+    : mode === 'bringParent' ? '괜찮아요. 부모님을 부르고, 함께 시작해요.' : '')
   const dialog = useRef(null)
   const heading = useRef(null)
   const titleId = useId()
@@ -343,7 +348,20 @@ function PanelDialog({
         )}
       </div>
       {mode === 'friends' && <FriendStudio friend={friend} friends={friends} onFriend={onFriend} />}
-      {mode === 'guardian' && <Guardian friend={friend} onOpen={onOpen} />}
+      {(mode === 'together' || mode === 'bringParent') && (
+        <GuidePortrait friend={friend} className="parent-prompt-guide" />
+      )}
+      {mode === 'together' && (
+        <div className="forest-panel-menu">
+          <button type="button" className="forest-panel-primary" onClick={() => onOpen('signup')}>함께 있어요</button>
+          <button type="button" className="forest-panel-secondary" onClick={() => onOpen('bringParent')}>혼자 있어요</button>
+        </div>
+      )}
+      {mode === 'bringParent' && (
+        <button type="button" className="forest-panel-primary" onClick={() => onOpen('signup')}>부모님이 오셨어요</button>
+      )}
+      {mode === 'gate' && <GuardianGate onUnlock={onUnlock} />}
+      {mode === 'guardian' && <Guardian onOpen={onOpen} />}
       {(mode === 'account' || mode === 'signup') && (
         <Account
           key={mode}
@@ -353,7 +371,7 @@ function PanelDialog({
         />
       )}
       {mode === 'report' && <LearningReport {...{ records, recipient, onOpen }} />}
-      {mode === 'records' && <RecordBook records={records} onOpen={onOpen} />}
+      {mode === 'records' && <RecordBook records={records} onOpen={onOpen} onReview={onReview} />}
       {mode === 'retest' && (
         <>
           <p className="forest-panel-note">
@@ -361,7 +379,7 @@ function PanelDialog({
             있어요.
           </p>
           <button className="forest-panel-primary" type="button" onClick={onRetest}>
-            준비 산책 하기 <Icon name="next" size={18} />
+            학습 진단 시작 <Icon name="next" size={18} />
           </button>
           <button className="forest-panel-link" type="button" onClick={() => onOpen('guardian')}>
             설정으로 돌아가기

@@ -1,3 +1,4 @@
+import { GuidePortrait } from './PaintedFriend.jsx'
 import { useEffect, useRef, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { FriendLook } from './FriendLook.jsx'
@@ -54,12 +55,8 @@ export function ForestEntrance({ friend, finished, resuming = false, onEnter, hi
           className="entrance-walker"
           data-walk-ready={!!friend.walkImage && loadedWalkImage === friend.walkImage}
         >
-          <FriendLook
-            className="entrance-pose-front"
-            friend={friend}
-            alt={`${friend.species} 친구 ${friend.name}`}
-            fetchPriority="high"
-          />
+          <GuidePortrait friend={friend} active={!walking && !hidden}
+            className="friend-look entrance-pose-front" />
           {friend.walkImage && (
             <FriendLook
               className="entrance-pose-back"
@@ -78,7 +75,7 @@ export function ForestEntrance({ friend, finished, resuming = false, onEnter, hi
         aria-disabled={walking || undefined}
         onClick={enter}
       >
-        {resuming ? '산책 이어가기' : finished ? '오늘 학습 다시 하기' : '마음숲 들어가기'}
+        {resuming ? '산책 이어가기' : finished ? '오늘 학습 다시 하기' : '시작하기'}
         <ArrowRight aria-hidden="true" />
       </button>
     </main>
