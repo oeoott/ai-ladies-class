@@ -14,7 +14,6 @@ const faces = {
     mouth: [241, 346],
     muzzleSample: 40,
     ink: '#794720',
-    closeUp: '54 33 163 156',
     paw: 'M-5 330H56L62 349Q92 347 109 393Q120 416 144 430L160 475 155 502 119 519H-5Z',
     wrist: [142, 479],
   },
@@ -29,7 +28,6 @@ const faces = {
     mouth: [305, 335],
     muzzleSample: 38,
     ink: '#874d1f',
-    closeUp: '32 13 201 193',
     paw: 'M35 349L72 348Q88 321 109 343Q130 325 155 349Q166 357 176 380L205 412 243 488 184 517 52 446Z',
     wrist: [207, 478],
     browMarks: [
@@ -48,7 +46,6 @@ const faces = {
     mouth: [272, 273],
     muzzleSample: 35,
     ink: '#683c20',
-    closeUp: '32 6 202 194',
     paw: 'M-5 254L61 274Q92 267 114 300Q130 338 158 356L173 413 141 444 80 428-5 384Z',
     wrist: [145, 410],
   },
@@ -255,7 +252,6 @@ export function PaintedFriend({
   gesture,
   actionKey,
   active,
-  closeUp,
   charm,
   headwear,
 }) {
@@ -269,7 +265,7 @@ export function PaintedFriend({
   return (
     <svg
       className="edu-portrait"
-      viewBox={closeUp ? face.closeUp : '7 0 252 317'}
+      viewBox="7 0 252 317"
       role="img"
       aria-labelledby={id}
       data-active={active}
@@ -283,7 +279,7 @@ export function PaintedFriend({
           <stop offset="1" stopColor="white" stopOpacity="0" />
         </radialGradient>
       </defs>
-      {!closeUp && <ellipse cx="138" cy="300" rx="57" ry="6" fill="#454a28" opacity=".18" />}
+      <ellipse cx="138" cy="300" rx="57" ry="6" fill="#454a28" opacity=".18" />
       <g transform={`translate(${insetLeft} ${insetTop}) scale(${scale})`}>
         <g key={actionKey} data-gesture={gesture} data-feeling={feeling}>
           <g className="edu-character-head">

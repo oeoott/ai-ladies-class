@@ -112,6 +112,20 @@
   height: clamp(265px, 54vh, 550px);
   filter: drop-shadow(0 3px 3px #42352129);
 }
+.edu-emotion-card {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+}
+.edu-figure > .edu-emotion-card {
+  width: min(100%, 48vh, 420px);
+  padding: 7px;
+  border: 1px solid #b19c72;
+  border-radius: 20px;
+  background: #fff9e9;
+  box-shadow: 0 4px 0 #8c714fb3, 0 8px 16px #28452b26;
+}
 .edu-figure figcaption {
   width: fit-content;
   max-width: 100%;
@@ -278,6 +292,15 @@
   margin-top: 4px;
   padding-left: 0;
 }
+.edu-device-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.edu-mic-status:not(:empty) {
+  width: 100%;
+  color: var(--edu-muted);
+}
 .edu-camera {
   background: #e6eeea;
   aspect-ratio: 4/3;
@@ -310,7 +333,7 @@
   border: 2px solid #b19c72;
   background: #fff8df;
   color: var(--edu-ink);
-  border-radius: 46% 46% 20px 20px / 32% 32% 20px 20px;
+  border-radius: 20px;
   box-shadow:
     0 4px 0 #8c714fb3,
     0 7px 15px #28452b33;
@@ -323,9 +346,6 @@
 }
 .edu-board .edu-picture-choice:disabled:not(.is-selected) {
   opacity: 1;
-}
-.edu-placement .edu-portrait {
-  border-radius: 46% 46% 12px 12px / 32% 32% 12px 12px;
 }
 .edu-picture-check {
   position: absolute;
@@ -379,6 +399,9 @@
   }
   .edu-figure .edu-portrait {
     height: clamp(185px, 30vh, 410px);
+  }
+  .edu-figure > .edu-emotion-card {
+    width: min(100%, 28vh, 360px);
   }
   .edu-placement {
     width: min(100%, 690px);

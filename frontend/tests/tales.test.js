@@ -1,8 +1,16 @@
 import assert from 'node:assert/strict'
-import { access } from 'node:fs/promises'
+import { access, readFile } from 'node:fs/promises'
 import test from 'node:test'
 import { forestTales } from '../src/forestTales.js'
 import { topics } from '../src/session.js'
+
+test('every learning topic has a WebP emotion card', async () => {
+  for (const { id } of topics) {
+    const card = await readFile(new URL('../public/art/cards/' + id + '.webp', import.meta.url))
+    assert.equal(card.toString('ascii', 0, 4), 'RIFF', id)
+    assert.equal(card.toString('ascii', 8, 12), 'WEBP', id)
+  }
+})
 
 test('every daily emotion opens an illustrated tale with two playable outcomes', async () => {
   for (const { id } of topics) {

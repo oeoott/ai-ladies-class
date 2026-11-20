@@ -134,7 +134,19 @@ function Choice({ selected, children, ...props }) {
     </button>
   )
 }
-function Portrait({ friend, feeling, closeUp = false, gesture, actionKey, active = true }) {
+function EmotionCard({ feeling, alt = FEELINGS[feeling].clue }) {
+  return (
+    <img
+      className="edu-emotion-card"
+      src={import.meta.env.BASE_URL + 'art/cards/' + feeling + '.webp'}
+      width="626"
+      height="626"
+      alt={alt}
+      draggable={false}
+    />
+  )
+}
+function Portrait({ friend, feeling, gesture, actionKey, active = true }) {
   const kind = animalKind(friend)
   const clue = feeling === 'neutral' ? '편안하게 기다리고 있어요.' : FEELINGS[feeling].clue
   return (
@@ -144,7 +156,7 @@ function Portrait({ friend, feeling, closeUp = false, gesture, actionKey, active
       kind={kind}
       src={friend?.image || import.meta.env.BASE_URL + 'art/' + kind + '.webp'}
       label={`${friend?.name || '숲속 친구'}의 얼굴. ${clue}`}
-      {...{ feeling, gesture, actionKey, active, closeUp }}
+      {...{ feeling, gesture, actionKey, active }}
     />
   )
 }
@@ -207,7 +219,7 @@ const PLACEMENT = [
     hint: '눈과 입이 동그래진 얼굴을 찾아봐요.',
   },
 ]
-export function LevelTest({ progress, onUpdate, onDone, friend, active = true }) {
+export function LevelTest({ progress, onUpdate, onDone }) {
   const state = progress.placement || {}
   const idx = state.index === 1 ? 1 : 0
   const item = PLACEMENT[idx]
@@ -236,7 +248,7 @@ export function LevelTest({ progress, onUpdate, onDone, friend, active = true })
         description={item.introduction}
         illustration={
           <figure className="edu-figure">
-            <Portrait friend={friend} feeling={item.target} gesture="model" active={active} />
+            <EmotionCard feeling={item.target} />
           </figure>
         }
       >
@@ -266,13 +278,7 @@ export function LevelTest({ progress, onUpdate, onDone, friend, active = true })
             className={'edu-picture-choice' + (state.choice === key ? ' is-selected' : '')}
             onClick={() => choose(key)}
           >
-            <Portrait
-              friend={friend}
-              feeling={key}
-              closeUp
-              gesture={state.choice === key ? 'listen' : undefined}
-              active={active}
-            />
+            <EmotionCard feeling={key} alt="" />
             {state.choice === key && (
               <span className="edu-picture-check" aria-hidden="true">
                 ✓
@@ -297,16 +303,9 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
   // Older walks saved word choices before the introductory scenes existed.
   const phase = state.practicePhase || (state.selected || state.solved ? 'words' : 'intro')
   const cueFound = state.cue === practice.target
-  const illustration = (gesture, actionKey) => (
+  const card = (
     <figure className="edu-figure">
-      <Portrait
-        friend={friend}
-        feeling={feeling}
-        active={active}
-        gesture={gesture}
-        actionKey={actionKey}
-      />
-      <figcaption>{friend.name}의 표정</figcaption>
+      <EmotionCard feeling={feeling} />
     </figure>
   )
   if (phase === 'intro') {
@@ -315,13 +314,13 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
         kicker="첫째 걸음 · 마음 알아보기"
         title={practice.subject + ' 어떤 마음일까요?'}
         description={practice.meaning}
-        illustration={illustration('listen', feeling)}
+        illustration={card}
       >
         <p className="edu-prompt">
           {practice.example}
         </p>
         <p className="edu-note">
-          {friend.name}의 얼굴도 살펴봐요. {fact.clue}
+          그림 속 얼굴을 살펴봐요. {fact.clue}
         </p>
         <Action onClick={() => update({ practicePhase: 'experiment' })}>숲에서 해 보기</Action>
       </Board>
@@ -419,10 +418,7 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
           ? '그림에 어울리는 말을 골라요. 두 개를 골라도 돼요.'
           : '그림에 어울리는 마음을 하나 골라요.'
       }
-      illustration={illustration(
-        done ? 'nod' : state.feedback ? 'model' : selected.length ? 'listen' : undefined,
-        selected.join('|') + (state.feedback || ''),
-      )}
+      illustration={card}
     >
       <div
         className={expanded ? 'edu-choices edu-multiple' : 'edu-choices'}
@@ -538,6 +534,41 @@ function useCamera(active) {
   }, [status])
   return { status, video, start, off, facePresent }
 }
+
+function MicrophonePermission() {
+  const [status, setStatus] = useState('idle')
+
+  async function check() {
+    setStatus('waiting')
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+      // Release even when the permission prompt finishes after the child leaves.
+      stream.getTracks().forEach((track) => track.stop())
+      setStatus('granted')
+    } catch {
+      setStatus('unavailable')
+    }
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        className="edu-secondary"
+        onClick={check}
+        disabled={status === 'waiting' || status === 'granted'}
+      >
+        {status === 'unavailable' ? '마이크 권한 다시 확인' : '마이크 권한 확인'}
+      </button>
+      <span className="edu-mic-status" role="status">
+        {status === 'waiting' && '마이크 권한을 확인하고 있어요.'}
+        {status === 'granted' && '권한을 확인하고 마이크를 껐어요.'}
+        {status === 'unavailable' && '마이크를 사용할 수 없어요. 그대로 산책해도 돼요.'}
+      </span>
+    </>
+  )
+}
+
 function MirrorActivity({ fact, feeling, friend, active, state, update, next }) {
   const camera = useCamera(active)
   const [demonstration, setDemonstration] = useState(0)
@@ -635,7 +666,7 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
           <video ref={camera.video} muted autoPlay playsInline aria-label="이 기기의 내 모습" />
         </div>
       )}
-      <div className="edu-camera-row">
+      <div className="edu-device-options">
         {camera.status === 'on' || camera.status === 'waiting' ? (
           <button className="edu-secondary" type="button" onClick={camera.off}>
             {camera.status === 'waiting' ? '카메라 요청 취소' : '카메라 끄기'}
@@ -658,6 +689,7 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
             {camera.status === 'unavailable' ? '카메라 다시 켜기' : '카메라로 내 모습 보기'}
           </button>
         )}
+        {active && <MicrophonePermission />}
       </div>
       <p role="status" className="edu-note">
         {camera.status === 'on'

@@ -284,13 +284,7 @@ function App() {
           {page === 'lesson' && <JourneyProgress friend={friend} step={session.step} />}
           <div className="scene-content">
             {page === 'placement' && (
-              <LevelTest
-                progress={session}
-                onUpdate={patch}
-                onDone={afterTest}
-                friend={friend}
-                active={!panel}
-              />
+              <LevelTest progress={session} onUpdate={patch} onDone={afterTest} />
             )}
             {page === 'lesson' && (
               <Lesson
