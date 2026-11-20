@@ -89,7 +89,7 @@ const scenery = {
 }
 
 // The story marks a child's choice with a lasting change to a pictured object.
-// The outcome also appears in the narrated text for children using a screen reader.
+// The same outcome is described in the story text.
 export function TaleScene({ feeling, page, branch, active, children }) {
   const Props = scenery[feeling]
   return (

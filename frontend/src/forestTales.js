@@ -41,7 +41,6 @@ export const forestTales = {
         '초대장 가운데 하트를 그렸어요. 새 편지가 완성됐어요.',
       ],
     },
-    voiceSummary: '초대장을 받은 친구에게 내 목소리로 말했어요.',
   },
   sad: {
     title: '도토리 등대',
@@ -84,7 +83,6 @@ export const forestTales = {
         '두 친구는 작은 배가 물살을 따라가는 모습을 보았어요.',
       ],
     },
-    voiceSummary: '속상한 마음을 들려준 친구에게 내 목소리로 답했어요.',
   },
   surprise: {
     title: '잎사귀 속 작은 손님',
@@ -127,7 +125,6 @@ export const forestTales = {
         '두 친구가 바라보는 사이, 나비가 다음 꽃을 향해 날아갔어요.',
       ],
     },
-    voiceSummary: '나비를 만난 친구에게 내 목소리로 답했어요.',
   },
   anger: {
     title: '구름 미끄럼틀의 차례',
@@ -170,6 +167,5 @@ export const forestTales = {
         '옆에서 잠깐 쉬는 동안 다음 친구가 미끄럼틀을 탔어요.',
       ],
     },
-    voiceSummary: '차례를 기다리는 친구에게 내 목소리로 답했어요.',
   },
 }

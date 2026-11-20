@@ -142,7 +142,6 @@ function App() {
     }
   })
   const entry = useRef('welcome')
-  const speaker = typeof window !== 'undefined' ? window.speechSynthesis : null
   const { page } = session
   const baseFriend = friends.find((f) => f.id === session.friendId) || friends[0]
   const name = session.friendNickname || baseFriend.name
@@ -193,60 +192,6 @@ function App() {
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [page, session.step, showEntrance])
-
-  useEffect(() => {
-    speaker?.getVoices()
-  }, [speaker])
-
-  // Start narration after entry and leave its volume to the device.
-  useEffect(() => {
-    if (showEntrance || !speaker) return
-    let previous = ''
-    const main = document.getElementById('main-content')
-    if (!main || panel) return
-    const read = () => {
-      if (document.hidden) return
-      if (main.querySelector('[data-mic-active]')) {
-        speaker.cancel()
-        previous = ''
-        return
-      }
-      const lines = [...main.querySelectorAll('h1,[data-read-aloud]')]
-        .map((el) => el.textContent.trim())
-        .filter(Boolean)
-      const words = lines.join('. ')
-      if (!words || words === previous) return
-      const voice = speaker.getVoices().find((item) => item.localService && /^ko/i.test(item.lang))
-      if (!voice) return
-      previous = words
-      speaker.cancel()
-      const utterance = new SpeechSynthesisUtterance(words)
-      utterance.voice = voice
-      utterance.lang = 'ko-KR'
-      utterance.rate = 0.9
-      speaker.speak(utterance)
-    }
-    const onHidden = () => {
-      if (document.hidden) speaker.cancel()
-    }
-    const observer = new MutationObserver(read)
-    observer.observe(main, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-      attributes: true,
-      attributeFilter: ['data-mic-active'],
-    })
-    speaker.addEventListener?.('voiceschanged', read)
-    document.addEventListener('visibilitychange', onHidden)
-    read()
-    return () => {
-      observer.disconnect()
-      speaker.cancel()
-      speaker.removeEventListener?.('voiceschanged', read)
-      document.removeEventListener('visibilitychange', onHidden)
-    }
-  }, [page, panel, speaker, showEntrance])
 
   function retest() {
     const returnPage = page === 'placement' ? session.retestReturn : session.onboarded ? page : null

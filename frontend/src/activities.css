@@ -446,21 +446,6 @@
   background: #eef3e7;
   color: #547553;
 }
-.edu-voice {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-.edu-voice .edu-note {
-  margin-top: 0;
-}
-.edu-voice audio {
-  display: block;
-  width: 100%;
-  min-height: 48px;
-  margin: 0 0 13px;
-}
-
 .edu-model-caption {
   display: flex;
   align-items: center;

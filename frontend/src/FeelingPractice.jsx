@@ -19,9 +19,9 @@ export const feelingPractice = {
     cueHint: '웃고 있는 입의 양쪽 끝을 살펴봐요.',
     expression: [
       {
-        action: '“나 정말 기뻐!” 말하기',
-        practice: '기뻤던 일을 떠올리며 “나 정말 기뻐!” 하고 말해 봐요.',
-        answer: '“무엇이 기뻤어? 나도 듣고 싶어.”',
+        action: '“나 정말 기뻐!” 말풍선',
+        practice: '“나 정말 기뻐!” 하는 마음을 친구에게 전했어요.',
+        answer: '“꽃이 핀 걸 보니 나도 기뻐!”',
       },
       {
         action: '손뼉으로 전하기',
@@ -48,8 +48,8 @@ export const feelingPractice = {
     cueHint: '입의 양쪽 끝이 어느 쪽을 향하는지 살펴봐요.',
     expression: [
       {
-        action: '“나 속상해.” 말하기',
-        practice: '속상할 때 “나 속상해.” 하고 알려 줄 수 있어요.',
+        action: '“나 속상해.” 말풍선',
+        practice: '“나 속상해.” 하고 친구에게 마음을 전했어요.',
         answer: '“알려 줘서 고마워. 옆에 있어 줄게.”',
       },
       {
@@ -77,8 +77,8 @@ export const feelingPractice = {
     cueHint: '두 눈이 커졌어요. 입도 동그랗게 벌어졌어요.',
     expression: [
       {
-        action: '“깜짝 놀랐어.” 말하기',
-        practice: '놀랐던 순간을 떠올리며 “깜짝 놀랐어.” 하고 알려 줘요.',
+        action: '“깜짝 놀랐어.” 말풍선',
+        practice: '상자를 열고 깜짝 놀란 마음을 친구에게 전했어요.',
         answer: '“나도 깜짝 놀랐어. 같이 살펴보자.”',
       },
       {
@@ -106,9 +106,9 @@ export const feelingPractice = {
     cueHint: '눈 위에 있는 두 눈썹 사이가 좁아졌어요.',
     expression: [
       {
-        action: '“도와줘.” 말하기',
-        practice: '잠시 멈추고 “수레가 걸렸어. 도와줘.” 하고 부탁해 봐요.',
-        answer: '“도와 달라는 말을 들었어. 같이 돌을 피해 가자.”',
+        action: '“도와줘.” 말풍선',
+        practice: '“수레가 걸렸어. 도와줘.” 하고 친구에게 부탁했어요.',
+        answer: '“같이 돌을 피해 가자.”',
       },
       {
         action: '멈춤 손짓 하기',

@@ -164,7 +164,7 @@ function Board({ kicker, title, description, illustration, children, focusKey = 
       <h1 id={id} tabIndex="-1" ref={heading}>
         {title}
       </h1>
-      {description && <p data-read-aloud>{description}</p>}
+      {description && <p>{description}</p>}
     </div>
   )
   return (
@@ -240,7 +240,7 @@ export function LevelTest({ progress, onUpdate, onDone, friend, active = true })
           </figure>
         }
       >
-        <p className="edu-story" data-read-aloud>
+        <p className="edu-story">
           {item.example}
         </p>
         <Action onClick={() => onUpdate({ placement: { ...state, index: idx, introduced: true } })}>
@@ -282,7 +282,7 @@ export function LevelTest({ progress, onUpdate, onDone, friend, active = true })
         ))}
       </div>
       <div className="edu-action-row">
-        <p role="status" data-read-aloud>
+        <p role="status">
           {solved ? '찾았어요! ' + FEELINGS[item.target].clue : state.choice ? item.hint : ''}
         </p>
         {solved && (
@@ -317,10 +317,10 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
         description={practice.meaning}
         illustration={illustration('listen', feeling)}
       >
-        <p className="edu-prompt" data-read-aloud>
+        <p className="edu-prompt">
           {practice.example}
         </p>
-        <p className="edu-note" data-read-aloud>
+        <p className="edu-note">
           {friend.name}의 얼굴도 살펴봐요. {fact.clue}
         </p>
         <Action onClick={() => update({ practicePhase: 'experiment' })}>숲에서 해 보기</Action>
@@ -356,7 +356,7 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
       >
         {revealed && (
           <>
-            <p className="edu-prompt" data-read-aloud>
+            <p className="edu-prompt">
               {practice.cueQuestion}
             </p>
             <div className="practice-cue-options" role="group" aria-label="표정 단서">
@@ -371,7 +371,7 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
                 </Choice>
               ))}
             </div>
-            <p className="edu-feedback" role="status" data-read-aloud>
+            <p className="edu-feedback" role="status">
               {cueFound ? fact.clue : state.cue ? practice.cueHint : ''}
             </p>
             {cueFound && (
@@ -435,7 +435,7 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
           </Choice>
         ))}
       </div>
-      <p role="status" className="edu-feedback" data-read-aloud>
+      <p role="status" className="edu-feedback">
         {state.feedback}
       </p>
       {done ? (
@@ -548,7 +548,7 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
       <Board
         kicker="둘째 걸음 · 마음 전하기"
         title={chosen ? '친구가 이렇게 답했어요' : '내 마음을 전해 봐요'}
-        description={chosen ? chosen.practice : '말이나 몸짓 중 편한 방법을 하나 골라요.'}
+        description={chosen ? chosen.practice : '말풍선이나 몸짓 중 편한 방법을 하나 골라요.'}
         illustration={
           <figure className="edu-figure">
             <Portrait
@@ -564,7 +564,7 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
       >
         {chosen ? (
           <>
-            <p className="edu-prompt" data-read-aloud>
+            <p className="edu-prompt">
               {chosen.answer}
             </p>
             <Action onClick={next}>동화 속으로</Action>
@@ -627,7 +627,7 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
         </figure>
       }
     >
-      <p className="edu-prompt" data-read-aloud>
+      <p className="edu-prompt">
         {fact.motion}
       </p>
       {camera.status === 'on' && (
@@ -659,7 +659,7 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
           </button>
         )}
       </div>
-      <p role="status" className="edu-note" data-read-aloud>
+      <p role="status" className="edu-note">
         {camera.status === 'on'
           ? camera.facePresent
             ? '얼굴이 화면에 보여요.'
@@ -714,12 +714,6 @@ const pictograms = {
     <path d="M6 13V6a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-8a1.5 1.5 0 0 1 3 0v8-6a1.5 1.5 0 0 1 3 0v5.5l1-2a1.6 1.6 0 0 1 3 1.3l-3.4 7.5a6 6 0 0 1-5.5 3.6h-1a7 7 0 0 1-6-4l-3-5.4c-1.2-2.1 1-3.8 2.4-2Z" />
   ),
   talk: <path d="M21 11a8 8 0 0 1-8 8H9l-5 3 1-5A8 8 0 1 1 21 11Zm-14 0h8" />,
-  mic: (
-    <>
-      <rect x="9" y="2" width="6" height="13" rx="3" />
-      <path d="M5 11v1a7 7 0 0 0 14 0v-1m-7 8v3m-4 0h8" />
-    </>
-  ),
 }
 const replyIcons = {
   joy: ['plane', 'heart', 'cloud', 'tree'],
@@ -745,207 +739,21 @@ function Pictogram({ name }) {
   )
 }
 
-function VoiceAnswer({ active, onCancel, onAccept }) {
-  const [stage, setStage] = useState('ready')
-  const [url, setUrl] = useState('')
-  const generation = useRef(0)
-  const media = useRef(null)
-  const recorder = useRef(null)
-  const playback = useRef(null)
-  const clipUrl = useRef('')
-  const limit = useRef(null)
-
-  function release() {
-    generation.current += 1
-    clearTimeout(limit.current)
-    const capture = recorder.current
-    if (capture) {
-      capture.ondataavailable = null
-      capture.onstop = null
-      capture.onerror = null
-      if (capture.state !== 'inactive') capture.stop()
-    }
-    recorder.current = null
-    media.current?.getTracks().forEach((track) => track.stop())
-    media.current = null
-    playback.current?.pause()
-    if (clipUrl.current) URL.revokeObjectURL(clipUrl.current)
-    clipUrl.current = ''
-  }
-  function reset(nextStage = 'ready') {
-    release()
-    setUrl('')
-    setStage(nextStage)
-  }
-  useEffect(() => {
-    function interrupt() {
-      reset()
-    }
-    function visibility() {
-      if (document.hidden) interrupt()
-    }
-    if (!active) interrupt()
-    document.addEventListener('visibilitychange', visibility)
-    window.addEventListener('pagehide', interrupt)
-    window.addEventListener('blur', interrupt)
-    return () => {
-      document.removeEventListener('visibilitychange', visibility)
-      window.removeEventListener('pagehide', interrupt)
-      window.removeEventListener('blur', interrupt)
-      release()
-    }
-  }, [active])
-
-  async function start() {
-    if (!active) return
-    reset('waiting')
-    if (typeof MediaRecorder === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-      setStage('unavailable')
-      return
-    }
-    const token = generation.current
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-      if (token !== generation.current || document.hidden) {
-        stream.getTracks().forEach((track) => track.stop())
-        return
-      }
-      media.current = stream
-      const capture = new MediaRecorder(stream)
-      recorder.current = capture
-      const chunks = []
-      capture.ondataavailable = (event) => {
-        if (event.data.size && token === generation.current) chunks.push(event.data)
-      }
-      capture.onerror = () => {
-        if (token === generation.current) reset('unavailable')
-      }
-      capture.onstop = () => {
-        if (token !== generation.current) return
-        clearTimeout(limit.current)
-        stream.getTracks().forEach((track) => track.stop())
-        media.current = null
-        recorder.current = null
-        if (chunks.length === 0) {
-          reset('unavailable')
-          return
-        }
-        const clip = new Blob(chunks, { type: capture.mimeType || chunks[0].type })
-        clipUrl.current = URL.createObjectURL(clip)
-        setUrl(clipUrl.current)
-        setStage('review')
-      }
-      capture.start()
-      setStage('recording')
-      // Bound the temporary buffer if a recording is left unattended.
-      limit.current = window.setTimeout(() => {
-        if (capture.state === 'recording') capture.stop()
-      }, 120000)
-    } catch {
-      if (token === generation.current) reset('unavailable')
-    }
-  }
-  function finishRecording() {
-    if (recorder.current?.state === 'recording') {
-      setStage('finishing')
-      recorder.current.stop()
-    }
-  }
-  let notice = '내 목소리는 여기에서만 들어요. 답하기를 누르면 녹음이 지워져요.'
-  if (stage === 'waiting') notice = '마이크를 여는 중이에요.'
-  if (stage === 'recording') notice = '말해 보세요. 다 말하면 녹음을 마쳐요.'
-  if (stage === 'unavailable') notice = '마이크를 쓸 수 없어요. 그림으로도 답할 수 있어요.'
-  if (stage === 'review') notice = '내 목소리를 들어볼 수 있어요.'
-  if (stage === 'finishing') notice = '내 목소리를 준비하고 있어요.'
-  return (
-    <div
-      className="edu-voice"
-      data-mic-active={
-        ['waiting', 'recording', 'finishing', 'review'].includes(stage) ? '' : undefined
-      }
-    >
-      <p className="edu-note" role="status" data-read-aloud>
-        {notice}
-      </p>
-      {(stage === 'ready' || stage === 'unavailable') && (
-        <button type="button" className="edu-secondary" onClick={start}>
-          <Pictogram name="mic" />
-          {stage === 'ready' ? '녹음 시작' : '마이크 다시 켜기'}
-        </button>
-      )}
-      {stage === 'recording' && (
-        <button className="edu-primary" type="button" onClick={finishRecording}>
-          녹음 마치기
-        </button>
-      )}
-      {stage === 'review' && (
-        <>
-          <audio
-            ref={playback}
-            aria-label="녹음한 내 목소리"
-            controls
-            preload="metadata"
-            src={url}
-            onError={() => reset('unavailable')}
-          />
-          <Action
-            onClick={() => {
-              release()
-              onAccept()
-            }}
-          >
-            이 목소리로 답하기
-          </Action>
-          <button className="edu-link" type="button" onClick={start}>
-            지우고 다시 녹음하기
-          </button>
-        </>
-      )}
-      <button
-        className="edu-link"
-        type="button"
-        onClick={() => {
-          release()
-          onCancel()
-        }}
-      >
-        그림으로 답하기
-      </button>
-    </div>
-  )
-}
-function StoryQuestion({ fact, feeling, isExtra, onReply, active }) {
-  const [voice, setVoice] = useState(false)
+function StoryQuestion({ fact, feeling, isExtra, onReply }) {
   return (
     <>
-      <p className="edu-prompt" data-read-aloud>
-        {isExtra ? fact.again : fact.ask}
-      </p>
-      {voice ? (
-        <VoiceAnswer
-          active={active}
-          onCancel={() => setVoice(false)}
-          onAccept={() => onReply(null, true)}
-        />
-      ) : (
-        <>
-          <div className="edu-choices" role="group" aria-label="친구에게 보낼 말">
-            {(isExtra ? fact.extra : fact.choices).map((text, index) => (
-              <button key={text} type="button" className="edu-reply" onClick={() => onReply(index)}>
-                <span className="edu-picto">
-                  <Pictogram name={replyIcons[feeling][(isExtra ? 2 : 0) + index]} />
-                </span>
-                <span>{text}</span>
-                <Arrow />
-              </button>
-            ))}
-          </div>
-          <button type="button" className="edu-link" onClick={() => setVoice(true)}>
-            <Pictogram name="mic" />
-            목소리로 답하기
+      <p className="edu-prompt">{isExtra ? fact.again : fact.ask}</p>
+      <div className="edu-choices" role="group" aria-label="친구에게 보낼 말">
+        {(isExtra ? fact.extra : fact.choices).map((text, index) => (
+          <button key={text} type="button" className="edu-reply" onClick={() => onReply(index)}>
+            <span className="edu-picto">
+              <Pictogram name={replyIcons[feeling][(isExtra ? 2 : 0) + index]} />
+            </span>
+            <span>{text}</span>
+            <Arrow />
           </button>
-        </>
-      )}
+        ))}
+      </div>
     </>
   )
 }
@@ -975,11 +783,11 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
   const conversation = outcome ? tale.talk : fact
   const isExtra = phase === 'extra'
   const isEnding = phase === 'ending'
-  const voiced = isEnding ? state.extraVoice : state.voice
   const lines = isEnding ? conversation.ends : conversation.replies
   const pickedLine = isEnding ? state.extraChoice : state.choice
-  const reply = lines[pickedLine] || lines[0]
-  const voiceSummary = outcome ? tale.voiceSummary : '친구에게 내 목소리로 답했어요.'
+  const reply = lines[pickedLine]
+  // Earlier sessions may have finished the exchange without selecting a line.
+  const replyText = reply ? (isEnding ? reply : '“' + reply + '”') : '친구와 이야기를 나눴어요.'
   let title = tale.title
   if (phase === 'situation') title = tale.situation
   if (phase === 'act') title = '이때 어떻게 할까요?'
@@ -1018,7 +826,7 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
     >
       {phase === 'book' && (
         <>
-          <p className="edu-story" data-read-aloud>
+          <p className="edu-story">
             {pages[page].replaceAll('{친구}', friend?.familiar || friendName)}
           </p>
           {page + 1 < pages.length ? (
@@ -1030,7 +838,7 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
       )}
       {phase === 'situation' && (
         <>
-          <p className="edu-story" data-read-aloud>
+          <p className="edu-story">
             {tale.explanation}
           </p>
           <Action onClick={() => update({ phase: 'act' })}>내가 해 보기</Action>
@@ -1044,10 +852,10 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
       )}
       {phase === 'consequence' && outcome && (
         <>
-          <p className="edu-story" data-read-aloud>
+          <p className="edu-story">
             {outcome.event}
           </p>
-          <blockquote data-read-aloud>“{outcome.line}”</blockquote>
+          <blockquote>“{outcome.line}”</blockquote>
           <Action onClick={() => update({ phase: 'question' })}>친구와 대화하기</Action>
           <button type="button" className="edu-link" onClick={() => update({ phase: 'act' })}>
             다른 방법 해 보기
@@ -1056,24 +864,18 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
       )}
       {(phase === 'question' || isExtra) && (
         <StoryQuestion
-          key={phase}
           fact={conversation}
-          active={active}
           isExtra={isExtra}
           feeling={feeling}
-          onReply={(choice, voice = false) =>
-            update(
-              isExtra
-                ? { phase: 'ending', extraChoice: choice, extraVoice: voice }
-                : { phase: 'reply', choice, voice },
-            )
+          onReply={(choice) =>
+            update(isExtra ? { phase: 'ending', extraChoice: choice } : { phase: 'reply', choice })
           }
         />
       )}
       {(phase === 'reply' || isEnding) && (
         <>
-          <p className="edu-story" role="status" data-read-aloud>
-            {voiced ? voiceSummary : isEnding ? reply : '“' + reply + '”'}
+          <p className="edu-story" role="status">
+            {replyText}
           </p>
           <Action onClick={onComplete}>산책 마무리하기</Action>
           {phase === 'reply' && (
