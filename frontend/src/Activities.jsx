@@ -160,6 +160,14 @@ function Portrait({ friend, feeling, gesture, actionKey, active = true }) {
     />
   )
 }
+function FaceDetail({ feeling }) {
+  return (
+    <div className={'face-detail face-detail-' + feeling}>
+      <EmotionCard feeling={feeling} />
+      <span aria-hidden="true" />
+    </div>
+  )
+}
 function Board({ kicker, title, description, illustration, children, focusKey = title }) {
   const heading = useRef(null)
   const id = useId()
@@ -226,6 +234,7 @@ export function LevelTest({ progress, onUpdate, onDone }) {
   const solved = state.choice === item.target
   function choose(value) {
     if (solved) return
+    if (value === item.target) return advance()
     onUpdate({
       placement: {
         ...state,
@@ -236,7 +245,6 @@ export function LevelTest({ progress, onUpdate, onDone }) {
     })
   }
   function advance() {
-    if (!solved) return
     if (idx === 0) onUpdate({ placement: { index: 1, usedHint: Boolean(state.usedHint) } })
     else onDone(state.usedHint ? 'basic' : 'expand')
   }
@@ -333,16 +341,12 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
         description={revealed ? practice.reaction : practice.before}
         illustration={
           <div className="edu-figure practice-field">
-            <figure className="practice-field-friend">
-              <Portrait
-                friend={friend}
-                feeling={revealed ? feeling : 'neutral'}
-                active={active}
-                gesture={revealed ? (cueFound ? 'nod' : 'model') : 'listen'}
-                actionKey={state.cue || phase}
-              />
-              <figcaption>{friend.name}</figcaption>
-            </figure>
+            {revealed ? <FaceDetail feeling={feeling} /> : (
+              <figure className="practice-field-friend">
+                <Portrait friend={friend} feeling="neutral" active={active} gesture="listen" />
+                <figcaption>{friend.name}의 안내</figcaption>
+              </figure>
+            )}
             <PracticeObject
               feeling={feeling}
               revealed={revealed}
@@ -362,7 +366,7 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
                   key={cue}
                   selected={state.cue === cue}
                   disabled={cueFound}
-                  onClick={() => update({ cue })}
+                  onClick={() => update(cue === practice.target ? { cue, practicePhase: 'words' } : { cue })}
                 >
                   {cue}
                 </Choice>
@@ -388,24 +392,16 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
   const done = Boolean(state.solved)
   function pick(word) {
     if (done) return
-    const current = expanded
-      ? selected.includes(word)
-        ? selected.filter((x) => x !== word)
-        : [...selected, word]
-      : [word]
+    if (!expanded && word === fact.word) return next()
+    if (!expanded) return update({ selected: [word], feedback: fact.clue })
+    const current = selected.includes(word) ? selected.filter((x) => x !== word) : [...selected, word]
     update({ selected: current, feedback: '' })
   }
   function submit() {
     const correct =
       selected.length > 0 && selected.every((word) => word === fact.word || word === fact.kin)
-    update({
-      solved: correct,
-      feedback: correct
-        ? expanded
-          ? fact.word + ' ' + fact.kin + ' 비슷한 마음을 나타내요.'
-          : fact.clue
-        : '그림을 다시 볼까요? ' + fact.clue,
-    })
+    if (correct) return next()
+    update({ feedback: '그림을 다시 볼까요? ' + fact.clue })
   }
   return (
     <Board
@@ -434,7 +430,7 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
       {done ? (
         <Action onClick={next}>표정 연습으로</Action>
       ) : (
-        <Action onClick={submit} disabled={selected.length === 0}>
+        expanded && <Action onClick={submit} disabled={selected.length === 0}>
           선택 확인하기
         </Action>
       )}
@@ -532,40 +528,6 @@ function useCamera(active) {
   return { status, video, start, off, facePresent }
 }
 
-function MicrophonePermission() {
-  const [status, setStatus] = useState('idle')
-
-  async function check() {
-    setStatus('waiting')
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-      // Release even when the permission prompt finishes after the child leaves.
-      stream.getTracks().forEach((track) => track.stop())
-      setStatus('granted')
-    } catch {
-      setStatus('unavailable')
-    }
-  }
-
-  return (
-    <>
-      <button
-        type="button"
-        className="edu-secondary"
-        onClick={check}
-        disabled={status === 'waiting' || status === 'granted'}
-      >
-        {status === 'unavailable' ? '마이크 권한 다시 확인' : '마이크 권한 확인'}
-      </button>
-      <span className="edu-mic-status" role="status">
-        {status === 'waiting' && '마이크 권한을 확인하고 있어요.'}
-        {status === 'granted' && '권한을 확인하고 마이크를 껐어요.'}
-        {status === 'unavailable' && '마이크를 사용할 수 없어요. 그대로 산책해도 돼요.'}
-      </span>
-    </>
-  )
-}
-
 function MirrorActivity({ fact, feeling, friend, active, state, update, next }) {
   const camera = useCamera(active)
   const [demonstration, setDemonstration] = useState(0)
@@ -579,14 +541,7 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
         description={chosen ? chosen.practice : '말풍선이나 몸짓 중 편한 방법을 하나 골라요.'}
         illustration={
           <figure className="edu-figure">
-            <Portrait
-              friend={friend}
-              feeling={feeling}
-              active={active}
-              gesture={chosen ? 'speak' : 'listen'}
-              actionKey={state.mirrorPhase}
-            />
-            <figcaption>{friend.name}</figcaption>
+            <EmotionCard feeling={feeling} />
           </figure>
         }
       >
@@ -622,13 +577,7 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
       description="그림을 살펴봐요. 따라 하고 싶으면 천천히 해 봐요."
       illustration={
         <figure className="edu-figure">
-          <Portrait
-            friend={friend}
-            feeling={feeling}
-            active={active}
-            gesture="model"
-            actionKey={demonstration}
-          />
+          {demonstration % 2 ? <FaceDetail feeling={feeling} /> : <EmotionCard feeling={feeling} />}
           <figcaption className="edu-model-caption">
             {fact.label} 표정
             <button
@@ -649,7 +598,7 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
               >
                 <path d="M4 10a8 8 0 1 1 1.8 7M4 4v6h6" />
               </svg>
-              표정 다시 보기
+              {demonstration % 2 ? '얼굴 전체 보기' : '표정 크게 보기'}
             </button>
           </figcaption>
         </figure>
@@ -686,7 +635,6 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
             {camera.status === 'unavailable' ? '카메라 다시 켜기' : '카메라로 내 모습 보기'}
           </button>
         )}
-        {active && <MicrophonePermission />}
       </div>
       <p role="status" className="edu-note">
         {camera.status === 'on'
@@ -705,7 +653,7 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
           update({ mirrorPhase: 'express' })
         }}
       >
-        마음 전해 보기
+        표정 연습 마쳤어요
       </Action>
     </Board>
   )

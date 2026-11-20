@@ -297,10 +297,6 @@
   flex-wrap: wrap;
   gap: 8px;
 }
-.edu-mic-status:not(:empty) {
-  width: 100%;
-  color: var(--edu-muted);
-}
 .edu-camera {
   background: #e6eeea;
   aspect-ratio: 4/3;
@@ -470,6 +466,7 @@
   color: #547553;
 }
 .edu-model-caption {
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -484,7 +481,8 @@
   }
 }
 .edu-board .edu-replay {
-  display: none;
+  display: inline-flex;
+  white-space: nowrap;
   align-items: center;
   gap: 7px;
   min-height: 48px;
@@ -614,3 +612,22 @@
     transform: rotate(-1deg) scale(1.018);
   }
 }
+
+.face-detail {
+  position: relative;
+  width: min(100%, 38vh, 350px);
+  aspect-ratio: 1;
+  border-radius: 18px;
+  overflow: hidden;
+}
+.face-detail img { transform: scale(1.45); transform-origin: 50% 64%; }
+.face-detail span {
+  position: absolute;
+  left: 30%; top: 55%; width: 40%; height: 18%;
+  border: 3px solid #29694f;
+  border-radius: 50%;
+}
+.face-detail-anger img, .face-detail-surprise img { transform-origin: 50% 40%; }
+.face-detail-anger span { top: 25%; left: 12%; width: 76%; }
+.face-detail-surprise span { top: 33%; left: 13%; width: 74%; height: 48%; }
+.practice-field:has(.face-detail) { grid-template-columns: 2fr 1fr; }
