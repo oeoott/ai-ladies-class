@@ -19,11 +19,6 @@ const paths = {
       <path d="M4 18C1.7 9.4 7 4 20 3c.1 11-3.8 17.6-12.2 15.5M3 21c2.4-4.8 6.5-8.7 11.5-12.2" />
     </>
   ),
-  speaker: (
-    <>
-      <path d="M4 9h3.5L13 5v14l-5.5-4H4zM16.5 9a4.2 4.2 0 0 1 0 6M19 6.5a8 8 0 0 1 0 11" />
-    </>
-  ),
   stamp: (
     <>
       <path d="M7 14h10l3 3v2H4v-2l3-3ZM9 14l.9-4a3.4 3.4 0 1 1 4.2 0l.9 4M5.5 21h13" />
@@ -132,7 +127,7 @@ function MenuRow({ icon, children, detail, onClick }) {
   )
 }
 
-function Guardian({ friend, settings, onSettings, onOpen, soundNotice }) {
+function Guardian({ friend, onOpen }) {
   return (
     <div className="forest-panel-menu">
       <MenuRow icon="paw" detail={friend?.name} onClick={() => onOpen('friends')}>
@@ -144,28 +139,6 @@ function Guardian({ friend, settings, onSettings, onOpen, soundNotice }) {
       <MenuRow icon="stamp" onClick={() => onOpen('records')}>
         스티커 기록
       </MenuRow>
-      <button
-        type="button"
-        role="switch"
-        aria-label="소리 안내"
-        aria-checked={!!settings.sound}
-        className="forest-panel-row"
-        onClick={() => onSettings({ sound: !settings.sound })}
-      >
-        <span className="forest-panel-row-icon">
-          <Icon name="speaker" />
-        </span>
-        <span className="forest-panel-row-title">소리 안내</span>
-        <span className="forest-panel-row-detail">{settings.sound ? '켜짐' : '꺼짐'}</span>
-        <span className={'forest-panel-switch' + (settings.sound ? ' on' : '')} aria-hidden="true">
-          <i />
-        </span>
-      </button>
-      {soundNotice && (
-        <p className="forest-panel-note" role="status">
-          {soundNotice}
-        </p>
-      )}
       <MenuRow icon="person" onClick={() => onOpen('account')}>
         이메일 계정 체험
       </MenuRow>
@@ -301,11 +274,8 @@ function PanelDialog({
   friend,
   friends = [],
   onFriend,
-  settings = {},
-  onSettings,
   onRetest,
   records = [],
-  soundNotice,
   onOpen,
   onAccountDone = onClose,
   returnFocusRef,
@@ -375,9 +345,7 @@ function PanelDialog({
         )}
       </div>
       {mode === 'friends' && <FriendPicker friend={friend} friends={friends} onFriend={onFriend} />}
-      {mode === 'guardian' && (
-        <Guardian {...{ friend, settings, onSettings, onOpen, soundNotice }} />
-      )}
+      {mode === 'guardian' && <Guardian friend={friend} onOpen={onOpen} />}
       {(mode === 'account' || mode === 'signup') && (
         <Account key={mode} {...{ mode, onOpen, onAccountDone }} />
       )}

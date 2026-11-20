@@ -129,14 +129,10 @@ svg {
   height: 20px;
   stroke-width: 1.8;
 }
-.nav-divider {
-  width: 1px;
-  height: 18px;
-  background: #d7dfd1;
-}
 .guardian-button {
   background: #eef2e7;
-  padding: 0 17px;
+  width: 48px;
+  padding: 0;
 }
 .nav-button:hover {
   background: #e8efe1;
@@ -281,15 +277,6 @@ svg {
   background: #f1f4e5;
   text-align: center;
 }
-.notice button {
-  margin-left: 8px;
-  min-width: 48px;
-  min-height: 48px;
-  color: #284e38;
-  background: #fff;
-  border: 1px solid #93a68a;
-  border-radius: 10px;
-}
 @media (max-width: 1050px) {
   .header-inner {
     height: 73px;
@@ -321,12 +308,6 @@ svg {
     gap: 5px;
     font-size: 14px;
   }
-  .guardian-button {
-    padding: 0 10px;
-  }
-  .nav-divider {
-    display: none;
-  }
   .page-wrap {
     width: calc(100% - 32px);
   }
@@ -348,12 +329,6 @@ svg {
   }
 }
 @media (max-width: 370px) {
-  .sound-control span {
-    display: none;
-  }
-  .sound-control {
-    min-width: 48px;
-  }
   .page-wrap {
     width: calc(100% - 20px);
   }

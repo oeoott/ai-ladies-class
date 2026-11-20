@@ -222,26 +222,6 @@
   font-size: 14px;
   color: var(--panel-muted);
 }
-.forest-panel .forest-panel-switch {
-  display: flex;
-  align-items: center;
-  padding: 3px;
-  width: 38px;
-  height: 23px;
-  border-radius: 16px;
-  background: #63776e;
-}
-.forest-panel .forest-panel-switch i {
-  display: block;
-  width: 17px;
-  height: 17px;
-  border-radius: 50%;
-  background: white;
-}
-.forest-panel .forest-panel-switch.on {
-  background: #2b7052;
-  justify-content: end;
-}
 .forest-panel .forest-account-form {
   display: grid;
   gap: 9px;

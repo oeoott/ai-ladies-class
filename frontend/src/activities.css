@@ -371,3 +371,135 @@
   min-height: 48px;
   margin: 0 0 13px;
 }
+
+.edu-model-caption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.edu-board .edu-replay {
+  display: none;
+  align-items: center;
+  gap: 7px;
+  min-height: 48px;
+  padding: 7px 13px;
+  border: 1px solid var(--edu-line);
+  border-radius: 12px;
+  background: #f4f7ef;
+  color: var(--edu-green);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .edu-board .edu-replay {
+    display: inline-flex;
+  }
+  .edu-character-head,
+  .edu-character-eyes,
+  .edu-character-mouth,
+  .edu-character-brow {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .edu-character-head {
+    transform-origin: 50% 88%;
+  }
+  .edu-character-paw {
+    transform-box: view-box;
+    transform-origin: 178px 183px;
+  }
+  .edu-portrait [data-gesture='listen'] .edu-character-head {
+    animation: edu-listen 820ms ease-in-out;
+  }
+  .edu-portrait [data-gesture='listen'] .edu-character-eyes {
+    animation: edu-blink 700ms ease-in-out;
+  }
+  .edu-portrait [data-gesture='nod'] .edu-character-head {
+    animation: edu-nod 800ms ease-in-out;
+  }
+
+  /* Show the named facial movement once, ending in the exercise's target expression. */
+  .edu-portrait [data-gesture='model']:not([data-feeling='anger']) .edu-character-mouth,
+  .edu-portrait [data-gesture='model'][data-feeling='surprise'] .edu-character-eyes {
+    animation: edu-form-expression 1250ms ease-in-out;
+  }
+  .edu-portrait [data-feeling='joy'] .edu-character-mouth {
+    transform-origin: center bottom;
+  }
+  .edu-portrait [data-feeling='sad'] .edu-character-mouth {
+    transform-origin: center top;
+  }
+  .edu-portrait [data-gesture='model'] .edu-character-brow {
+    --relaxed-angle: -28deg;
+    animation: edu-draw-brows 1250ms ease-in-out;
+  }
+  .edu-portrait [data-gesture='model'] .edu-character-brow.right {
+    --relaxed-angle: 28deg;
+  }
+  .edu-portrait [data-gesture='speak'] .edu-character-mouth {
+    animation: edu-mouth-words 1050ms ease-in-out;
+  }
+  .edu-portrait [data-gesture='speak'] .edu-character-paw {
+    animation: edu-raise-paw 1050ms ease-in-out;
+  }
+  .edu-portrait[data-active='false'] * {
+    animation-play-state: paused !important;
+  }
+}
+@keyframes edu-listen {
+  45%,
+  58% {
+    transform: rotate(-5deg);
+  }
+}
+@keyframes edu-blink {
+  0%,
+  32%,
+  66%,
+  100% {
+    transform: scaleY(1);
+  }
+  49% {
+    transform: scaleY(0.18);
+  }
+}
+@keyframes edu-nod {
+  45% {
+    transform: translateY(4px) scaleY(0.95);
+  }
+}
+@keyframes edu-form-expression {
+  0%,
+  16% {
+    transform: scale(0.87, 0.18);
+  }
+  88%,
+  100% {
+    transform: none;
+  }
+}
+@keyframes edu-draw-brows {
+  0%,
+  16% {
+    transform: translateY(-2px) rotate(var(--relaxed-angle));
+  }
+  88%,
+  100% {
+    transform: none;
+  }
+}
+@keyframes edu-mouth-words {
+  24%,
+  69% {
+    transform: translateY(1px) scale(0.78, 1.32);
+  }
+  45%,
+  86% {
+    transform: scale(1.06, 0.55);
+  }
+}
+@keyframes edu-raise-paw {
+  38%,
+  57% {
+    transform: rotate(-51deg);
+  }
+}

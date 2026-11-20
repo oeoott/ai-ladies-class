@@ -1,24 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  Check,
-  Pause,
-  PawPrint,
-  ShieldCheck,
-  Sparkles,
-  Sprout,
-  Volume2,
-  VolumeX,
-} from 'lucide-react'
+import { Check, Pause, PawPrint, ShieldCheck, Sparkles, Sprout } from 'lucide-react'
 import { ForestEntrance } from './ForestEntrance.jsx'
 import { JourneyProgress } from './JourneyProgress.jsx'
 import { LevelTest, Lesson } from './Activities.jsx'
 import { Panel } from './Panels.jsx'
 import {
   STORAGE_KEY,
+  beginWalk,
   emptySession,
   finishWalk,
   forToday,
-  localDay,
   readSession,
   topics,
   withRecordedStickers,
@@ -37,13 +28,17 @@ const friends = [
 
 function startSession() {
   try {
-    return readSession(localStorage.getItem(STORAGE_KEY))
+    const saved = readSession(localStorage.getItem(STORAGE_KEY))
+    if (saved.page === 'praise' || saved.page === 'stickers') {
+      return forToday({ ...saved, page: 'welcome' })
+    }
+    return saved
   } catch {
     return emptySession()
   }
 }
 
-function AppHeader({ sound, onSound, onGuard, onRest, learning }) {
+function AppHeader({ onGuard, onRest, learning }) {
   return (
     <header className="site-header">
       <div className="header-inner">
@@ -60,18 +55,13 @@ function AppHeader({ sound, onSound, onGuard, onRest, learning }) {
           )}
           <button
             type="button"
-            className="nav-button sound-control"
-            onClick={onSound}
-            aria-pressed={sound}
-            aria-label={'소리 안내 ' + (sound ? '끄기' : '켜기')}
+            className="nav-button guardian-button"
+            onClick={onGuard}
+            aria-label="보호자"
+            title="보호자 설정"
+            aria-haspopup="dialog"
           >
-            {sound ? <Volume2 /> : <VolumeX />}
-            <span>소리 {sound ? '켬' : '끔'}</span>
-          </button>
-          <span className="nav-divider" aria-hidden="true" />
-          <button type="button" className="nav-button guardian-button" onClick={onGuard}>
-            <ShieldCheck />
-            <span>보호자</span>
+            <ShieldCheck aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -117,7 +107,7 @@ function Reward({ page, friend, topic, records, onBook, onFinish }) {
             <h1 ref={title} tabIndex="-1">
               마음숲 스티커판
             </h1>
-            <p>산책을 마칠 때마다 마음 스티커를 모아요.</p>
+            <p>하루의 첫 산책을 마치면 마음 스티커를 하나 받아요.</p>
             <div className="stamp-board">
               {Array.from({ length: 5 }, (_, i) => (
                 <Stamp key={i} label={group[i]?.topic} filled={Boolean(group[i])} />
@@ -139,7 +129,7 @@ function Reward({ page, friend, topic, records, onBook, onFinish }) {
               {friend.familiar}와 {topic.phrase}을 알아보고 이야기를 나눴어요.
             </p>
             <button type="button" className="primary" onClick={onBook}>
-              내 스티커 붙이기
+              스티커판 보기
               <Sparkles aria-hidden="true" />
             </button>
           </>
@@ -154,10 +144,9 @@ function App() {
   const [hasEntered, setHasEntered] = useState(false)
   const [panel, setPanel] = useState(null)
   const [storageUnavailable, setStorageUnavailable] = useState(false)
-  const [audioMessage, setAudioMessage] = useState('')
   const entry = useRef('welcome')
   const speaker = typeof window !== 'undefined' ? window.speechSynthesis : null
-  const { page, settings } = session
+  const { page } = session
   const friend = friends.find((f) => f.id === session.friendId) || friends[0]
   const topic = topics.find((t) => t.id === session.topicId) || topics[0]
   const showEntrance = !hasEntered || page === 'welcome'
@@ -199,9 +188,9 @@ function App() {
     speaker?.getVoices()
   }, [speaker])
 
-  // Speak only after a deliberate opt-in and only with an installed Korean voice.
+  // Start narration after entry and leave its volume to the device.
   useEffect(() => {
-    if (!settings.sound || !speaker) return
+    if (showEntrance || !speaker) return
     let previous = ''
     const main = document.getElementById('main-content')
     if (!main || panel) return
@@ -247,23 +236,12 @@ function App() {
       speaker.removeEventListener?.('voiceschanged', read)
       document.removeEventListener('visibilitychange', onHidden)
     }
-  }, [settings.sound, page, panel, speaker, showEntrance])
+  }, [page, panel, speaker, showEntrance])
 
   function retest() {
     const returnPage = page === 'placement' ? session.retestReturn : session.onboarded ? page : null
     patch({ page: 'placement', placement: null, retestReturn: returnPage })
     setPanel(null)
-  }
-  function setPreferences(values) {
-    if (
-      values.sound &&
-      !speaker?.getVoices().some((voice) => voice.localService && /^ko/i.test(voice.lang))
-    ) {
-      setAudioMessage('이 기기에서 한국어 안내 음성을 찾을 수 없어요.')
-      return
-    }
-    setAudioMessage('')
-    setSession((current) => ({ ...current, settings: { ...current.settings, ...values } }))
   }
   function open(mode, origin) {
     entry.current = origin
@@ -271,12 +249,9 @@ function App() {
   }
   function enterForest() {
     setHasEntered(true)
-    if (page !== 'welcome') return
-    const updated = forToday(session, localDay())
-    if (updated !== session) setSession(updated)
-    if (updated.records.some((r) => r.date === updated.day)) patch({ page: 'stickers' })
-    else if (updated.onboarded) patch({ page: 'lesson', step: 0, activity: null })
-    else open('account', 'onboarding')
+    const next = beginWalk(session)
+    setSession(next)
+    if (next.page === 'welcome') open('account', 'onboarding')
   }
   function chooseFriend(id) {
     patch(
@@ -311,21 +286,11 @@ function App() {
             본문으로 가기
           </a>
           <AppHeader
-            sound={settings.sound}
             learning={learning}
-            onSound={() => setPreferences({ sound: !settings.sound })}
             onGuard={() => open('guardian', 'guardian')}
             onRest={() => open('rest', 'rest')}
           />
         </>
-      )}
-      {!showEntrance && audioMessage && (
-        <div className="notice" role="status">
-          {audioMessage}
-          <button type="button" onClick={() => setAudioMessage('')}>
-            닫기
-          </button>
-        </div>
       )}
       {storageUnavailable && (
         <p className="notice" role="status">
@@ -335,9 +300,8 @@ function App() {
       {showEntrance && (
         <ForestEntrance
           friend={friend}
-          topic={topic}
-          finished={page === 'stickers' || (page === 'welcome' && finished)}
-          resuming={page !== 'welcome' && page !== 'stickers'}
+          finished={page === 'welcome' && finished}
+          resuming={page === 'lesson' || page === 'placement'}
           hidden={Boolean(panel)}
           onEnter={enterForest}
         />
@@ -352,7 +316,13 @@ function App() {
             {page === 'lesson' && <JourneyProgress friend={friend} step={session.step} />}
           </div>
           {page === 'placement' ? (
-            <LevelTest progress={session} onUpdate={patch} onDone={afterTest} friend={friend} />
+            <LevelTest
+              progress={session}
+              onUpdate={patch}
+              onDone={afterTest}
+              friend={friend}
+              active={!panel}
+            />
           ) : (
             <Lesson
               progress={session}
@@ -381,12 +351,9 @@ function App() {
         friend={friend}
         friends={friends}
         onFriend={chooseFriend}
-        settings={settings}
-        onSettings={setPreferences}
         records={session.records}
         onOpen={setPanel}
         onAccountDone={() => setPanel(entry.current === 'onboarding' ? 'friends' : 'guardian')}
-        soundNotice={audioMessage}
         onRetest={retest}
       />
     </>

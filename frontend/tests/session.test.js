@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  beginWalk,
   emptySession,
   forToday,
   finishWalk,
@@ -37,6 +38,37 @@ test('repeated completion and reopening the sticker board award a single daily s
   assert.deepEqual(done.records, [{ date, topic: '기쁨' }])
   assert.deepEqual(finishWalk(done).records, done.records)
   assert.equal(forToday({ ...done, page: 'stickers' }, tomorrow).page, 'stickers')
+})
+test('a completed walk can be practiced again at the same level without another sticker', () => {
+  const done = finishWalk({
+    ...emptySession(date),
+    onboarded: true,
+    topicId: 'sad',
+    friendId: 'rabbit',
+    level: 'expand',
+  })
+  for (const page of ['welcome', 'stickers', 'praise']) {
+    const saved = readSession(JSON.stringify({ ...done, page, settings: { sound: false } }), date)
+    const replay = beginWalk(saved, date)
+    assert.equal(replay.page, 'lesson')
+    assert.equal(replay.step, 0)
+    assert.equal(replay.activity, null)
+    assert.equal(replay.topicId, 'sad')
+    assert.equal(replay.friendId, 'rabbit')
+    assert.equal(replay.level, 'expand')
+    assert.deepEqual(finishWalk(replay).records, done.records)
+  }
+})
+test('an unfinished replay resumes and a past completed walk starts today’s topic', () => {
+  const done = finishWalk({ ...emptySession(date), onboarded: true })
+  const replay = { ...beginWalk(done, date), step: 1 }
+  assert.equal(beginWalk(replay, tomorrow), replay)
+  const next = beginWalk({ ...done, page: 'stickers' }, tomorrow)
+  assert.equal(next.day, tomorrow)
+  assert.equal(next.topicId, 'surprise')
+  assert.equal(next.step, 0)
+  assert.deepEqual(next.records, done.records)
+  assert.equal(beginWalk(emptySession(date), date).page, 'welcome')
 })
 test('next day starts one new topic, maintaining the friend, level and collected stickers', () => {
   const completed = finishWalk({

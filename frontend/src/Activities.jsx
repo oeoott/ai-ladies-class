@@ -150,7 +150,7 @@ function Face({ kind = 'lion', feeling = 'joy' }) {
   const fur = { lion: '#f4c261', rabbit: '#f8eddc', bear: '#bd8a60' }[kind] || '#f4c261'
   const dark = '#473b32'
   return (
-    <g>
+    <g className="edu-character-head">
       {kind === 'lion' && (
         <path
           fill="#ce8947"
@@ -190,42 +190,56 @@ function Face({ kind = 'lion', feeling = 'joy' }) {
       </g>
       <g fill={dark}>
         {feeling === 'joy' ? (
-          <g fill="none" stroke={dark} strokeWidth="4" strokeLinecap="round">
+          <g
+            className="edu-character-eyes"
+            fill="none"
+            stroke={dark}
+            strokeWidth="4"
+            strokeLinecap="round"
+          >
             <path d="M73 99q6-9 12 0m31 0q6-9 12 0" />
           </g>
         ) : (
           <>
-            <ellipse
-              cx="79"
-              cy="98"
-              rx={feeling === 'surprise' ? 5 : 3.5}
-              ry={feeling === 'surprise' ? 7 : 5}
-            />
-            <ellipse
-              cx="122"
-              cy="98"
-              rx={feeling === 'surprise' ? 5 : 3.5}
-              ry={feeling === 'surprise' ? 7 : 5}
-            />
-            <g stroke={dark} strokeWidth="3.5" fill="none" strokeLinecap="round">
-              <path
-                d={
-                  feeling === 'sad'
-                    ? 'M71 90q6 0 12-5m34 0q6 5 12 5'
-                    : feeling === 'anger'
-                      ? 'M71 85l13 7m32 0 13-7'
-                      : 'M72 85q7-7 13-3m31 0q6-4 13 3'
-                }
+            <g className="edu-character-eyes">
+              <ellipse
+                cx="79"
+                cy="98"
+                rx={feeling === 'surprise' ? 5 : 3.5}
+                ry={feeling === 'surprise' ? 7 : 5}
               />
+              <ellipse
+                cx="122"
+                cy="98"
+                rx={feeling === 'surprise' ? 5 : 3.5}
+                ry={feeling === 'surprise' ? 7 : 5}
+              />
+            </g>
+            <g stroke={dark} strokeWidth="3.5" fill="none" strokeLinecap="round">
+              {feeling === 'anger' ? (
+                <>
+                  <path className="edu-character-brow left" d="M71 85l13 7" />
+                  <path className="edu-character-brow right" d="m116 92 13-7" />
+                </>
+              ) : (
+                <path
+                  d={
+                    feeling === 'sad'
+                      ? 'M71 90q6 0 12-5m34 0q6 5 12 5'
+                      : 'M72 85q7-7 13-3m31 0q6-4 13 3'
+                  }
+                />
+              )}
             </g>
           </>
         )}
         <path d="M95 105q5-4 11 0l-4 5q-2 2-4-1Z" />
       </g>
       {feeling === 'surprise' ? (
-        <ellipse cx="101" cy="121" rx="6" ry="8" fill={dark} />
+        <ellipse className="edu-character-mouth" cx="101" cy="121" rx="6" ry="8" fill={dark} />
       ) : (
         <path
+          className="edu-character-mouth"
           d={
             feeling === 'joy'
               ? 'M90 116q11 16 22 0'
@@ -293,17 +307,19 @@ function StoryProp({ type }) {
     </g>
   )
 }
-function Portrait({ friend, feeling, scene = false, small = false }) {
+function Portrait({ friend, feeling, scene = false, gesture, actionKey, active = true }) {
   const id = useId()
   const data = FEELINGS[feeling]
-  if (small)
-    return (
-      <svg viewBox="25 0 150 159" aria-hidden="true">
-        <Face kind={animalKind(friend)} feeling={feeling} />
-      </svg>
-    )
+  const kind = animalKind(friend)
+  const fur = { lion: '#edb85b', rabbit: '#f4e8d5', bear: '#ba8660' }[kind]
   return (
-    <svg className="edu-portrait" viewBox="0 0 300 213" role="img" aria-labelledby={id}>
+    <svg
+      className="edu-portrait"
+      viewBox="0 0 300 213"
+      role="img"
+      aria-labelledby={id}
+      data-active={active}
+    >
       <title id={id}>
         {friend?.name || '숲속 친구'}의 얼굴. {data.clue}
       </title>
@@ -317,20 +333,37 @@ function Portrait({ friend, feeling, scene = false, small = false }) {
       <g fill="none" stroke="#759d7b" strokeWidth="2.4" strokeLinecap="round">
         <path d="m18 176-2-6m4 7 4-5m255-7 1-6m-4 6-3-4m-35 34 4-4" />
       </g>
-      <path
-        d="M65 213q0-49 67-56c45-4 71 21 76 56Z"
-        fill={{ lion: '#edb85b', rabbit: '#f4e8d5', bear: '#ba8660' }[animalKind(friend)]}
-      />
-      <path d="m104 166 45 47h12l-48-52Z" fill="#ae865c" />
-      <g transform="translate(26 6) scale(1.07)">
-        <Face kind={animalKind(friend)} feeling={feeling} />
+      <g key={actionKey} data-gesture={gesture} data-feeling={feeling}>
+        <path d="M65 213q0-49 67-56c45-4 71 21 76 56Z" fill={fur} />
+        <path d="m104 166 45 47h12l-48-52Z" fill="#ae865c" />
+        {scene && (
+          <g className="edu-character-paw">
+            <path
+              d="M174 177q8-8 16 1l11 13q3-3 6-1 6 4 0 12-6 9-16 4l-17-12q-7-7 0-17Z"
+              fill={fur}
+              stroke="#8b6b4b"
+              strokeOpacity=".65"
+              strokeWidth="1.6"
+            />
+            <path
+              d="m200 198 3-3m-1 7 4-3"
+              fill="none"
+              stroke="#8b6b4b"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </g>
+        )}
+        <g transform="translate(26 6) scale(1.07)">
+          <Face kind={kind} feeling={feeling} />
+        </g>
+        <path
+          d="m94 161 39 16 41-16-13 21-19 3-14 15-15-11 6-10Z"
+          fill="#769873"
+          stroke="#65866b"
+          strokeWidth="1.5"
+        />
       </g>
-      <path
-        d="m94 161 39 16 41-16-13 21-19 3-14 15-15-11 6-10Z"
-        fill="#769873"
-        stroke="#65866b"
-        strokeWidth="1.5"
-      />
       {scene && <StoryProp type={data.prop} />}
     </svg>
   )
@@ -371,7 +404,7 @@ const PLACEMENT = [
     hint: '눈과 입이 동그래진 얼굴을 찾아봐요.',
   },
 ]
-export function LevelTest({ progress, onUpdate, onDone, friend }) {
+export function LevelTest({ progress, onUpdate, onDone, friend, active = true }) {
   const state = progress.placement || {}
   const idx = state.index === 1 ? 1 : 0
   const item = PLACEMENT[idx]
@@ -409,8 +442,17 @@ export function LevelTest({ progress, onUpdate, onDone, friend }) {
             className={'edu-picture-choice' + (state.choice === key ? ' is-selected' : '')}
             onClick={() => choose(key)}
           >
-            <Portrait friend={friend} feeling={key} />
-            {state.choice === key && <span className="edu-picture-check" aria-hidden="true">✓</span>}
+            <Portrait
+              friend={friend}
+              feeling={key}
+              gesture={state.choice === key ? 'listen' : undefined}
+              active={active}
+            />
+            {state.choice === key && (
+              <span className="edu-picture-check" aria-hidden="true">
+                ✓
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -425,7 +467,7 @@ export function LevelTest({ progress, onUpdate, onDone, friend }) {
     </Board>
   )
 }
-function EmotionActivity({ fact, feeling, friend, state, update, next, expanded }) {
+function EmotionActivity({ fact, feeling, friend, state, update, next, expanded, active }) {
   const words = expanded ? [fact.word, fact.kin, fact.opposite] : [fact.word, fact.opposite]
   // Rotate the answer position by topic while keeping it stable on repeat visits.
   if (feeling === 'joy' || feeling === 'surprise') words.unshift(words.pop())
@@ -466,7 +508,15 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded 
     >
       <div className="edu-split">
         <figure className="edu-figure">
-          <Portrait friend={friend} feeling={feeling} />
+          <Portrait
+            friend={friend}
+            feeling={feeling}
+            active={active}
+            gesture={
+              done ? 'nod' : state.feedback ? 'model' : selected.length ? 'listen' : undefined
+            }
+            actionKey={selected.join('|') + (state.feedback || '')}
+          />
           <figcaption>{friend?.name || '숲속 친구'}의 표정</figcaption>
         </figure>
         <div className="edu-task">
@@ -593,6 +643,7 @@ function useCamera(active) {
 }
 function MirrorActivity({ fact, feeling, friend, active, next }) {
   const camera = useCamera(active)
+  const [demonstration, setDemonstration] = useState(0)
   return (
     <Board
       kicker="둘째 걸음 · 표정 연습"
@@ -601,8 +652,36 @@ function MirrorActivity({ fact, feeling, friend, active, next }) {
     >
       <div className="edu-split">
         <figure className="edu-figure">
-          <Portrait friend={friend} feeling={feeling} />
-          <figcaption>{fact.label} 표정</figcaption>
+          <Portrait
+            friend={friend}
+            feeling={feeling}
+            active={active}
+            gesture="model"
+            actionKey={demonstration}
+          />
+          <figcaption className="edu-model-caption">
+            {fact.label} 표정
+            <button
+              type="button"
+              className="edu-replay"
+              onClick={() => setDemonstration((n) => n + 1)}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4 10a8 8 0 1 1 1.8 7M4 4v6h6" />
+              </svg>
+              표정 다시 보기
+            </button>
+          </figcaption>
         </figure>
         <div className="edu-task">
           <p className="edu-prompt" data-read-aloud>
@@ -965,7 +1044,14 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
     >
       <div className="edu-split">
         <figure className="edu-figure">
-          <Portrait friend={friend} feeling={feeling} scene />
+          <Portrait
+            friend={friend}
+            feeling={feeling}
+            scene
+            active={active}
+            gesture="speak"
+            actionKey={phase}
+          />
           <figcaption>
             {name}의 {fact.label} 이야기
           </figcaption>
@@ -1004,7 +1090,7 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
                     ? reply
                     : '“' + reply + '”'}
               </p>
-              <Action onClick={onComplete}>스티커 받기</Action>
+              <Action onClick={onComplete}>산책 마무리하기</Action>
               {phase === 'reply' && (
                 <button
                   type="button"
@@ -1042,6 +1128,7 @@ export function Lesson({ progress, onUpdate, onComplete, friend, topic, active =
         state={state}
         update={update}
         expanded={progress.level === 'expand'}
+        active={active}
         next={next}
       />
     )
