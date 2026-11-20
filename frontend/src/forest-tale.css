@@ -1,0 +1,327 @@
+/* The picture-book objects share the clearing with the selected companion. */
+.tale-figure {
+  width: 100%;
+}
+.tale-diorama {
+  position: relative;
+  width: min(100%, 620px);
+  height: clamp(260px, 50vh, 540px);
+  container-type: inline-size;
+  isolation: isolate;
+}
+.tale-cast {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  bottom: 2%;
+  width: 62%;
+  height: 90%;
+  display: grid;
+  align-items: end;
+}
+.tale-cast > .edu-portrait {
+  height: 100%;
+  width: 100%;
+}
+.tale-props {
+  position: absolute;
+  inset: 3% 0 5% 44%;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 2px #563d323b);
+}
+.tale-props > span {
+  position: absolute;
+  display: block;
+}
+.tale-props > span,
+.tale-pinwheel {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.tale-plane {
+  z-index: 2;
+  width: 33%;
+  aspect-ratio: 1.5;
+  background-image: url('./assets/tale-objects/plane.webp');
+}
+[data-page='1'] .tale-plane {
+  left: 12%;
+  bottom: 27%;
+  width: 29%;
+  background-image: url('./assets/tale-objects/letter.webp');
+}
+[data-page='2'] .tale-plane {
+  bottom: 43%;
+  left: 15%;
+}
+[data-page='3'] .tale-plane {
+  bottom: 50%;
+  left: 20%;
+  transform: rotate(-10deg);
+}
+
+.tale-postbox {
+  width: 39%;
+  height: 38%;
+  left: 60%;
+  bottom: 1%;
+  background-image: url('./assets/tale-objects/postbox.webp');
+  background-position: bottom;
+}
+.tale-windmill {
+  left: 27%;
+  bottom: 7%;
+  width: 2.3%;
+  height: 25%;
+  background-color: #987348;
+  border-radius: 4px;
+}
+.tale-pinwheel {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 16cqi;
+  height: 16cqi;
+  background-image: url('./assets/tale-objects/pinwheel.webp');
+  transform: translate(-50%, -50%) rotate(16deg);
+}
+[data-world='joy'][data-outcome='0'] .tale-plane {
+  left: 30%;
+  bottom: 36%;
+  transform: rotate(-27deg);
+}
+[data-world='joy'][data-outcome='1'] .tale-plane {
+  left: 67%;
+  bottom: 18%;
+  transform: rotate(58deg) scale(0.7);
+}
+
+.tale-props > .tale-block {
+  height: 12%;
+  background-size: 100% 100%;
+}
+.block-base {
+  width: 50%;
+  left: 25%;
+  bottom: 5%;
+  background-image: url('./assets/tale-objects/oak-block.webp');
+}
+.block-middle {
+  width: 40%;
+  left: 30%;
+  bottom: 15.5%;
+  background-image: url('./assets/tale-objects/sage-block.webp');
+}
+.block-cap {
+  width: 33%;
+  left: 33.5%;
+  bottom: 26%;
+  background-image: url('./assets/tale-objects/coral-block.webp');
+}
+.tale-beacon {
+  width: 22%;
+  height: 15%;
+  bottom: 36.5%;
+  left: 39%;
+  background-image: url('./assets/tale-objects/acorn-light.webp');
+  background-position: bottom;
+  transform-origin: bottom center;
+  filter: saturate(0.55) brightness(0.7);
+}
+[data-page='2'] .tale-beacon,
+[data-world='sad'][data-outcome='1'] .tale-beacon {
+  filter: drop-shadow(0 0 7px #ffdc75);
+}
+[data-page='1'] .tale-beacon {
+  left: 12%;
+  bottom: 2%;
+  transform: rotate(-9deg);
+}
+[data-page='3']:not([data-outcome='1']) .block-middle {
+  left: 62%;
+  bottom: 2%;
+  transform: rotate(12deg);
+}
+[data-page='3']:not([data-outcome='1']) .block-cap {
+  left: 9%;
+  bottom: 1%;
+  transform: rotate(-15deg);
+}
+[data-page='3']:not([data-outcome='1']) .tale-beacon {
+  bottom: 3%;
+  left: 49%;
+  transform: rotate(-70deg);
+}
+.tale-mat {
+  bottom: 0;
+  left: -19%;
+  width: 83%;
+  height: 20%;
+  background-image: url('./assets/tale-objects/mat.webp');
+  background-size: 100% 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+}
+[data-world='sad'][data-outcome='0'] .tale-mat {
+  transform: scaleX(1);
+}
+
+.tale-leaf {
+  z-index: 1;
+  left: 55%;
+  bottom: 25%;
+  width: 43%;
+  height: 29%;
+  background-image: url('./assets/tale-objects/leaf.webp');
+  transform: rotate(-15deg);
+}
+.tale-butterfly {
+  z-index: 2;
+  width: 32%;
+  height: 18%;
+  bottom: 31%;
+  left: 61%;
+  background-image: url('./assets/tale-objects/butterfly.webp');
+  transform: rotate(-13deg) scale(0.14);
+}
+[data-page='1'] .tale-butterfly {
+  opacity: 0;
+}
+[data-page='2'] .tale-butterfly {
+  bottom: 39%;
+  left: 61%;
+  transform: rotate(-13deg) scale(0.55);
+  z-index: 0;
+}
+[data-page='3'] .tale-butterfly {
+  bottom: 59%;
+  left: 47%;
+  transform: rotate(-13deg);
+}
+.tale-flower {
+  left: 10%;
+  bottom: 0;
+  height: 29%;
+  width: 35%;
+  background-image: url('./assets/tale-objects/cosmos.webp');
+  background-position: bottom;
+}
+.tale-rocks {
+  width: 37%;
+  height: 16%;
+  left: 54%;
+  bottom: 0;
+  background-image: url('./assets/tale-objects/rocks.webp');
+  background-position: bottom;
+}
+[data-world='surprise'][data-outcome='0'] .tale-butterfly {
+  bottom: 47%;
+  left: 66%;
+  transform: rotate(12deg) scale(0.84);
+}
+[data-world='surprise'][data-outcome='1'] .tale-butterfly {
+  bottom: 27%;
+  left: 12%;
+  transform: rotate(-21deg) scale(0.86);
+}
+[data-world='surprise'][data-outcome='1'] .tale-flower {
+  height: 34%;
+}
+
+.tale-cloud-stairs {
+  bottom: 7%;
+  left: 24%;
+  width: 66%;
+  height: 33%;
+  background-image: url('./assets/tale-objects/stairs.webp');
+  background-position: bottom;
+}
+.tale-cloud-friend {
+  width: 29%;
+  height: 18%;
+  left: 73%;
+  bottom: 42%;
+  background-image: url('./assets/tale-objects/cloud.webp');
+}
+[data-page='1'] .tale-cloud-friend {
+  opacity: 0;
+  transform: translate(12%, -19%);
+}
+[data-page='2'] .tale-cloud-friend {
+  left: 53%;
+}
+[data-page='3'] .tale-cloud-friend {
+  left: 30%;
+  bottom: 18%;
+}
+[data-world='anger'][data-outcome] .tale-cloud-friend {
+  left: 67%;
+  bottom: 31%;
+}
+.tale-turn {
+  display: grid !important;
+  place-content: center;
+  width: 25%;
+  aspect-ratio: 1;
+  bottom: 1%;
+  left: 3%;
+  padding-bottom: 10%;
+  color: #49381f;
+  background-image: url('./assets/tale-objects/ginkgo.webp');
+  font: 400 clamp(16px, 4cqi, 30px)/1 var(--display);
+  transform: rotate(-8deg);
+  opacity: 0;
+}
+.tale-turn.next-leaf {
+  left: 31%;
+  bottom: -3%;
+  transform: rotate(7deg);
+}
+[data-world='anger'][data-outcome] .first-leaf,
+[data-world='anger'][data-outcome='1'] .next-leaf {
+  opacity: 1;
+}
+[data-world='anger'][data-outcome='0'] .tale-cast {
+  transform: translateX(11%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tale-plane,
+  .tale-butterfly,
+  .tale-turn,
+  .tale-block,
+  .tale-beacon,
+  .tale-mat,
+  .tale-flower,
+  .tale-cloud-friend,
+  .tale-cast {
+    transition:
+      left 0.72s ease-in-out,
+      bottom 0.72s ease-in-out,
+      transform 0.72s ease-in-out,
+      opacity 0.45s,
+      height 0.65s;
+  }
+  [data-world='joy'][data-outcome='0'] .tale-pinwheel {
+    animation: tale-breeze 1.2s ease-out both;
+  }
+  [data-paused='true'] * {
+    animation-play-state: paused !important;
+  }
+  @keyframes tale-breeze {
+    to {
+      transform: translate(-50%, -50%) rotate(156deg);
+    }
+  }
+}
+@media (max-aspect-ratio: 1/1), (max-width: 650px) {
+  .tale-diorama {
+    width: min(100%, 480px);
+    height: clamp(180px, 29vh, 355px);
+  }
+}
+@media (max-width: 465px) {
+  .tale-diorama {
+    height: clamp(142px, 24vh, 206px);
+  }
+}

@@ -1,0 +1,28 @@
+/* Values for the learning scene in DESIGN-SYSTEM.md. */
+:root {
+  --forest-sky: #c3e4e2;
+  --forest-ink: #244238;
+  --forest-muted: #4e6252;
+  --forest-action: #206246;
+  --forest-action-ink: #fffdf3;
+  --forest-line: #b8c9b8;
+  --forest-card: #fff8e6;
+  --forest-card-highlight: #fffdf5;
+  --forest-card-edge: #d5ba87;
+  --forest-card-shadow: inset 0 0 0 4px #fff2ce, 0 4px 0 #b998699e, 0 12px 28px #29412626;
+  --forest-card-radius: 26px 32px 24px 29px;
+  --forest-toolbar: #fff8e7;
+  --forest-trail: #f9f4df;
+  --forest-focus: #155da4;
+  --forest-touch: 48px;
+  --forest-action-height: 52px;
+  --forest-action-gap: 12px;
+  --forest-button-radius: 13px;
+  --forest-pill-radius: 999px;
+  --forest-card-padding: clamp(23px, 3.25vw, 48px);
+  --forest-scene-gap: clamp(18px, 3.7vw, 64px);
+  --forest-title-size: clamp(2.15rem, 3.9vw, 3.5rem);
+  --forest-body-size: clamp(1rem, 1.8vw, 1.15rem);
+  --forest-prompt-size: clamp(1.2rem, 2.3vw, 1.55rem);
+  --forest-travel: 650ms;
+}

@@ -1,0 +1,382 @@
+@import './design-tokens.css';
+
+@font-face {
+  font-family: ForestJua;
+  src: url('./assets/Jua-Regular.woff') format('woff');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+:root {
+  color-scheme: light;
+  font-family: 'Apple SD Gothic Neo', 'Pretendard', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  color: #253f36;
+  background: #f8f9f2;
+  font-synthesis: none;
+  line-height: 1.55;
+  --ink: #263f34;
+  --green: #2d704d;
+  --paper: #f8f9f2;
+  --rule: #dce3d4;
+  --display: ForestJua, 'Apple SD Gothic Neo', sans-serif;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 280px;
+}
+button,
+input {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+button:disabled {
+  cursor: default;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 3px solid #18678c;
+  outline-offset: 4px;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+h1,
+h2,
+h3,
+button,
+p {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+svg {
+  flex-shrink: 0;
+}
+.skip-link {
+  position: fixed;
+  z-index: 20;
+  left: 14px;
+  top: 0;
+  padding: 14px;
+  transform: translateY(-120%);
+  background: white;
+  color: var(--ink);
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+.immersive-scene {
+  --scene-edge: clamp(16px, 3.5vw, 58px);
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: clamp(14px, 2.4vh, 30px);
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: max(clamp(24px, 4vh, 60px), env(safe-area-inset-top))
+    max(var(--scene-edge), env(safe-area-inset-right))
+    max(clamp(14px, 2.4vh, 32px), env(safe-area-inset-bottom))
+    max(var(--scene-edge), env(safe-area-inset-left));
+  background: var(--forest-sky);
+}
+.scene-landscape {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+}
+.immersive-scene.has-route {
+
+  row-gap: clamp(8px, 1.4vh, 16px);
+  padding-top: max(18px, env(safe-area-inset-top));
+}
+.immersive-scene > .journey-progress {
+  grid-area: 1 / 1;
+  justify-self: center;
+}
+@media (orientation: portrait) {
+  .tale-landscape {
+    object-position: 18% center;
+  }
+}
+.scene-content {
+  grid-area: 2 / 1;
+  min-width: 0;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+}
+.scene-footer {
+  grid-area: 1 / 1;
+  justify-self: end;
+  align-self: start;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+}
+.scene-tools {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.scene-tool {
+  min-height: var(--forest-touch);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 15px;
+  background: var(--forest-toolbar);
+  color: #304f3e;
+  border: 1px solid #9c9274;
+  border-radius: 24px;
+  box-shadow: 0 2px 0 #645b3f50;
+  font-size: 16px;
+  font-weight: 650;
+}
+.scene-tool svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.9;
+}
+.scene-tool.guardian-button {
+  width: 48px;
+  padding: 0;
+}
+@media (hover: hover) {
+  .scene-tool:hover {
+    background: #f7ebcf;
+  }
+}
+.scene-tool:focus-visible,
+.immersive-scene .primary:focus-visible {
+  outline-color: #175e79;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 7px #fffdf0;
+}
+
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 56px;
+  padding: 12px 24px;
+  border-radius: 100px;
+  border: 1.5px solid #225e3b;
+  background: #286a46;
+  color: #fffdf2;
+  font: 400 clamp(23px, 2.25vw, 30px)/1.25 var(--display);
+  box-shadow:
+    inset 0 2px 0 #75a679,
+    0 3px 0 #205b38;
+}
+.primary:hover {
+  background: #205c3d;
+}
+.primary:active {
+  box-shadow: none;
+  transform: translateY(2px);
+}
+.primary svg {
+  width: 22px;
+  height: 22px;
+}
+
+.praise-clearing,
+.sticker-book {
+  text-align: center;
+  color: #284c38;
+  display: grid;
+  justify-items: center;
+}
+.praise-clearing {
+  gap: clamp(16px, 2.3vh, 30px);
+}
+.praise-note,
+.sticker-book {
+  border: 1px solid #c2a776;
+  background: #fff6df;
+  border-radius: 28px 35px 31px 27px;
+  box-shadow:
+    0 4px 0 #c7ae80,
+    0 9px 24px #3d543723;
+}
+.praise-note {
+  padding: clamp(16px, 2.5vh, 30px) clamp(20px, 4.8vw, 72px);
+}
+.praise-clearing h1,
+.sticker-book h1 {
+  font: 400 clamp(32px, 4.4vw, 62px)/1.18 var(--display);
+  letter-spacing: -0.045em;
+}
+.praise-note p,
+.sticker-book p {
+  margin-top: 8px;
+  max-width: 36em;
+  font-size: clamp(16px, 1.7vw, 21px);
+}
+.reward-friend {
+  width: min(70vw, 490px);
+  height: clamp(180px, 42vh, 475px);
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 5px 3px #3d452c27);
+}
+.sticker-book {
+  width: min(100%, 750px);
+  padding: clamp(26px, 5vh, 62px) clamp(12px, 4vw, 64px);
+  box-shadow:
+    0 3px 0 #dabf89,
+    0 6px 0 #65836a,
+    0 12px 24px #43472d30;
+}
+.stamp-board {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(7px, 1.5vw, 18px);
+  margin: clamp(22px, 4vh, 42px) 0 14px;
+}
+.stamp {
+  width: clamp(52px, 8.4vw, 96px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px dashed #96aa8b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #8da082;
+  font-size: 16px;
+}
+.stamp.filled {
+  background: #f3dd91;
+  border: 4px double #9a6e31;
+  color: #67491c;
+  font-family: var(--display);
+  transform: rotate(-6deg);
+}
+.stamp.filled svg {
+  width: 28px;
+  height: 28px;
+}
+.stamp-pages {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.stamp-pages button {
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid #baa779;
+  border-radius: 12px;
+  background: #fff9e9;
+  color: #284c38;
+}
+.stamp-count {
+  color: #526549;
+  margin-bottom: clamp(20px, 3.5vh, 38px);
+}
+.notice {
+  max-width: 1000px;
+  margin: 12px auto;
+  padding: 8px 15px;
+  color: #254b38;
+  background: #f1f4e5;
+  text-align: center;
+}
+@media (max-width: 600px) {
+  .immersive-scene {
+    --scene-edge: 14px;
+    row-gap: 14px;
+    padding-top: max(18px, env(safe-area-inset-top));
+  }
+  .scene-footer {
+    gap: 10px;
+    align-items: center;
+  }
+  .scene-tool {
+    gap: 4px;
+    padding-inline: 10px;
+    font-size: 14px;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .immersive-scene {
+    padding-block: max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-bottom));
+    row-gap: 10px;
+  }
+  .praise-clearing {
+    grid-template-columns: auto auto;
+    align-items: center;
+    gap: 12px 20px;
+  }
+  .reward-friend {
+    grid-area: 1 / 1 / 3 / 2;
+    width: min(28vw, 220px);
+    height: min(52vh, 235px);
+  }
+  .praise-note {
+    align-self: end;
+    padding: 14px 18px;
+  }
+  .praise-clearing .primary {
+    align-self: start;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (max-width: 740px) {
+  .has-route > .journey-progress { grid-row: 2; }
+  .has-route > .scene-content { grid-row: 3; }
+  .immersive-scene.has-route { grid-template-rows: auto auto 1fr; }
+}
+
+.scene-back {
+  grid-area: 1 / 1;
+  justify-self: start;
+  align-self: start;
+}
+
+.scene-back .scene-tool {
+  width: 48px;
+  padding-inline: 0;
+}
+
+.stamp.stamp-next {
+  color: var(--forest-action);
+  border-color: currentColor;
+  background: #edf3e5;
+  font-weight: 750;
+}
+
+.stamp-next-label {
+  font-size: 0.77rem;
+}

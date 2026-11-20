@@ -1,0 +1,12 @@
+Google MediaPipe Face Landmarker float16/1
+
+The original model is distributed by Google for MediaPipe. The model cards
+for BlazeFace (short range), FaceMesh V2 and Blendshape V2 identify their
+license as Apache License, Version 2.0. See LICENSE.txt.
+
+Documentation and model cards
+https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker
+
+Unmodified model bundle
+https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task
+SHA-256 64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff
