@@ -97,6 +97,11 @@ svg {
   object-position: center;
   pointer-events: none;
 }
+@media (orientation: portrait) {
+  .tale-landscape {
+    object-position: 18% center;
+  }
+}
 .scene-content {
   min-width: 0;
   display: grid;

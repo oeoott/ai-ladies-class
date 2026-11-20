@@ -502,7 +502,7 @@
   }
   .edu-character-paw {
     transform-box: view-box;
-    transform-origin: 178px 183px;
+    transform-origin: 0 0;
   }
   .edu-portrait [data-gesture='listen'] .edu-character-head {
     animation: edu-listen 820ms ease-in-out;
@@ -526,11 +526,7 @@
     transform-origin: center top;
   }
   .edu-portrait [data-gesture='model'] .edu-character-brow {
-    --relaxed-angle: -28deg;
     animation: edu-draw-brows 1250ms ease-in-out;
-  }
-  .edu-portrait [data-gesture='model'] .edu-character-brow.right {
-    --relaxed-angle: 28deg;
   }
   .edu-portrait [data-gesture='speak'] .edu-character-mouth {
     animation: edu-mouth-words 1050ms ease-in-out;
@@ -577,7 +573,7 @@
 @keyframes edu-draw-brows {
   0%,
   16% {
-    transform: translateY(-2px) rotate(var(--relaxed-angle));
+    transform: translateY(-2px) rotate(-28deg);
   }
   88%,
   100% {
@@ -595,8 +591,13 @@
   }
 }
 @keyframes edu-raise-paw {
-  38%,
-  57% {
-    transform: rotate(-51deg);
+  30% {
+    transform: rotate(-2deg) scale(1.035);
+  }
+  58% {
+    transform: rotate(1.5deg) scale(1.025);
+  }
+  81% {
+    transform: rotate(-1deg) scale(1.018);
   }
 }

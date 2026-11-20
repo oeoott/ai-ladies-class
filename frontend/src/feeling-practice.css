@@ -1,0 +1,123 @@
+.edu-figure.practice-field {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  align-items: end;
+  column-gap: clamp(6px, 1vw, 20px);
+}
+.practice-field-friend {
+  display: grid;
+  align-content: end;
+  justify-items: center;
+  width: 100%;
+  margin: 0;
+}
+.practice-field .practice-field-friend .edu-portrait {
+  width: 100%;
+  height: auto;
+  max-height: clamp(220px, 52vh, 520px);
+}
+.practice-field-friend figcaption {
+  margin: 8px 0 0;
+}
+.practice-object {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  align-content: end;
+  gap: 8px;
+  color: #244a32;
+}
+.edu-board .practice-object-button {
+  border: 0;
+  border-radius: 20px;
+  background: transparent;
+  padding: 0;
+}
+.practice-object-image {
+  display: block;
+  width: 100%;
+  height: clamp(100px, 22vw, 240px);
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 3px 2px #38472b4a);
+}
+.practice-object-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 48px;
+  padding: 5px 15px;
+  border: 1px solid #d6c098;
+  border-radius: 999px;
+  background: #fff7dd;
+  font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+  font-weight: 650;
+  line-height: 1.25;
+  box-shadow: 0 2px 0 #92826180;
+}
+.practice-object-button .practice-object-label {
+  border-color: #124c32;
+  background: #286847;
+  box-shadow: 0 3px 0 #16472e;
+  color: #fffdf3;
+  font-weight: 750;
+}
+.practice-object-button:focus-visible {
+  background: #fff9e455;
+}
+.practice-cue-options {
+  display: flex;
+  gap: 8px;
+}
+.practice-cue-options .edu-choice {
+  width: auto;
+  flex: 1;
+  padding-inline: 10px;
+}
+@media (min-width: 651px) and (max-aspect-ratio: 1/1) {
+  .edu-spread:has(.practice-field) {
+    align-self: stretch;
+    grid-template-rows: minmax(min-content, 1fr) auto;
+  }
+  .practice-field {
+    max-width: min(84vw, 650px);
+    align-self: end;
+  }
+  .practice-field .practice-field-friend .edu-portrait {
+    max-height: min(35vh, 385px);
+  }
+  .practice-object-image {
+    height: min(23vh, 224px);
+  }
+}
+@media (max-width: 650px) {
+  .edu-spread:has(.practice-field) {
+    align-content: start;
+    align-self: stretch;
+  }
+  .edu-figure.practice-field {
+    max-width: 380px;
+  }
+  .practice-field .practice-field-friend .edu-portrait {
+    max-height: clamp(150px, 26vh, 230px);
+  }
+  .practice-object-label {
+    padding-inline: 10px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .practice-object.is-revealed img {
+    animation: practice-reveal 380ms ease-out both;
+    transform-origin: center bottom;
+  }
+}
+@keyframes practice-reveal {
+  from {
+    transform: scale(0.95);
+  }
+  to {
+    transform: scale(1);
+  }
+}

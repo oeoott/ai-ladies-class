@@ -1,6 +1,10 @@
 import React, { useEffect, useRef, useState, useId } from 'react'
 import { startFacePreview } from './facePreview.js'
+import { feelingPractice, PracticeObject } from './FeelingPractice.jsx'
+import { PaintedFriend } from './PaintedFriend.jsx'
 import './activities.css'
+import { TaleActions, TaleScene } from './ForestTale.jsx'
+import { forestTales } from './forestTales.js'
 
 const FEELINGS = {
   joy: {
@@ -10,16 +14,12 @@ const FEELINGS = {
     opposite: '슬퍼요',
     clue: '입꼬리가 위로 올라갔어요.',
     motion: '입꼬리를 살짝 올려 봐요.',
-    scene: '친구가 같이 종이비행기를 날리자고 했어요.',
-    line: '함께 놀게 돼서 기뻐!',
     ask: '친구에게 어떤 말을 건네 볼까요?',
     choices: ['같이 놀자!', '불러 줘서 고마워.'],
     replies: ['좋아! 종이비행기를 함께 날려 보자.', '나도 고마워. 같이 노니까 즐거워.'],
     again: '비행기를 어디로 날려 볼까요?',
     extra: ['하늘로!', '나무 쪽으로!'],
     ends: ['하늘을 향해 비행기를 날렸어요.', '나무 쪽으로 비행기를 날렸어요.'],
-    prop: 'plane',
-    swatch: '#f2dba0',
   },
   sad: {
     label: '슬픔',
@@ -28,16 +28,12 @@ const FEELINGS = {
     opposite: '기뻐요',
     clue: '입꼬리가 아래로 내려갔어요.',
     motion: '입꼬리를 살짝 내려 봐요.',
-    scene: '공들여 쌓은 나무 블록이 와르르 무너졌어요.',
-    line: '열심히 쌓았는데 무너져서 속상해.',
     ask: '친구에게 어떤 말을 건네 볼까요?',
     choices: ['옆에 있어 줄게.', '같이 다시 쌓을까?'],
     replies: ['내 옆에 있어 줘서 고마워.', '좋아. 함께 쌓으면 힘이 날 것 같아.'],
     again: '다음에는 무엇을 해 볼까요?',
     extra: ['잠깐 쉬자.', '블록을 모으자.'],
     ends: ['둘이 나란히 앉아 잠깐 쉬었어요.', '둘이 천천히 블록을 모았어요.'],
-    prop: 'blocks',
-    swatch: '#c4dfed',
   },
   surprise: {
     label: '놀람',
@@ -46,16 +42,12 @@ const FEELINGS = {
     opposite: '슬퍼요',
     clue: '눈과 입이 동그래졌어요.',
     motion: '입을 동그랗게 벌려 봐요.',
-    scene: '화단을 살펴보는데 나뭇잎 뒤에서 나비가 날아올랐어요.',
-    line: '나비가 갑자기 나타나서 깜짝 놀랐어!',
     ask: '친구에게 어떤 말을 건네 볼까요?',
     choices: ['나비가 있었구나!', '괜찮아?'],
     replies: ['응! 잎이 움직여서 깜짝 놀랐어.', '응, 괜찮아. 이제 천천히 보고 싶어.'],
     again: '나비를 어떻게 볼까요?',
     extra: ['여기서 보자.', '앉아서 보자.'],
     ends: ['둘은 서서 나비를 가만히 바라보았어요.', '둘은 나란히 앉아 나비를 보았어요.'],
-    prop: 'butterfly',
-    swatch: '#e1d2e3',
   },
   anger: {
     label: '화남',
@@ -64,16 +56,12 @@ const FEELINGS = {
     opposite: '기뻐요',
     clue: '눈썹이 가운데로 모였어요.',
     motion: '눈썹을 살짝 모아 봐요.',
-    scene: '미끄럼틀에서 기다리는데 다른 친구가 먼저 올라갔어요.',
-    line: '내 차례였는데 먼저 가서 화가 나.',
     ask: '차례를 지키도록 어떤 말을 해 볼까요?',
     choices: ['지금은 내 차례야.', '우리 차례로 타자.'],
     replies: ['맞아. 내가 먼저 기다렸다고 알려 줄래.', '좋아. 차례를 지키자고 말해 볼래.'],
     again: '또 도움이 필요하면 어떻게 할까요?',
     extra: ['선생님께 말해요.', '잠깐 쉬어요.'],
     ends: ['선생님께 차례를 지키고 싶다고 말했어요.', '벤치에 앉아 잠깐 쉬었어요.'],
-    prop: 'slide',
-    swatch: '#eccfb6',
   },
 }
 const TOPIC_NAMES = {
@@ -146,265 +134,16 @@ function Choice({ selected, children, ...props }) {
     </button>
   )
 }
-function Face({ kind = 'lion', feeling = 'joy', fur }) {
-  const dark = '#473b32'
-  return (
-    <g className="edu-character-head">
-      {kind === 'lion' && (
-        <path
-          fill="#ce8947"
-          d="M44 94Q29 82 44 68Q39 49 57 47Q59 30 78 35Q90 20 103 33Q121 26 131 43Q151 40 155 60Q174 69 163 87Q177 103 161 116Q163 135 143 139Q134 158 117 149Q101 162 88 149Q71 156 60 140Q40 142 41 123Q25 109 44 94Z"
-        />
-      )}
-      {kind === 'rabbit' ? (
-        <g fill={fur} stroke="#c8a788" strokeWidth="2">
-          <ellipse cx="78" cy="49" rx="15" ry="39" transform="rotate(-11 78 49)" />
-          <ellipse cx="123" cy="49" rx="15" ry="39" transform="rotate(11 123 49)" />
-          <path
-            d="M78 62q-11-28-8-37m48 37q11-28 8-37"
-            stroke="#e8bba9"
-            strokeWidth="9"
-            strokeLinecap="round"
-          />
-        </g>
-      ) : (
-        <g fill={fur} stroke={kind === 'lion' ? '#b68043' : '#936748'} strokeWidth="2.4">
-          <circle cx="62" cy="65" r="15" />
-          <circle cx="139" cy="65" r="15" />
-          <g fill="#c38f73" stroke="none">
-            <circle cx="62" cy="65" r="8" />
-            <circle cx="139" cy="65" r="8" />
-          </g>
-        </g>
-      )}
-      <path
-        d="M48 100c0-31 20-51 52-51s53 20 53 51c0 29-22 46-53 46s-52-17-52-46Z"
-        fill={fur}
-        stroke={kind === 'rabbit' ? '#c8a788' : 'none'}
-        strokeWidth="2"
-      />
-      <g fill="#dc9983" opacity=".66">
-        <ellipse cx="69" cy="110" rx="8" ry="4.5" />
-        <ellipse cx="132" cy="110" rx="8" ry="4.5" />
-      </g>
-      <g fill={dark}>
-        {feeling === 'joy' ? (
-          <g
-            className="edu-character-eyes"
-            fill="none"
-            stroke={dark}
-            strokeWidth="4"
-            strokeLinecap="round"
-          >
-            <path d="M73 99q6-9 12 0m31 0q6-9 12 0" />
-          </g>
-        ) : (
-          <>
-            <g className="edu-character-eyes">
-              <ellipse
-                cx="79"
-                cy="98"
-                rx={feeling === 'surprise' ? 5 : 3.5}
-                ry={feeling === 'surprise' ? 7 : 5}
-              />
-              <ellipse
-                cx="122"
-                cy="98"
-                rx={feeling === 'surprise' ? 5 : 3.5}
-                ry={feeling === 'surprise' ? 7 : 5}
-              />
-            </g>
-            <g stroke={dark} strokeWidth="3.5" fill="none" strokeLinecap="round">
-              {feeling === 'anger' ? (
-                <>
-                  <path className="edu-character-brow left" d="M71 85l13 7" />
-                  <path className="edu-character-brow right" d="m116 92 13-7" />
-                </>
-              ) : (
-                <path
-                  d={
-                    feeling === 'sad'
-                      ? 'M71 90q6 0 12-5m34 0q6 5 12 5'
-                      : 'M72 85q7-7 13-3m31 0q6-4 13 3'
-                  }
-                />
-              )}
-            </g>
-          </>
-        )}
-        <path d="M95 105q5-4 11 0l-4 5q-2 2-4-1Z" />
-      </g>
-      {feeling === 'surprise' ? (
-        <ellipse className="edu-character-mouth" cx="101" cy="121" rx="6" ry="8" fill={dark} />
-      ) : (
-        <path
-          className="edu-character-mouth"
-          d={
-            feeling === 'joy'
-              ? 'M90 116q11 16 22 0'
-              : feeling === 'sad'
-                ? 'M90 125q11-13 21 0'
-                : 'M93 119q7-2 15 0'
-          }
-          fill="none"
-          stroke={dark}
-          strokeWidth="3.5"
-          strokeLinecap="round"
-        />
-      )}
-      <g fill="#644c3c" opacity=".58">
-        <circle cx="83" cy="109" r="1.2" />
-        <circle cx="79" cy="113" r="1.2" />
-        <circle cx="117" cy="109" r="1.2" />
-        <circle cx="121" cy="113" r="1.2" />
-      </g>
-    </g>
-  )
-}
-function StoryProp({ type }) {
-  if (type === 'plane')
-    return (
-      <g stroke="#698a94" strokeWidth="2.2" strokeLinejoin="round">
-        <path d="M232 75l40-14-14 29-10-10-11 3 3-7Z" fill="#fff8e7" />
-        <path d="m241 77 24-12-18 16" fill="none" />
-        <path d="M218 90q11-1 14-10m-22 13 3-1" fill="none" strokeDasharray="3 4" />
-      </g>
-    )
-  if (type === 'blocks')
-    return (
-      <g stroke="#8a7960" strokeWidth="1.5">
-        <rect
-          x="221"
-          y="127"
-          width="24"
-          height="24"
-          rx="3"
-          fill="#f4cc86"
-          transform="rotate(-10 233 139)"
-        />
-        <rect x="244" y="137" width="22" height="20" rx="3" fill="#93b7ab" />
-        <path d="m235 126 13-22 10 22Z" fill="#df9981" />
-      </g>
-    )
-  if (type === 'butterfly')
-    return (
-      <g transform="translate(250 74) rotate(-15)">
-        <path
-          d="M0 6c-29-24-28 16-3 6-17 11-8 23 4 4 11 19 23 4 5-5 26 4 22-31-4-8"
-          fill="#edc26c"
-          stroke="#a77846"
-          strokeWidth="2"
-        />
-        <path d="M1 3v13" stroke="#666343" strokeWidth="4" strokeLinecap="round" />
-      </g>
-    )
-  return (
-    <g fill="none" strokeWidth="4" strokeLinejoin="round" strokeLinecap="round">
-      <path d="M218 153l13-40h14l22 39" stroke="#719b8c" />
-      <path d="m242 119 14 28q5 8 16 7" stroke="#db996e" strokeWidth="6" />
-      <path d="m225 135 9 0m-12 9h9" stroke="#719b8c" />
-    </g>
-  )
-}
-function Portrait({
-  friend,
-  feeling,
-  scene = false,
-  closeUp = false,
-  gesture,
-  actionKey,
-  active = true,
-}) {
-  const id = useId()
-  const data = FEELINGS[feeling]
+function Portrait({ friend, feeling, closeUp = false, gesture, actionKey, active = true }) {
   const kind = animalKind(friend)
-  const fur = { lion: '#edb85b', rabbit: '#f4e8d5', bear: '#ba8660' }[kind]
+  const clue = feeling === 'neutral' ? '편안하게 기다리고 있어요.' : FEELINGS[feeling].clue
   return (
-    <svg
-      className="edu-portrait"
-      viewBox={closeUp ? '24 0 218 209' : scene ? '10 0 274 317' : '14 0 232 317'}
-      role="img"
-      aria-labelledby={id}
-      data-active={active}
-    >
-      <title id={id}>
-        {friend?.name || '숲속 친구'}의 얼굴. {data.clue}
-      </title>
-      <defs>
-        <radialGradient id={id + '-fur'} cx="40%" cy="32%" r="73%">
-          <stop stopColor={{ lion: '#ffe09a', rabbit: '#fffaed', bear: '#dfb58a' }[kind]} />
-          <stop offset=".75" stopColor={fur} />
-          <stop
-            offset="1"
-            stopColor={{ lion: '#d99a48', rabbit: '#e0caae', bear: '#a67752' }[kind]}
-          />
-        </radialGradient>
-      </defs>
-      {closeUp ? (
-        <>
-          <rect width="300" height="213" fill="#dcefea" />
-          <path d="M0 153q71-54 159-14t141 4v70H0Z" fill="#c8dfcd" />
-          <path d="M0 177q92 3 158-19t142 4v51H0Z" fill="#accdb4" />
-          <path d="M23 48q1-9 10-9 5-13 16-7 9-3 14 9 8-1 11 7Z" fill="#fffdf1" />
-        </>
-      ) : (
-        <ellipse cx="135" cy="301" rx="71" ry="8" fill="#454a28" opacity=".20" />
-      )}
-      <g key={actionKey} data-gesture={gesture} data-feeling={feeling}>
-        {kind === 'lion' && (
-          <g>
-            <path
-              d="M97 255q-37 10-47-18-4-12-4-27"
-              fill="none"
-              stroke={fur}
-              strokeWidth="10"
-              strokeLinecap="round"
-            />
-            <path d="M46 219q-17-3-11-19 6-11 9-13 0 7 8 12 8 13-6 20Z" fill="#bd783e" />
-          </g>
-        )}
-        <g fill={`url(#${id}-fur)`} stroke="#725132" strokeOpacity=".27" strokeWidth="1.4">
-          <path d="M95 242q-5 17-4 43-10 9-4 14 10 8 31 2 7-3 8-14l6-30Zm42 12 9 35q2 13 10 14 23 4 30-3 4-7-7-13l-5-41Z" />
-          <path d="M82 194q13-35 49-38 40-3 58 43 11 30-1 51-11 17-49 18-38 0-53-17-13-19-4-57Z" />
-          <path d="M96 179q-13-1-20 15l-11 32q-3 11 7 15 11 3 17-10l12-31" />
-          {!scene && <path d="M174 178q12-3 20 14l12 32q5 11-4 16-12 5-18-10l-13-31" />}
-        </g>
-        <path d="m100 164 68 77 7-7-66-73Z" fill="#99754d" />
-        <g transform="rotate(-8 164 241)" stroke="#9c7956" strokeWidth="1.5">
-          <rect x="144" y="226" width="40" height="31" rx="9" fill="#e8c596" />
-          <path d="M143 230q0-7 7-7h27q8 0 8 7v7q-20 12-42-1Z" fill="#f7deb2" />
-          <circle cx="164" cy="237" r="2.1" fill="#9c7956" stroke="none" />
-        </g>
-        {scene && (
-          <g className="edu-character-paw">
-            <path
-              d="M174 177q8-8 16 1l11 13q3-3 6-1 6 4 0 12-6 9-16 4l-17-12q-7-7 0-17Z"
-              fill={fur}
-              stroke="#8b6b4b"
-              strokeOpacity=".65"
-              strokeWidth="1.6"
-            />
-            <path
-              d="m200 198 3-3m-1 7 4-3"
-              fill="none"
-              stroke="#8b6b4b"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </g>
-        )}
-        <g transform="translate(26 6) scale(1.07)">
-          <Face kind={kind} feeling={feeling} fur={`url(#${id}-fur)`} />
-        </g>
-        <path
-          d="m94 161 39 16 41-16-13 21-19 3-14 15-15-11 6-10Z"
-          fill="#769873"
-          stroke="#65866b"
-          strokeWidth="1.5"
-        />
-      </g>
-      {scene && <StoryProp type={data.prop} />}
-    </svg>
+    <PaintedFriend
+      kind={kind}
+      src={friend?.image || import.meta.env.BASE_URL + 'art/' + kind + '.webp'}
+      label={`${friend?.name || '숲속 친구'}의 얼굴. ${clue}`}
+      {...{ feeling, gesture, actionKey, active, closeUp }}
+    />
   )
 }
 function Board({ kicker, title, description, illustration, children, focusKey = title }) {
@@ -412,6 +151,7 @@ function Board({ kicker, title, description, illustration, children, focusKey = 
   const id = useId()
   useEffect(() => {
     heading.current?.focus({ preventScroll: true })
+    window.scrollTo(0, 0)
   }, [focusKey])
   const prompt = (
     <div className="edu-header">
@@ -451,12 +191,16 @@ const PLACEMENT = [
   {
     target: 'joy',
     alternatives: ['joy', 'sad'],
+    introduction: '기쁨은 반가운 일이 생겼을 때 느끼는 마음이에요.',
+    example: '기다리던 친구가 놀러 왔어요. 반가워서 빙긋 웃었어요.',
     prompt: '기쁜 얼굴을 찾아볼까요?',
     hint: '웃으면서 입꼬리가 올라간 얼굴을 찾아봐요.',
   },
   {
     target: 'surprise',
     alternatives: ['anger', 'surprise'],
+    introduction: '놀람은 예상하지 못한 일이 생겼을 때 드는 마음이에요.',
+    example: '풀잎 뒤에서 나비가 날아올랐어요. 깜짝 놀라 눈이 동그래졌어요.',
     prompt: '놀란 얼굴을 찾아볼까요?',
     hint: '눈과 입이 동그래진 얼굴을 찾아봐요.',
   },
@@ -481,6 +225,27 @@ export function LevelTest({ progress, onUpdate, onDone, friend, active = true })
     if (!solved) return
     if (idx === 0) onUpdate({ placement: { index: 1, usedHint: Boolean(state.usedHint) } })
     else onDone(state.usedHint ? 'basic' : 'expand')
+  }
+  if (!state.introduced && !state.choice) {
+    return (
+      <Board
+        kicker={'준비 산책 · ' + (idx + 1) + ' / 2'}
+        title={idx === 0 ? '기쁨을 만나 봐요' : '놀람을 만나 봐요'}
+        description={item.introduction}
+        illustration={
+          <figure className="edu-figure">
+            <Portrait friend={friend} feeling={item.target} gesture="model" active={active} />
+          </figure>
+        }
+      >
+        <p className="edu-story" data-read-aloud>
+          {item.example}
+        </p>
+        <Action onClick={() => onUpdate({ placement: { ...state, index: idx, introduced: true } })}>
+          얼굴 찾아보기
+        </Action>
+      </Board>
+    )
   }
   return (
     <Board
@@ -526,6 +291,95 @@ export function LevelTest({ progress, onUpdate, onDone, friend, active = true })
   )
 }
 function EmotionActivity({ fact, feeling, friend, state, update, next, expanded, active }) {
+  const practice = feelingPractice[feeling]
+  // Older walks saved word choices before the introductory scenes existed.
+  const phase = state.practicePhase || (state.selected || state.solved ? 'words' : 'intro')
+  const cueFound = state.cue === practice.target
+  const illustration = (gesture, actionKey) => (
+    <figure className="edu-figure">
+      <Portrait
+        friend={friend}
+        feeling={feeling}
+        active={active}
+        gesture={gesture}
+        actionKey={actionKey}
+      />
+      <figcaption>{friend.name}의 표정</figcaption>
+    </figure>
+  )
+  if (phase === 'intro') {
+    return (
+      <Board
+        kicker="첫째 걸음 · 마음 알아보기"
+        title={practice.subject + ' 어떤 마음일까요?'}
+        description={practice.meaning}
+        illustration={illustration('listen', feeling)}
+      >
+        <p className="edu-prompt" data-read-aloud>
+          {practice.example}
+        </p>
+        <p className="edu-note" data-read-aloud>
+          {friend.name}의 얼굴도 살펴봐요. {fact.clue}
+        </p>
+        <Action onClick={() => update({ practicePhase: 'experiment' })}>숲에서 해 보기</Action>
+      </Board>
+    )
+  }
+  if (phase === 'experiment' || phase === 'discovery') {
+    const revealed = phase === 'discovery'
+    return (
+      <Board
+        kicker={revealed ? '첫째 걸음 · 표정 단서 찾기' : '첫째 걸음 · 숲속 실험'}
+        title={revealed ? practice.afterTitle : practice.beforeTitle}
+        description={revealed ? practice.reaction : practice.before}
+        illustration={
+          <div className="edu-figure practice-field">
+            <figure className="practice-field-friend">
+              <Portrait
+                friend={friend}
+                feeling={revealed ? feeling : 'neutral'}
+                active={active}
+                gesture={revealed ? (cueFound ? 'nod' : 'model') : 'listen'}
+                actionKey={state.cue || phase}
+              />
+              <figcaption>{friend.name}</figcaption>
+            </figure>
+            <PracticeObject
+              feeling={feeling}
+              revealed={revealed}
+              onAct={revealed ? undefined : () => update({ practicePhase: 'discovery' })}
+            />
+          </div>
+        }
+      >
+        {revealed && (
+          <>
+            <p className="edu-prompt" data-read-aloud>
+              {practice.cueQuestion}
+            </p>
+            <div className="practice-cue-options" role="group" aria-label="표정 단서">
+              {practice.cues.map((cue) => (
+                <Choice
+                  key={cue}
+                  selected={state.cue === cue}
+                  disabled={cueFound}
+                  onClick={() => update({ cue })}
+                >
+                  {cue}
+                </Choice>
+              ))}
+            </div>
+            <p className="edu-feedback" role="status" data-read-aloud>
+              {cueFound ? fact.clue : state.cue ? practice.cueHint : ''}
+            </p>
+            {cueFound && (
+              <Action onClick={() => update({ practicePhase: 'words' })}>마음 낱말 고르기</Action>
+            )}
+          </>
+        )}
+      </Board>
+    )
+  }
   const words = expanded ? [fact.word, fact.kin, fact.opposite] : [fact.word, fact.opposite]
   // Rotate the answer position by topic while keeping it stable on repeat visits.
   if (feeling === 'joy' || feeling === 'surprise') words.unshift(words.pop())
@@ -563,20 +417,10 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
           ? '그림에 어울리는 말을 골라요. 두 개를 골라도 돼요.'
           : '그림에 어울리는 마음을 하나 골라요.'
       }
-      illustration={
-        <figure className="edu-figure">
-          <Portrait
-            friend={friend}
-            feeling={feeling}
-            active={active}
-            gesture={
-              done ? 'nod' : state.feedback ? 'model' : selected.length ? 'listen' : undefined
-            }
-            actionKey={selected.join('|') + (state.feedback || '')}
-          />
-          <figcaption>{friend?.name || '숲속 친구'}의 표정</figcaption>
-        </figure>
-      }
+      illustration={illustration(
+        done ? 'nod' : state.feedback ? 'model' : selected.length ? 'listen' : undefined,
+        selected.join('|') + (state.feedback || ''),
+      )}
     >
       <div
         className={expanded ? 'edu-choices edu-multiple' : 'edu-choices'}
@@ -692,9 +536,55 @@ function useCamera(active) {
   }, [status])
   return { status, video, start, off, facePresent }
 }
-function MirrorActivity({ fact, feeling, friend, active, next }) {
+function MirrorActivity({ fact, feeling, friend, active, state, update, next }) {
   const camera = useCamera(active)
   const [demonstration, setDemonstration] = useState(0)
+  const ways = feelingPractice[feeling].expression
+  if (state.mirrorPhase === 'express' || state.mirrorPhase === 'response') {
+    const chosen = state.mirrorPhase === 'response' ? ways[state.mirrorChoice] : null
+    return (
+      <Board
+        kicker="둘째 걸음 · 마음 전하기"
+        title={chosen ? '친구가 이렇게 답했어요' : '내 마음을 전해 봐요'}
+        description={chosen ? chosen.practice : '말이나 몸짓 중 편한 방법을 하나 골라요.'}
+        illustration={
+          <figure className="edu-figure">
+            <Portrait
+              friend={friend}
+              feeling={feeling}
+              active={active}
+              gesture={chosen ? 'speak' : 'listen'}
+              actionKey={state.mirrorPhase}
+            />
+            <figcaption>{friend.name}</figcaption>
+          </figure>
+        }
+      >
+        {chosen ? (
+          <>
+            <p className="edu-prompt" data-read-aloud>
+              {chosen.answer}
+            </p>
+            <Action onClick={next}>동화 속으로</Action>
+          </>
+        ) : (
+          <div className="edu-choices" role="group" aria-label="마음을 전하는 방법">
+            {ways.map((way, index) => (
+              <button
+                key={way.action}
+                type="button"
+                className="edu-reply"
+                onClick={() => update({ mirrorPhase: 'response', mirrorChoice: index })}
+              >
+                {way.action}
+                <Arrow />
+              </button>
+            ))}
+          </div>
+        )}
+      </Board>
+    )
+  }
   return (
     <Board
       kicker="둘째 걸음 · 표정 연습"
@@ -781,10 +671,10 @@ function MirrorActivity({ fact, feeling, friend, active, next }) {
       <Action
         onClick={() => {
           camera.off()
-          next()
+          update({ mirrorPhase: 'express' })
         }}
       >
-        이야기로 가기
+        마음 전해 보기
       </Action>
     </Board>
   )
@@ -1059,66 +949,113 @@ function StoryQuestion({ fact, feeling, isExtra, onReply, active }) {
 }
 
 function StoryActivity({ fact, feeling, friend, state, update, onComplete, active }) {
-  const phase = state.phase || 'read'
+  const tale = forestTales[feeling]
+  const pages = tale.pages
+  const phase = [
+    'situation',
+    'act',
+    'consequence',
+    'question',
+    'reply',
+    'extra',
+    'ending',
+  ].includes(state.phase)
+    ? state.phase
+    : 'book'
+  const savedPage = Number.isInteger(state.bookPage) ? state.bookPage : 0
+  const page =
+    phase === 'book' ? Math.max(0, Math.min(pages.length - 1, savedPage)) : pages.length - 1
+  const chosen = state.branch === 0 || state.branch === 1 ? state.branch : null
+  const outcome = chosen == null ? null : tale.actions[chosen]
+  const friendName = friend?.name || '숲속 친구'
+  const inDialogue = ['question', 'reply', 'extra', 'ending'].includes(phase)
+  // A conversation saved before the picture books existed keeps its original replies.
+  const conversation = outcome ? tale.talk : fact
   const isExtra = phase === 'extra'
-  const isQuestion = phase === 'question' || isExtra
-  const caption = {
-    read: '이야기 한 장',
-    question: '친구의 질문',
-    reply: '친구의 대답',
-    extra: '친구의 질문',
-    ending: '이야기 마무리',
-  }[phase]
-  const voiceReply = phase === 'ending' ? state.extraVoice : state.voice
-  const reply =
-    phase === 'ending' ? fact.ends[state.extraChoice ?? 0] : fact.replies[state.choice ?? 0]
-  const voiceSummary = {
-    joy: '종이비행기 이야기에 내 목소리로 답했어요.',
-    sad: '블록 이야기에 내 목소리로 답했어요.',
-    surprise: '나비 이야기에 내 목소리로 답했어요.',
-    anger: '미끄럼틀 이야기에 내 목소리로 답했어요.',
-  }
-  const name = friend?.name || '숲속 친구'
+  const isEnding = phase === 'ending'
+  const voiced = isEnding ? state.extraVoice : state.voice
+  const lines = isEnding ? conversation.ends : conversation.replies
+  const pickedLine = isEnding ? state.extraChoice : state.choice
+  const reply = lines[pickedLine] || lines[0]
+  const voiceSummary = outcome ? tale.voiceSummary : '친구에게 내 목소리로 답했어요.'
+  let title = tale.title
+  if (phase === 'situation') title = tale.situation
+  if (phase === 'act') title = '이때 어떻게 할까요?'
+  if (phase === 'consequence' && outcome) title = outcome.title
+  if (inDialogue) title = isEnding ? '이야기를 마쳤어요' : withFriend(friendName) + ' 나누는 이야기'
+  const showActions = phase === 'act' || (phase === 'consequence' && !outcome)
+  const afterChoice = (phase === 'consequence' || inDialogue) && outcome != null
+  let expression = feeling
+  if (phase === 'book' && page < 2) expression = 'neutral'
+  if (afterChoice) expression = outcome.expression
   return (
     <Board
-      kicker="셋째 걸음 · 이야기와 대화"
-      focusKey={phase}
-      title={
-        phase === 'read'
-          ? '작은 이야기를 읽어요'
-          : phase === 'ending'
-            ? '이야기를 마쳤어요'
-            : withFriend(name) + ' 나누는 이야기'
+      kicker={
+        phase === 'book'
+          ? '숲속 동화 · ' + (page + 1) + ' / ' + pages.length
+          : '셋째 걸음 · 이야기 나누기'
       }
+      title={title}
+      focusKey={phase + '-' + page}
       illustration={
-        <figure className="edu-figure">
+        <TaleScene
+          feeling={feeling}
+          page={page}
+          branch={phase === 'consequence' || inDialogue ? chosen : null}
+          active={active}
+        >
           <Portrait
             friend={friend}
-            feeling={feeling}
-            scene
+            feeling={expression}
             active={active}
-            gesture="speak"
-            actionKey={phase}
+            gesture={phase === 'act' ? 'listen' : phase === 'consequence' ? 'nod' : 'speak'}
+            actionKey={phase + '-' + page}
           />
-          <figcaption>
-            {name}의 {fact.label} 이야기
-          </figcaption>
-        </figure>
+        </TaleScene>
       }
     >
-      <span className="edu-eyebrow">{voiceReply && !isQuestion ? '내가 한 말' : caption}</span>
-      {phase === 'read' ? (
+      {phase === 'book' && (
         <>
           <p className="edu-story" data-read-aloud>
-            {fact.scene}
+            {pages[page].replaceAll('{친구}', friend?.familiar || friendName)}
           </p>
-          <blockquote data-read-aloud>“{fact.line}”</blockquote>
-          <Action onClick={() => update({ phase: 'question' })}>친구와 대화하기</Action>
+          {page + 1 < pages.length ? (
+            <Action onClick={() => update({ phase: 'book', bookPage: page + 1 })}>다음 장</Action>
+          ) : (
+            <Action onClick={() => update({ phase: 'situation' })}>장면 살펴보기</Action>
+          )}
         </>
-      ) : isQuestion ? (
+      )}
+      {phase === 'situation' && (
+        <>
+          <p className="edu-story" data-read-aloud>
+            {tale.explanation}
+          </p>
+          <Action onClick={() => update({ phase: 'act' })}>내가 해 보기</Action>
+        </>
+      )}
+      {showActions && (
+        <TaleActions
+          actions={tale.actions}
+          onChoose={(branch) => update({ phase: 'consequence', branch })}
+        />
+      )}
+      {phase === 'consequence' && outcome && (
+        <>
+          <p className="edu-story" data-read-aloud>
+            {outcome.event}
+          </p>
+          <blockquote data-read-aloud>“{outcome.line}”</blockquote>
+          <Action onClick={() => update({ phase: 'question' })}>친구와 대화하기</Action>
+          <button type="button" className="edu-link" onClick={() => update({ phase: 'act' })}>
+            다른 방법 해 보기
+          </button>
+        </>
+      )}
+      {(phase === 'question' || isExtra) && (
         <StoryQuestion
           key={phase}
-          fact={fact}
+          fact={conversation}
           active={active}
           isExtra={isExtra}
           feeling={feeling}
@@ -1130,10 +1067,11 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
             )
           }
         />
-      ) : (
+      )}
+      {(phase === 'reply' || isEnding) && (
         <>
           <p className="edu-story" role="status" data-read-aloud>
-            {voiceReply ? voiceSummary[feeling] : phase === 'ending' ? reply : '“' + reply + '”'}
+            {voiced ? voiceSummary : isEnding ? reply : '“' + reply + '”'}
           </p>
           <Action onClick={onComplete}>산책 마무리하기</Action>
           {phase === 'reply' && (
@@ -1173,7 +1111,15 @@ export function Lesson({ progress, onUpdate, onComplete, friend, topic, active =
     )
   if (step === 1)
     return (
-      <MirrorActivity fact={fact} feeling={feeling} friend={friend} active={active} next={next} />
+      <MirrorActivity
+        fact={fact}
+        feeling={feeling}
+        friend={friend}
+        active={active}
+        state={state}
+        update={update}
+        next={next}
+      />
     )
   return (
     <StoryActivity

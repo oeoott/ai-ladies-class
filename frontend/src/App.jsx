@@ -139,6 +139,8 @@ function App() {
   const topic = topics.find((t) => t.id === session.topicId) || topics[0]
   const showEntrance = !hasEntered || page === 'welcome'
   const learning = !showEntrance && (page === 'lesson' || page === 'placement')
+  const inTale = page === 'lesson' && session.step === 2
+  const landscape = inTale ? 'art/tale-' + topic.id + '.webp' : 'art/forest-gate.webp'
   const finished = session.records.some((r) => r.date === session.day)
   const patch = useCallback((values) => setSession((current) => ({ ...current, ...values })), [])
   useEffect(() => {
@@ -289,7 +291,11 @@ function App() {
       )}
       {!showEntrance && (
         <main id="main-content" className="immersive-scene" tabIndex="-1">
-          <img className="scene-landscape" src={asset('art/forest-gate.webp')} alt="" />
+          <img
+            className={'scene-landscape' + (inTale ? ' tale-landscape' : '')}
+            src={asset(landscape)}
+            alt=""
+          />
           <div className="scene-content">
             {page === 'placement' && (
               <LevelTest

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import './journey.css'
 
-const stops = ['감정 그림', '표정 거울', '이야기 나누기']
+const stops = ['감정 탐색', '표정 거울', '동화 놀이']
 
 export function JourneyProgress({ friend, step }) {
   const [walking, setWalking] = useState(false)
