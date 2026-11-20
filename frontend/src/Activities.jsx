@@ -399,7 +399,7 @@ export function LevelTest({ progress, onUpdate, onDone, friend }) {
       description="그림을 하나 눌러 주세요. 천천히 골라도 돼요."
     >
       <div className="edu-placement">
-        {item.alternatives.map((key, i) => (
+        {item.alternatives.map((key) => (
           <button
             type="button"
             key={key}
@@ -410,10 +410,7 @@ export function LevelTest({ progress, onUpdate, onDone, friend }) {
             onClick={() => choose(key)}
           >
             <Portrait friend={friend} feeling={key} />
-            <span className="edu-picture-caption">
-              <span>{i === 0 ? '첫 번째 얼굴' : '두 번째 얼굴'}</span>
-              <i aria-hidden="true">{state.choice === key ? '✓' : ''}</i>
-            </span>
+            {state.choice === key && <span className="edu-picture-check" aria-hidden="true">✓</span>}
           </button>
         ))}
       </div>

@@ -140,7 +140,7 @@
   text-align: left;
 }
 .edu-choice-mark,
-.edu-picture-caption i {
+.edu-picture-check {
   display: inline-grid;
   flex: none;
   place-items: center;
@@ -164,7 +164,7 @@
   box-shadow: 0 0 0 1px var(--edu-green) inset;
 }
 .edu-choice.is-selected .edu-choice-mark,
-.edu-picture-choice.is-selected .edu-picture-caption i {
+.edu-picture-check {
   color: white;
   background: var(--edu-green);
   border-color: var(--edu-green);
@@ -257,6 +257,7 @@
   gap: clamp(12px, 3vw, 28px);
 }
 .edu-board .edu-picture-choice {
+  position: relative;
   min-width: 0;
   width: 100%;
   padding: 8px;
@@ -268,12 +269,11 @@
 .edu-placement .edu-portrait {
   border-radius: 13px;
 }
-.edu-picture-caption {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 5px 2px;
-  font-size: 1.01rem;
+.edu-picture-check {
+  position: absolute;
+  right: 13px;
+  bottom: 13px;
+  box-shadow: 0 0 0 2px #fffefa;
 }
 .edu-action-row {
   min-height: 62px;
@@ -329,14 +329,6 @@
   .edu-board .edu-picture-choice {
     padding: 5px;
     border-radius: 12px;
-  }
-  .edu-picture-caption {
-    font-size: 0.9rem;
-    padding: 6px 3px 1px;
-  }
-  .edu-picture-caption i {
-    width: 18px;
-    height: 18px;
   }
   .edu-action-row {
     flex-wrap: wrap;
