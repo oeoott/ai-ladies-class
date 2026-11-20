@@ -96,7 +96,7 @@ function Reward({ page, friend, topic, records, onBook, onFinish }) {
           <h1 ref={title} tabIndex="-1">
             마음숲 스티커판
           </h1>
-          <p>하루의 첫 산책을 마치면 마음 스티커를 하나 받아요.</p>
+          <p>하루에 한 장씩 모아요.</p>
           <div className="stamp-board">
             {Array.from({ length: 5 }, (_, i) => (
               <Stamp key={i} label={group[i]?.topic} filled={Boolean(group[i])} />

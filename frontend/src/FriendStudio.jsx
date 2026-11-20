@@ -6,10 +6,10 @@ import './friend-studio.css'
 const charms = [null, 'leaf', 'star', 'flower']
 const headwearOptions = [null, 'sky-hat', 'flower-pin']
 const prompts = [
-  '함께할 동물을 골라요',
+  '동물을 골라요',
   '머리에 무엇을 쓸까요?',
-  '가방에 달 장식을 골라요',
-  '친구 이름을 지어 주세요',
+  '가방 장식을 골라요',
+  '이름을 지어요',
 ]
 const nextLabels = ['머리 꾸미기', '가방 꾸미기', '이름 짓기', '이 친구와 함께하기']
 

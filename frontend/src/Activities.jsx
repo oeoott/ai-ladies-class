@@ -213,17 +213,17 @@ const PLACEMENT = [
   {
     target: 'joy',
     alternatives: ['joy', 'sad'],
-    introduction: '기쁨은 반가운 일이 생겼을 때 느끼는 마음이에요.',
-    example: '기다리던 친구가 놀러 왔어요. 반가워서 빙긋 웃었어요.',
-    prompt: '기쁜 얼굴을 찾아볼까요?',
+    introduction: '좋은 일이 생겨 기분이 좋아요.',
+    example: '친구가 와서 활짝 웃었어요.',
+    prompt: '기쁜 얼굴을 눌러요.',
     hint: '웃으면서 입꼬리가 올라간 얼굴을 찾아봐요.',
   },
   {
     target: 'surprise',
     alternatives: ['anger', 'surprise'],
-    introduction: '놀람은 예상하지 못한 일이 생겼을 때 드는 마음이에요.',
-    example: '풀잎 뒤에서 나비가 날아올랐어요. 깜짝 놀라 눈이 동그래졌어요.',
-    prompt: '놀란 얼굴을 찾아볼까요?',
+    introduction: '갑자기 무언가 나타나면 깜짝 놀라요.',
+    example: '나비가 갑자기 날아와 눈이 동그래졌어요.',
+    prompt: '놀란 얼굴을 눌러요.',
     hint: '눈과 입이 동그래진 얼굴을 찾아봐요.',
   },
 ]
@@ -251,8 +251,7 @@ export function LevelTest({ progress, onUpdate, onDone }) {
   if (!state.introduced && !state.choice) {
     return (
       <Board
-        kicker={'준비 산책 · ' + (idx + 1) + ' / 2'}
-        title={idx === 0 ? '기쁨을 만나 봐요' : '놀람을 만나 봐요'}
+        title={FEELINGS[item.target].label}
         description={item.introduction}
         illustration={
           <figure className="edu-figure">
@@ -270,11 +269,7 @@ export function LevelTest({ progress, onUpdate, onDone }) {
     )
   }
   return (
-    <Board
-      kicker={'준비 산책 · ' + (idx + 1) + ' / 2'}
-      title={item.prompt}
-      description="그림을 하나 눌러 주세요. 천천히 골라도 돼요."
-    >
+    <Board title={item.prompt}>
       <div className="edu-placement">
         {item.alternatives.map((key) => (
           <button
@@ -325,9 +320,6 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
       >
         <p className="edu-prompt">
           {practice.example}
-        </p>
-        <p className="edu-note">
-          {fact.clue}
         </p>
         <Action onClick={() => update({ practicePhase: 'experiment' })}>{practice.nextLabel}</Action>
       </Board>
@@ -408,8 +400,8 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
       title="어떤 마음일까요?"
       description={
         expanded
-          ? '그림에 어울리는 말을 골라요. 두 개를 골라도 돼요.'
-          : '그림에 어울리는 마음을 하나 골라요.'
+          ? '맞는 말을 하나나 두 개 골라요.'
+          : '맞는 말 하나를 골라요.'
       }
       illustration={card}
     >
@@ -536,9 +528,8 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
     const chosen = state.mirrorPhase === 'response' ? ways[state.mirrorChoice] : null
     return (
       <Board
-        kicker="둘째 걸음 · 마음 전하기"
         title={chosen ? '친구가 이렇게 답했어요' : '내 마음을 전해 봐요'}
-        description={chosen ? chosen.practice : '말풍선이나 몸짓 중 편한 방법을 하나 골라요.'}
+        description={chosen ? chosen.practice : '말이나 몸짓을 골라요.'}
         illustration={
           <figure className="edu-figure">
             <EmotionCard feeling={feeling} />
@@ -572,9 +563,7 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
   }
   return (
     <Board
-      kicker="둘째 걸음 · 표정 연습"
-      title="표정을 함께 해 볼까요?"
-      description="그림을 살펴봐요. 따라 하고 싶으면 천천히 해 봐요."
+      title="표정을 따라 해 봐요"
       illustration={
         <figure className="edu-figure">
           {demonstration % 2 ? <FaceDetail feeling={feeling} /> : <EmotionCard feeling={feeling} />}
@@ -642,9 +631,9 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
             ? '얼굴이 화면에 보여요.'
             : '내 모습은 이 화면에만 보여요.'
           : camera.status === 'waiting'
-            ? '카메라를 여는 중이에요. 그림만 보고 넘어가도 돼요.'
+            ? '카메라를 열고 있어요.'
             : camera.status === 'unavailable'
-              ? '카메라를 열 수 없어요. 그림만 보고 연습해도 돼요.'
+              ? '카메라가 꺼져 있어요. 그림을 봐요.'
               : '카메라 없이 그림만 봐도 돼요.'}
       </p>
       <Action
@@ -777,11 +766,7 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
   if (afterChoice) expression = outcome.expression
   return (
     <Board
-      kicker={
-        phase === 'book'
-          ? '숲속 동화 · ' + (page + 1) + ' / ' + pages.length
-          : '셋째 걸음 · 이야기 나누기'
-      }
+      kicker={phase === 'book' ? (page + 1) + ' / ' + pages.length : undefined}
       title={title}
       focusKey={phase + '-' + page}
       illustration={

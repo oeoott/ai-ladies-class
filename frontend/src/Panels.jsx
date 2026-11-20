@@ -373,7 +373,6 @@ function PanelDialog({
           <div className="forest-rest-symbol" aria-hidden="true">
             <Icon name="leaf" size={40} />
           </div>
-          <p className="forest-panel-note">준비되면 하던 곳에서 이어 가요.</p>
           <button className="forest-panel-primary" type="button" onClick={onClose}>
             이어서 하기 <Icon name="next" size={18} />
           </button>
