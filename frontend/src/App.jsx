@@ -38,34 +38,26 @@ function startSession() {
   }
 }
 
-function AppHeader({ onGuard, onRest, learning }) {
+function SceneTools({ onGuard, onRest, learning }) {
   return (
-    <header className="site-header">
-      <div className="header-inner">
-        <span className="wordmark" aria-label="마음숲">
-          <img src={asset('sprout.svg')} width="45" height="45" alt="" />
-          마음숲
-        </span>
-        <div className="header-controls">
-          {learning && (
-            <button type="button" className="nav-button" onClick={onRest}>
-              <Pause />
-              <span>쉬어 가기</span>
-            </button>
-          )}
-          <button
-            type="button"
-            className="nav-button guardian-button"
-            onClick={onGuard}
-            aria-label="보호자"
-            title="보호자 설정"
-            aria-haspopup="dialog"
-          >
-            <ShieldCheck aria-hidden="true" />
-          </button>
-        </div>
-      </div>
-    </header>
+    <div className="scene-tools">
+      {learning && (
+        <button type="button" className="scene-tool" onClick={onRest} aria-haspopup="dialog">
+          <Pause aria-hidden="true" />
+          쉬어 가기
+        </button>
+      )}
+      <button
+        type="button"
+        className="scene-tool guardian-button"
+        onClick={onGuard}
+        aria-label="보호자"
+        title="보호자 설정"
+        aria-haspopup="dialog"
+      >
+        <ShieldCheck aria-hidden="true" />
+      </button>
+    </div>
   )
 }
 
@@ -96,46 +88,42 @@ function Reward({ page, friend, topic, records, onBook, onFinish }) {
   const pageStart = Math.max(0, Math.floor((records.length - 1) / 5) * 5)
   const group = records.slice(pageStart, pageStart + 5)
   return (
-    <main className="page-wrap reward-wrap" id="main-content">
-      <section className={'reward-card' + (isBook ? ' is-book' : '')}>
-        <div className="reward-badge">
-          {isBook ? <PawPrint /> : <Check />}
-          {isBook ? '나의 스티커판' : '세 걸음 완료'}
-        </div>
-        {isBook ? (
-          <>
-            <h1 ref={title} tabIndex="-1">
-              마음숲 스티커판
-            </h1>
-            <p>하루의 첫 산책을 마치면 마음 스티커를 하나 받아요.</p>
-            <div className="stamp-board">
-              {Array.from({ length: 5 }, (_, i) => (
-                <Stamp key={i} label={group[i]?.topic} filled={Boolean(group[i])} />
-              ))}
-            </div>
-            <span className="stamp-count">지금까지 모은 스티커 {records.length}개</span>
-            <button type="button" className="primary" onClick={onFinish}>
-              산책 마치기
-              <Check aria-hidden="true" />
-            </button>
-          </>
-        ) : (
-          <>
-            <img className="reward-friend" src={friend.image} alt="" />
+    <section className={isBook ? 'sticker-book' : 'praise-clearing'}>
+      {isBook ? (
+        <>
+          <h1 ref={title} tabIndex="-1">
+            마음숲 스티커판
+          </h1>
+          <p>하루의 첫 산책을 마치면 마음 스티커를 하나 받아요.</p>
+          <div className="stamp-board">
+            {Array.from({ length: 5 }, (_, i) => (
+              <Stamp key={i} label={group[i]?.topic} filled={Boolean(group[i])} />
+            ))}
+          </div>
+          <span className="stamp-count">지금까지 모은 스티커 {records.length}개</span>
+          <button type="button" className="primary" onClick={onFinish}>
+            산책 마치기
+            <Check aria-hidden="true" />
+          </button>
+        </>
+      ) : (
+        <>
+          <div className="praise-note">
             <h1 ref={title} tabIndex="-1">
               끝까지 함께 걸었어요!
             </h1>
             <p>
               {friend.familiar}와 {topic.phrase}을 알아보고 이야기를 나눴어요.
             </p>
-            <button type="button" className="primary" onClick={onBook}>
-              스티커판 보기
-              <Sparkles aria-hidden="true" />
-            </button>
-          </>
-        )}
-      </section>
-    </main>
+          </div>
+          <img className="reward-friend" src={friend.image} alt="" />
+          <button type="button" className="primary" onClick={onBook}>
+            스티커판 보기
+            <Sparkles aria-hidden="true" />
+          </button>
+        </>
+      )}
+    </section>
   )
 }
 
@@ -281,16 +269,9 @@ function App() {
   return (
     <>
       {!showEntrance && (
-        <>
-          <a href="#main-content" className="skip-link">
-            본문으로 가기
-          </a>
-          <AppHeader
-            learning={learning}
-            onGuard={() => open('guardian', 'guardian')}
-            onRest={() => open('rest', 'rest')}
-          />
-        </>
+        <a href="#main-content" className="skip-link">
+          본문으로 가기
+        </a>
       )}
       {storageUnavailable && (
         <p className="notice" role="status">
@@ -306,44 +287,49 @@ function App() {
           onEnter={enterForest}
         />
       )}
-      {learning && (
-        <main id="main-content" className="page-wrap learning-wrap">
-          <div className="lesson-context">
-            <span>
-              <Sprout />
-              {page === 'placement' ? '산책 준비' : '오늘의 감정 · ' + topic.label}
-            </span>
-            {page === 'lesson' && <JourneyProgress friend={friend} step={session.step} />}
+      {!showEntrance && (
+        <main id="main-content" className="immersive-scene" tabIndex="-1">
+          <img className="scene-landscape" src={asset('art/forest-gate.webp')} alt="" />
+          <div className="scene-content">
+            {page === 'placement' && (
+              <LevelTest
+                progress={session}
+                onUpdate={patch}
+                onDone={afterTest}
+                friend={friend}
+                active={!panel}
+              />
+            )}
+            {page === 'lesson' && (
+              <Lesson
+                progress={session}
+                onUpdate={patch}
+                onComplete={() => setSession(finishWalk)}
+                friend={friend}
+                topic={topic}
+                active={!panel}
+              />
+            )}
+            {(page === 'praise' || page === 'stickers') && (
+              <Reward
+                page={page}
+                friend={friend}
+                topic={topic}
+                records={session.records}
+                onBook={() => patch({ page: 'stickers' })}
+                onFinish={() => setSession((current) => forToday({ ...current, page: 'welcome' }))}
+              />
+            )}
           </div>
-          {page === 'placement' ? (
-            <LevelTest
-              progress={session}
-              onUpdate={patch}
-              onDone={afterTest}
-              friend={friend}
-              active={!panel}
+          <div className="scene-footer">
+            {page === 'lesson' && <JourneyProgress friend={friend} step={session.step} />}
+            <SceneTools
+              learning={learning}
+              onGuard={() => open('guardian', 'guardian')}
+              onRest={() => open('rest', 'rest')}
             />
-          ) : (
-            <Lesson
-              progress={session}
-              onUpdate={patch}
-              onComplete={() => setSession(finishWalk)}
-              friend={friend}
-              topic={topic}
-              active={!panel}
-            />
-          )}
+          </div>
         </main>
-      )}
-      {!showEntrance && (page === 'praise' || page === 'stickers') && (
-        <Reward
-          page={page}
-          friend={friend}
-          topic={topic}
-          records={session.records}
-          onBook={() => patch({ page: 'stickers' })}
-          onFinish={() => setSession((current) => forToday({ ...current, page: 'welcome' }))}
-        />
       )}
       <Panel
         mode={panel}

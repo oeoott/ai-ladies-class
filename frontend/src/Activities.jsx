@@ -146,8 +146,7 @@ function Choice({ selected, children, ...props }) {
     </button>
   )
 }
-function Face({ kind = 'lion', feeling = 'joy' }) {
-  const fur = { lion: '#f4c261', rabbit: '#f8eddc', bear: '#bd8a60' }[kind] || '#f4c261'
+function Face({ kind = 'lion', feeling = 'joy', fur }) {
   const dark = '#473b32'
   return (
     <g className="edu-character-head">
@@ -307,7 +306,15 @@ function StoryProp({ type }) {
     </g>
   )
 }
-function Portrait({ friend, feeling, scene = false, gesture, actionKey, active = true }) {
+function Portrait({
+  friend,
+  feeling,
+  scene = false,
+  closeUp = false,
+  gesture,
+  actionKey,
+  active = true,
+}) {
   const id = useId()
   const data = FEELINGS[feeling]
   const kind = animalKind(friend)
@@ -315,7 +322,7 @@ function Portrait({ friend, feeling, scene = false, gesture, actionKey, active =
   return (
     <svg
       className="edu-portrait"
-      viewBox="0 0 300 213"
+      viewBox={closeUp ? '24 0 218 209' : scene ? '10 0 274 317' : '14 0 232 317'}
       role="img"
       aria-labelledby={id}
       data-active={active}
@@ -323,19 +330,51 @@ function Portrait({ friend, feeling, scene = false, gesture, actionKey, active =
       <title id={id}>
         {friend?.name || '숲속 친구'}의 얼굴. {data.clue}
       </title>
-      <rect width="300" height="213" rx="20" fill={scene ? '#dfedf0' : '#e7f1ee'} />
-      <path d="M0 153q71-54 159-14t141 4v70H0Z" fill="#c9decd" />
-      <path d="M0 177q92 3 158-19t142 4v51H0Z" fill="#b6d1b9" />
-      <g fill="#f9f9ec" opacity=".9">
-        <path d="M23 48q1-9 10-9 5-13 16-7 9-3 14 9 8-1 11 7Z" />
-        <path d="M217 38q1-8 9-8 4-8 13-5 7-1 10 6 8 0 10 7Z" />
-      </g>
-      <g fill="none" stroke="#759d7b" strokeWidth="2.4" strokeLinecap="round">
-        <path d="m18 176-2-6m4 7 4-5m255-7 1-6m-4 6-3-4m-35 34 4-4" />
-      </g>
+      <defs>
+        <radialGradient id={id + '-fur'} cx="40%" cy="32%" r="73%">
+          <stop stopColor={{ lion: '#ffe09a', rabbit: '#fffaed', bear: '#dfb58a' }[kind]} />
+          <stop offset=".75" stopColor={fur} />
+          <stop
+            offset="1"
+            stopColor={{ lion: '#d99a48', rabbit: '#e0caae', bear: '#a67752' }[kind]}
+          />
+        </radialGradient>
+      </defs>
+      {closeUp ? (
+        <>
+          <rect width="300" height="213" fill="#dcefea" />
+          <path d="M0 153q71-54 159-14t141 4v70H0Z" fill="#c8dfcd" />
+          <path d="M0 177q92 3 158-19t142 4v51H0Z" fill="#accdb4" />
+          <path d="M23 48q1-9 10-9 5-13 16-7 9-3 14 9 8-1 11 7Z" fill="#fffdf1" />
+        </>
+      ) : (
+        <ellipse cx="135" cy="301" rx="71" ry="8" fill="#454a28" opacity=".20" />
+      )}
       <g key={actionKey} data-gesture={gesture} data-feeling={feeling}>
-        <path d="M65 213q0-49 67-56c45-4 71 21 76 56Z" fill={fur} />
-        <path d="m104 166 45 47h12l-48-52Z" fill="#ae865c" />
+        {kind === 'lion' && (
+          <g>
+            <path
+              d="M97 255q-37 10-47-18-4-12-4-27"
+              fill="none"
+              stroke={fur}
+              strokeWidth="10"
+              strokeLinecap="round"
+            />
+            <path d="M46 219q-17-3-11-19 6-11 9-13 0 7 8 12 8 13-6 20Z" fill="#bd783e" />
+          </g>
+        )}
+        <g fill={`url(#${id}-fur)`} stroke="#725132" strokeOpacity=".27" strokeWidth="1.4">
+          <path d="M95 242q-5 17-4 43-10 9-4 14 10 8 31 2 7-3 8-14l6-30Zm42 12 9 35q2 13 10 14 23 4 30-3 4-7-7-13l-5-41Z" />
+          <path d="M82 194q13-35 49-38 40-3 58 43 11 30-1 51-11 17-49 18-38 0-53-17-13-19-4-57Z" />
+          <path d="M96 179q-13-1-20 15l-11 32q-3 11 7 15 11 3 17-10l12-31" />
+          {!scene && <path d="M174 178q12-3 20 14l12 32q5 11-4 16-12 5-18-10l-13-31" />}
+        </g>
+        <path d="m100 164 68 77 7-7-66-73Z" fill="#99754d" />
+        <g transform="rotate(-8 164 241)" stroke="#9c7956" strokeWidth="1.5">
+          <rect x="144" y="226" width="40" height="31" rx="9" fill="#e8c596" />
+          <path d="M143 230q0-7 7-7h27q8 0 8 7v7q-20 12-42-1Z" fill="#f7deb2" />
+          <circle cx="164" cy="237" r="2.1" fill="#9c7956" stroke="none" />
+        </g>
         {scene && (
           <g className="edu-character-paw">
             <path
@@ -355,7 +394,7 @@ function Portrait({ friend, feeling, scene = false, gesture, actionKey, active =
           </g>
         )}
         <g transform="translate(26 6) scale(1.07)">
-          <Face kind={kind} feeling={feeling} />
+          <Face kind={kind} feeling={feeling} fur={`url(#${id}-fur)`} />
         </g>
         <path
           d="m94 161 39 16 41-16-13 21-19 3-14 15-15-11 6-10Z"
@@ -368,25 +407,43 @@ function Portrait({ friend, feeling, scene = false, gesture, actionKey, active =
     </svg>
   )
 }
-function Board({ kicker, title, description, children, focusKey = title }) {
+function Board({ kicker, title, description, illustration, children, focusKey = title }) {
   const heading = useRef(null)
   const id = useId()
   useEffect(() => {
     heading.current?.focus({ preventScroll: true })
   }, [focusKey])
+  const prompt = (
+    <div className="edu-header">
+      <span className="edu-kicker">
+        <i aria-hidden="true" />
+        {kicker}
+      </span>
+      <h1 id={id} tabIndex="-1" ref={heading}>
+        {title}
+      </h1>
+      {description && <p data-read-aloud>{description}</p>}
+    </div>
+  )
   return (
-    <section className="edu-board" aria-labelledby={id}>
-      <div className="edu-header">
-        <span className="edu-kicker">
-          <i aria-hidden="true" />
-          {kicker}
-        </span>
-        <h1 id={id} tabIndex="-1" ref={heading}>
-          {title}
-        </h1>
-        {description && <p data-read-aloud>{description}</p>}
-      </div>
-      {children}
+    <section
+      className={'edu-board ' + (illustration ? 'edu-spread' : 'edu-preparation')}
+      aria-labelledby={id}
+    >
+      {illustration ? (
+        <>
+          <div className="edu-paper">
+            {prompt}
+            <div className="edu-task">{children}</div>
+          </div>
+          {illustration}
+        </>
+      ) : (
+        <>
+          {prompt}
+          {children}
+        </>
+      )}
     </section>
   )
 }
@@ -445,6 +502,7 @@ export function LevelTest({ progress, onUpdate, onDone, friend, active = true })
             <Portrait
               friend={friend}
               feeling={key}
+              closeUp
               gesture={state.choice === key ? 'listen' : undefined}
               active={active}
             />
@@ -505,8 +563,7 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
           ? '그림에 어울리는 말을 골라요. 두 개를 골라도 돼요.'
           : '그림에 어울리는 마음을 하나 골라요.'
       }
-    >
-      <div className="edu-split">
+      illustration={
         <figure className="edu-figure">
           <Portrait
             friend={friend}
@@ -519,35 +576,29 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
           />
           <figcaption>{friend?.name || '숲속 친구'}의 표정</figcaption>
         </figure>
-        <div className="edu-task">
-          <div
-            className={expanded ? 'edu-choices edu-multiple' : 'edu-choices'}
-            role="group"
-            aria-label="마음 낱말"
-          >
-            {words.map((w) => (
-              <Choice
-                key={w}
-                selected={selected.includes(w)}
-                disabled={done}
-                onClick={() => pick(w)}
-              >
-                {w}
-              </Choice>
-            ))}
-          </div>
-          <p role="status" className="edu-feedback" data-read-aloud>
-            {state.feedback}
-          </p>
-          {done ? (
-            <Action onClick={next}>표정 연습으로</Action>
-          ) : (
-            <Action onClick={submit} disabled={selected.length === 0}>
-              선택 확인하기
-            </Action>
-          )}
-        </div>
+      }
+    >
+      <div
+        className={expanded ? 'edu-choices edu-multiple' : 'edu-choices'}
+        role="group"
+        aria-label="마음 낱말"
+      >
+        {words.map((w) => (
+          <Choice key={w} selected={selected.includes(w)} disabled={done} onClick={() => pick(w)}>
+            {w}
+          </Choice>
+        ))}
       </div>
+      <p role="status" className="edu-feedback" data-read-aloud>
+        {state.feedback}
+      </p>
+      {done ? (
+        <Action onClick={next}>표정 연습으로</Action>
+      ) : (
+        <Action onClick={submit} disabled={selected.length === 0}>
+          선택 확인하기
+        </Action>
+      )}
     </Board>
   )
 }
@@ -649,8 +700,7 @@ function MirrorActivity({ fact, feeling, friend, active, next }) {
       kicker="둘째 걸음 · 표정 연습"
       title="표정을 함께 해 볼까요?"
       description="그림을 살펴봐요. 따라 하고 싶으면 천천히 해 봐요."
-    >
-      <div className="edu-split">
+      illustration={
         <figure className="edu-figure">
           <Portrait
             friend={friend}
@@ -683,60 +733,59 @@ function MirrorActivity({ fact, feeling, friend, active, next }) {
             </button>
           </figcaption>
         </figure>
-        <div className="edu-task">
-          <p className="edu-prompt" data-read-aloud>
-            {fact.motion}
-          </p>
-          {camera.status === 'on' && (
-            <div className="edu-camera">
-              <video ref={camera.video} muted autoPlay playsInline aria-label="이 기기의 내 모습" />
-            </div>
-          )}
-          <div className="edu-camera-row">
-            {camera.status === 'on' || camera.status === 'waiting' ? (
-              <button className="edu-secondary" type="button" onClick={camera.off}>
-                {camera.status === 'waiting' ? '카메라 요청 취소' : '카메라 끄기'}
-              </button>
-            ) : (
-              <button className="edu-secondary" type="button" onClick={camera.start}>
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                >
-                  <rect x="3" y="7" width="18" height="13" rx="3" />
-                  <path d="m7 7 2-3h6l2 3" />
-                  <circle cx="12" cy="13" r="3" />
-                </svg>
-                {camera.status === 'unavailable' ? '카메라 다시 켜기' : '카메라로 내 모습 보기'}
-              </button>
-            )}
-          </div>
-          <p role="status" className="edu-note" data-read-aloud>
-            {camera.status === 'on'
-              ? camera.facePresent
-                ? '얼굴이 화면에 보여요.'
-                : '내 모습은 이 화면에만 보여요.'
-              : camera.status === 'waiting'
-                ? '카메라를 여는 중이에요. 그림만 보고 넘어가도 돼요.'
-                : camera.status === 'unavailable'
-                  ? '카메라를 열 수 없어요. 그림만 보고 연습해도 돼요.'
-                  : '카메라 없이 그림만 봐도 돼요.'}
-          </p>
-          <Action
-            onClick={() => {
-              camera.off()
-              next()
-            }}
-          >
-            이야기로 가기
-          </Action>
+      }
+    >
+      <p className="edu-prompt" data-read-aloud>
+        {fact.motion}
+      </p>
+      {camera.status === 'on' && (
+        <div className="edu-camera">
+          <video ref={camera.video} muted autoPlay playsInline aria-label="이 기기의 내 모습" />
         </div>
+      )}
+      <div className="edu-camera-row">
+        {camera.status === 'on' || camera.status === 'waiting' ? (
+          <button className="edu-secondary" type="button" onClick={camera.off}>
+            {camera.status === 'waiting' ? '카메라 요청 취소' : '카메라 끄기'}
+          </button>
+        ) : (
+          <button className="edu-secondary" type="button" onClick={camera.start}>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+            >
+              <rect x="3" y="7" width="18" height="13" rx="3" />
+              <path d="m7 7 2-3h6l2 3" />
+              <circle cx="12" cy="13" r="3" />
+            </svg>
+            {camera.status === 'unavailable' ? '카메라 다시 켜기' : '카메라로 내 모습 보기'}
+          </button>
+        )}
       </div>
+      <p role="status" className="edu-note" data-read-aloud>
+        {camera.status === 'on'
+          ? camera.facePresent
+            ? '얼굴이 화면에 보여요.'
+            : '내 모습은 이 화면에만 보여요.'
+          : camera.status === 'waiting'
+            ? '카메라를 여는 중이에요. 그림만 보고 넘어가도 돼요.'
+            : camera.status === 'unavailable'
+              ? '카메라를 열 수 없어요. 그림만 보고 연습해도 돼요.'
+              : '카메라 없이 그림만 봐도 돼요.'}
+      </p>
+      <Action
+        onClick={() => {
+          camera.off()
+          next()
+        }}
+      >
+        이야기로 가기
+      </Action>
     </Board>
   )
 }
@@ -1041,8 +1090,7 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
             ? '이야기를 마쳤어요'
             : withFriend(name) + ' 나누는 이야기'
       }
-    >
-      <div className="edu-split">
+      illustration={
         <figure className="edu-figure">
           <Portrait
             friend={friend}
@@ -1056,54 +1104,45 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
             {name}의 {fact.label} 이야기
           </figcaption>
         </figure>
-        <div className="edu-task">
-          <span className="edu-eyebrow">{voiceReply && !isQuestion ? '내가 한 말' : caption}</span>
-          {phase === 'read' ? (
-            <>
-              <p className="edu-story" data-read-aloud>
-                {fact.scene}
-              </p>
-              <blockquote data-read-aloud>“{fact.line}”</blockquote>
-              <Action onClick={() => update({ phase: 'question' })}>친구와 대화하기</Action>
-            </>
-          ) : isQuestion ? (
-            <StoryQuestion
-              key={phase}
-              fact={fact}
-              active={active}
-              isExtra={isExtra}
-              feeling={feeling}
-              onReply={(choice, voice = false) =>
-                update(
-                  isExtra
-                    ? { phase: 'ending', extraChoice: choice, extraVoice: voice }
-                    : { phase: 'reply', choice, voice },
-                )
-              }
-            />
-          ) : (
-            <>
-              <p className="edu-story" role="status" data-read-aloud>
-                {voiceReply
-                  ? voiceSummary[feeling]
-                  : phase === 'ending'
-                    ? reply
-                    : '“' + reply + '”'}
-              </p>
-              <Action onClick={onComplete}>산책 마무리하기</Action>
-              {phase === 'reply' && (
-                <button
-                  type="button"
-                  className="edu-link"
-                  onClick={() => update({ phase: 'extra' })}
-                >
-                  조금 더 이야기하기
-                </button>
-              )}
-            </>
+      }
+    >
+      <span className="edu-eyebrow">{voiceReply && !isQuestion ? '내가 한 말' : caption}</span>
+      {phase === 'read' ? (
+        <>
+          <p className="edu-story" data-read-aloud>
+            {fact.scene}
+          </p>
+          <blockquote data-read-aloud>“{fact.line}”</blockquote>
+          <Action onClick={() => update({ phase: 'question' })}>친구와 대화하기</Action>
+        </>
+      ) : isQuestion ? (
+        <StoryQuestion
+          key={phase}
+          fact={fact}
+          active={active}
+          isExtra={isExtra}
+          feeling={feeling}
+          onReply={(choice, voice = false) =>
+            update(
+              isExtra
+                ? { phase: 'ending', extraChoice: choice, extraVoice: voice }
+                : { phase: 'reply', choice, voice },
+            )
+          }
+        />
+      ) : (
+        <>
+          <p className="edu-story" role="status" data-read-aloud>
+            {voiceReply ? voiceSummary[feeling] : phase === 'ending' ? reply : '“' + reply + '”'}
+          </p>
+          <Action onClick={onComplete}>산책 마무리하기</Action>
+          {phase === 'reply' && (
+            <button type="button" className="edu-link" onClick={() => update({ phase: 'extra' })}>
+              조금 더 이야기하기
+            </button>
           )}
-        </div>
-      </div>
+        </>
+      )}
     </Board>
   )
 }

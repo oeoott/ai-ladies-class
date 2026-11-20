@@ -16,10 +16,12 @@ export function JourneyProgress({ friend, step }) {
             className={index < step ? 'journey-stop is-complete' : 'journey-stop'}
             aria-current={index === step ? 'step' : undefined}
           >
-            <span className="journey-marker" aria-hidden="true">
-              {index < step ? '✓' : index + 1}
+            <span className="journey-stop-label">
+              <span className="journey-marker" aria-hidden="true">
+                {index < step ? '✓' : index + 1}
+              </span>
+              <span className="journey-stage-name">{label}</span>
             </span>
-            <span className="journey-stage-name">{label}</span>
             {index < step && <span className="journey-sr"> 완료</span>}
           </li>
         ))}
