@@ -1,0 +1,134 @@
+.journey-progress {
+  --journey-travel: 650ms;
+  position: relative;
+  width: min(100%, 25rem);
+  min-width: 0;
+  color: #3c5947;
+  font-size: .93rem;
+}
+
+.journey-stops {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding: 39px 0 0;
+  list-style: none;
+}
+
+.journey-stops::before {
+  content: '';
+  position: absolute;
+  top: 48px;
+  right: 16.6667%;
+  left: 16.6667%;
+  border-top: 2px dashed #a7bea5;
+}
+
+.journey-stop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  text-align: center;
+}
+
+.journey-marker {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #a2b79c;
+  border-radius: 50%;
+  color: #486143;
+  background: #fcfcf3;
+  font: 700 12px/1 system-ui, sans-serif;
+}
+
+.journey-stop[aria-current='step'] .journey-marker,
+.journey-stop.is-complete .journey-marker {
+  border-color: #397151;
+  background: #397151;
+  color: white;
+}
+
+.journey-stage-name {
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+.journey-stop[aria-current='step'] .journey-stage-name {
+  font-weight: 750;
+  color: #204c36;
+}
+
+.journey-walker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 33.3333%;
+  height: 38px;
+  transform: translateX(calc(var(--journey-step) * 100%));
+  pointer-events: none;
+}
+
+.journey-walker img {
+  width: 38px;
+  height: 35px;
+  object-fit: contain;
+  object-position: center bottom;
+  transform-origin: center bottom;
+}
+
+.journey-walker .journey-walking-pose {
+  display: none;
+}
+
+.journey-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .journey-walker {
+    transition: transform var(--journey-travel) ease-in-out;
+  }
+
+  .journey-walker.is-walking[data-pose-ready='true'] .journey-standing-pose {
+    display: none;
+  }
+
+  .journey-walker.is-walking[data-pose-ready='true'] .journey-walking-pose {
+    display: block;
+  }
+
+  .journey-walker.is-walking img {
+    animation: journey-footsteps var(--journey-travel) ease-in-out;
+  }
+}
+
+@keyframes journey-footsteps {
+  0%, 50%, 100% { transform: translateY(0) rotate(0); }
+  25% { transform: translateY(-3px) rotate(4deg); }
+  75% { transform: translateY(-3px) rotate(-4deg); }
+}
+
+@media (max-width: 580px) {
+  .lesson-context:has(.journey-progress) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .journey-progress {
+    width: 100%;
+  }
+}

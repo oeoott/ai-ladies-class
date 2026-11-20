@@ -1,20 +1,16 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  ArrowRight,
-  CalendarDays,
   Check,
-  ChevronRight,
-  Footprints,
   Pause,
   PawPrint,
-  RefreshCw,
   ShieldCheck,
   Sparkles,
   Sprout,
-  Sun,
   Volume2,
   VolumeX,
 } from 'lucide-react'
+import { ForestEntrance } from './ForestEntrance.jsx'
+import { JourneyProgress } from './JourneyProgress.jsx'
 import { LevelTest, Lesson } from './Activities.jsx'
 import { Panel } from './Panels.jsx'
 import {
@@ -33,13 +29,11 @@ const friends = [
   { id: 'lion', name: '라온', familiar: '라온이', species: '사자' },
   { id: 'rabbit', name: '보리', familiar: '보리', species: '토끼' },
   { id: 'bear', name: '두리', familiar: '두리', species: '곰' },
-].map((friend) => ({ ...friend, image: asset('art/' + friend.id + '.webp') }))
-
-const path = [
-  { image: 'cards', name: '감정 그림', task: '표정을 보고 마음을 찾아요.' },
-  { image: 'mirror', name: '표정 거울', task: '친구의 표정을 따라 해요.' },
-  { image: 'story', name: '이야기 나누기', task: '이야기 속 친구와 대화해요.' },
-]
+].map((friend) => ({
+  ...friend,
+  image: asset('art/' + friend.id + '.webp'),
+  walkImage: asset('art/' + friend.id + '-walk.webp'),
+}))
 
 function startSession() {
   try {
@@ -82,91 +76,6 @@ function AppHeader({ sound, onSound, onGuard, onRest, learning }) {
         </div>
       </div>
     </header>
-  )
-}
-
-function Trail() {
-  return (
-    <section className="trail-section" aria-labelledby="trail-title">
-      <div className="section-heading">
-        <div className="heading-title">
-          <Footprints aria-hidden="true" />
-          <h2 id="trail-title">오늘의 산책길</h2>
-        </div>
-        <span>모두 3단계</span>
-      </div>
-      <ol className="trail-map">
-        {path.map((item, index) => (
-          <li key={item.image}>
-            <img src={asset('trail/' + item.image + '.webp')} alt="" width="85" height="85" />
-            <div className="trail-copy">
-              <span>{index + 1}단계</span>
-              <h3>{item.name}</h3>
-              <p>{item.task}</p>
-            </div>
-            {index < 2 && <ChevronRight className="trail-connector" size={16} aria-hidden="true" />}
-          </li>
-        ))}
-      </ol>
-    </section>
-  )
-}
-
-function Welcome({ friend, topic, day, onStart, onFriends, finished }) {
-  const date = new Intl.DateTimeFormat('ko-KR', {
-    month: 'long',
-    day: 'numeric',
-    weekday: 'long',
-  }).format(new Date(day + 'T12:00:00'))
-  return (
-    <main id="main-content" className="page-wrap welcome">
-      <div className="walk-edition">
-        <span>
-          <span className="edition-dot" />
-          오늘의 마음 산책
-        </span>
-        <time dateTime={day}>
-          <CalendarDays aria-hidden="true" />
-          {date}
-        </time>
-      </div>
-      <section className="hero" aria-labelledby="welcome-title">
-        <img
-          className="hero-landscape"
-          src={asset('art/forest.webp')}
-          alt=""
-          fetchPriority="high"
-        />
-        <div className="hero-copy">
-          <span className="theme-label">
-            <Sun size={18} aria-hidden="true" />
-            오늘의 감정 <b aria-hidden="true">·</b> {topic.label}
-          </span>
-          <h1 id="welcome-title">
-            {friend.familiar}와 함께
-            <br />
-            <em>마음숲을 걸어요</em>
-          </h1>
-          <p>오늘은 {topic.phrase}을 만나 볼 거예요.</p>
-          <button type="button" className="primary walk-start" onClick={onStart}>
-            {finished ? '오늘의 스티커 보기' : '산책 시작하기'}
-            <ArrowRight aria-hidden="true" />
-          </button>
-        </div>
-        <div className="hero-friend">
-          <img
-            src={friend.image}
-            alt={'손을 흔드는 ' + friend.species + ' ' + friend.name}
-            fetchPriority="high"
-          />
-        </div>
-        <button type="button" className="change-friend" onClick={onFriends}>
-          <RefreshCw size={16} aria-hidden="true" />
-          친구 바꾸기
-        </button>
-      </section>
-      <Trail />
-    </main>
   )
 }
 
@@ -242,6 +151,7 @@ function Reward({ page, friend, topic, records, onBook, onFinish }) {
 
 function App() {
   const [session, setSession] = useState(startSession)
+  const [hasEntered, setHasEntered] = useState(false)
   const [panel, setPanel] = useState(null)
   const [storageUnavailable, setStorageUnavailable] = useState(false)
   const [audioMessage, setAudioMessage] = useState('')
@@ -250,7 +160,8 @@ function App() {
   const { page, settings } = session
   const friend = friends.find((f) => f.id === session.friendId) || friends[0]
   const topic = topics.find((t) => t.id === session.topicId) || topics[0]
-  const learning = page === 'lesson' || page === 'placement'
+  const showEntrance = !hasEntered || page === 'welcome'
+  const learning = !showEntrance && (page === 'lesson' || page === 'placement')
   const finished = session.records.some((r) => r.date === session.day)
   const patch = useCallback((values) => setSession((current) => ({ ...current, ...values })), [])
   useEffect(() => {
@@ -282,7 +193,7 @@ function App() {
   }, [])
   useEffect(() => {
     window.scrollTo(0, 0)
-  }, [page, session.step])
+  }, [page, session.step, showEntrance])
 
   useEffect(() => {
     speaker?.getVoices()
@@ -336,7 +247,7 @@ function App() {
       speaker.removeEventListener?.('voiceschanged', read)
       document.removeEventListener('visibilitychange', onHidden)
     }
-  }, [settings.sound, page, panel, speaker])
+  }, [settings.sound, page, panel, speaker, showEntrance])
 
   function retest() {
     const returnPage = page === 'placement' ? session.retestReturn : session.onboarded ? page : null
@@ -358,7 +269,9 @@ function App() {
     entry.current = origin
     setPanel(mode)
   }
-  function start() {
+  function enterForest() {
+    setHasEntered(true)
+    if (page !== 'welcome') return
     const updated = forToday(session, localDay())
     if (updated !== session) setSession(updated)
     if (updated.records.some((r) => r.date === updated.day)) patch({ page: 'stickers' })
@@ -392,17 +305,21 @@ function App() {
 
   return (
     <>
-      <a href="#main-content" className="skip-link">
-        본문으로 가기
-      </a>
-      <AppHeader
-        sound={settings.sound}
-        learning={learning}
-        onSound={() => setPreferences({ sound: !settings.sound })}
-        onGuard={() => open('guardian', 'guardian')}
-        onRest={() => open('rest', 'rest')}
-      />
-      {audioMessage && (
+      {!showEntrance && (
+        <>
+          <a href="#main-content" className="skip-link">
+            본문으로 가기
+          </a>
+          <AppHeader
+            sound={settings.sound}
+            learning={learning}
+            onSound={() => setPreferences({ sound: !settings.sound })}
+            onGuard={() => open('guardian', 'guardian')}
+            onRest={() => open('rest', 'rest')}
+          />
+        </>
+      )}
+      {!showEntrance && audioMessage && (
         <div className="notice" role="status">
           {audioMessage}
           <button type="button" onClick={() => setAudioMessage('')}>
@@ -415,14 +332,14 @@ function App() {
           이 브라우저에는 기록을 저장할 수 없어요. 지금 열린 화면에서 산책을 계속할 수 있어요.
         </p>
       )}
-      {page === 'welcome' && (
-        <Welcome
+      {showEntrance && (
+        <ForestEntrance
           friend={friend}
           topic={topic}
-          day={session.day}
-          onStart={start}
-          finished={finished}
-          onFriends={() => open('friends', 'welcome')}
+          finished={page === 'stickers' || (page === 'welcome' && finished)}
+          resuming={page !== 'welcome' && page !== 'stickers'}
+          hidden={Boolean(panel)}
+          onEnter={enterForest}
         />
       )}
       {learning && (
@@ -432,13 +349,7 @@ function App() {
               <Sprout />
               {page === 'placement' ? '산책 준비' : '오늘의 감정 · ' + topic.label}
             </span>
-            {page === 'lesson' && (
-              <span className="step-mark" aria-label={'3단계 중 ' + (session.step + 1) + '단계'}>
-                {path.map((_, i) => (
-                  <i className={i <= session.step ? 'covered' : ''} key={i} />
-                ))}
-              </span>
-            )}
+            {page === 'lesson' && <JourneyProgress friend={friend} step={session.step} />}
           </div>
           {page === 'placement' ? (
             <LevelTest progress={session} onUpdate={patch} onDone={afterTest} friend={friend} />
@@ -454,7 +365,7 @@ function App() {
           )}
         </main>
       )}
-      {(page === 'praise' || page === 'stickers') && (
+      {!showEntrance && (page === 'praise' || page === 'stickers') && (
         <Reward
           page={page}
           friend={friend}
