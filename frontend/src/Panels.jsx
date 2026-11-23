@@ -4,75 +4,12 @@ import { FriendLook } from './FriendLook.jsx'
 import { GuardianGate } from './GuardianGate.jsx'
 import React, { useId, useLayoutEffect, useRef, useState } from 'react'
 import { FriendStudio } from './FriendStudio.jsx'
+import { Icon, MenuRow } from './PanelIcon.jsx'
+import { GuardianAccountInfo, GuardianDashboard, GuardianSignIn, PeriodToggle } from './GuardianAccount.jsx'
+import { dashboardTitle } from './dashboard.js'
 import './panels.css'
 
-const paths = {
-  close: <path d="m6 6 12 12M18 6 6 18" />,
-  next: <path d="m9.5 5.5 6 6.5-6 6.5" />,
-  paw: (
-    <>
-      <path d="M6.3 15.6c1.3-1.7 2-4.3 5.7-4.3s4.4 2.6 5.7 4.3c1.8 2.4-.5 5.3-3.1 4.4-1.7-.6-3.5-.6-5.2 0-2.6.9-4.9-2-3.1-4.4Z" />
-      <ellipse cx="4.7" cy="10.2" rx="1.7" ry="2.3" transform="rotate(-24 4.7 10.2)" />
-      <ellipse cx="9.2" cy="6.5" rx="1.7" ry="2.3" />
-      <ellipse cx="14.8" cy="6.5" rx="1.7" ry="2.3" />
-      <ellipse cx="19.3" cy="10.2" rx="1.7" ry="2.3" transform="rotate(24 19.3 10.2)" />
-    </>
-  ),
-  leaf: (
-    <>
-      <path d="M4 18C1.7 9.4 7 4 20 3c.1 11-3.8 17.6-12.2 15.5M3 21c2.4-4.8 6.5-8.7 11.5-12.2" />
-    </>
-  ),
-  stamp: (
-    <>
-      <path d="M7 14h10l3 3v2H4v-2l3-3ZM9 14l.9-4a3.4 3.4 0 1 1 4.2 0l.9 4M5.5 21h13" />
-    </>
-  ),
-  book: (
-    <>
-      <path d="M12 6c-2.2-2.1-6-2.4-9-1.2V18c3-1.2 6.8-.9 9 1.2 2.2-2.1 6-2.4 9-1.2V4.8c-3-1.2-6.8-.9-9 1.2Zm0 0v13" />
-    </>
-  ),
-  person: (
-    <>
-      <circle cx="12" cy="8" r="3.5" />
-      <path d="M5 20v-1a7 7 0 0 1 14 0v1" />
-    </>
-  ),
-  check: <path d="m5 12 4.4 4.4L19 7" />,
-}
-function Icon({ name, size = 22 }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      width={size}
-      height={size}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      {paths[name]}
-    </svg>
-  )
-}
-
-function MenuRow({ icon, children, onClick, detail }) {
-  return (
-    <button type="button" className="forest-panel-row" onClick={onClick}>
-      <span className="forest-panel-row-icon">
-        <Icon name={icon} />
-      </span>
-      <span className="forest-panel-row-title">{children}</span>
-      {detail && <span className="forest-panel-row-detail">{detail}</span>}
-      <Icon name="next" size={16} />
-    </button>
-  )
-}
-
-function Guardian({ onOpen, cardPortrait }) {
+function Guardian({ onOpen, cardPortrait, guardian, accountEnabled }) {
   return (
     <div className="forest-panel-menu">
       <MenuRow icon="paw" onClick={() => onOpen('friends')}>
@@ -90,6 +27,18 @@ function Guardian({ onOpen, cardPortrait }) {
       <MenuRow icon="person" detail={cardPortrait === 'girl' ? '여자아이' : '남자아이'} onClick={() => onOpen('portrait')}>
         표정 카드
       </MenuRow>
+      {accountEnabled && (
+        <>
+          <MenuRow icon="person" detail={guardian.token ? guardian.email : '로그인 안 함'}
+            onClick={() => onOpen(guardian.token ? 'guardianAccount' : 'login')}>
+            보호자 계정
+          </MenuRow>
+          <MenuRow icon="chart" detail={guardian.token && guardian.profileName ? guardian.profileName : undefined}
+            onClick={() => onOpen('dashboard')}>
+            학습 대시보드
+          </MenuRow>
+        </>
+      )}
     </div>
   )
 }
@@ -258,6 +207,10 @@ const titles = {
   records: '스티커판',
   rest: '잠깐 쉬어 가요',
   retest: '학습 진단을 다시 할까요?',
+  login: '보호자 로그인',
+  signupAccount: '보호자 계정 만들기',
+  guardianAccount: '보호자 계정',
+  dashboard: '학습 대시보드',
 }
 
 export function Panel(props) {
@@ -285,9 +238,19 @@ function PanelDialog({
   onSignupDraft,
   recipient,
   returnFocusRef,
+  guardian = {},
+  accountEnabled = false,
+  linkNote,
+  onSignedIn,
+  onEnsureChild,
+  onSignOut,
+  onExpired,
 }) {
+  const [dashboardKind, setDashboardKind] = useState('week')
   const greeting = '안녕! 나는 ' + (friend.familiar || friend.name) + '야. 나랑 같이 놀자!'
-  const title = mode === 'friendHello' ? greeting : titles[mode]
+  const title = mode === 'friendHello' ? greeting
+    : mode === 'dashboard' ? dashboardTitle(guardian.token ? guardian.profileName : '')
+    : titles[mode]
   useNarration(mode === 'together' ? '반가워요! 지금 부모님과 함께 있나요?'
     : mode === 'bringParent' ? '괜찮아요. 부모님을 부르고, 함께 시작해요.'
     : mode === 'chooseFriend' || mode === 'portrait' ? titles[mode]
@@ -345,6 +308,9 @@ function PanelDialog({
         <h2 ref={heading} id={titleId} tabIndex="-1">
           {title}
         </h2>
+        {mode === 'dashboard' && guardian.token && guardian.profileId && (
+          <PeriodToggle kind={dashboardKind} onChange={setDashboardKind} />
+        )}
         {mode !== 'rest' && (
           <button
             className="forest-panel-iconbtn"
@@ -405,7 +371,13 @@ function PanelDialog({
         <button type="button" className="forest-panel-primary" onClick={() => onOpen('signup')}>부모님이 오셨어요</button>
       )}
       {mode === 'gate' && <GuardianGate onUnlock={onUnlock} />}
-      {mode === 'guardian' && <Guardian {...{ onOpen, cardPortrait }} />}
+      {mode === 'guardian' && <Guardian {...{ onOpen, cardPortrait, guardian, accountEnabled }} />}
+      {(mode === 'login' || mode === 'signupAccount') && (
+        <GuardianSignIn key={mode} signup={mode === 'signupAccount'} onOpen={onOpen} onSignedIn={onSignedIn}
+          initialEmail={guardian.email || recipient || signupEmail} />
+      )}
+      {mode === 'guardianAccount' && <GuardianAccountInfo {...{ guardian, linkNote, onSignOut }} />}
+      {mode === 'dashboard' && <GuardianDashboard key={dashboardKind} {...{ guardian, onOpen, onExpired, onEnsureChild }} kind={dashboardKind} />}
       {(mode === 'account' || mode === 'signup') && (
         <Account
           key={mode}

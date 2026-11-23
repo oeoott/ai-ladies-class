@@ -5,7 +5,7 @@ import './friend-studio.css'
 const charms = [null, 'leaf', 'star', 'flower']
 const headwearOptions = [null, 'sky-hat', 'flower-pin']
 
-function StudioChoice({ selected, label, onClick, children }) {
+export function StudioChoice({ selected, label, onClick, children }) {
   return (
     <button type="button" className="studio-choice" aria-pressed={selected} onClick={onClick}>
       <span className="studio-choice-art">{children}</span>

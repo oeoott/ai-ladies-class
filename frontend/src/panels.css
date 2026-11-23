@@ -335,3 +335,298 @@
   object-fit: cover;
   border-radius: 9px;
 }
+
+/* Guardian account screens (GuardianAccount.jsx). Only colors and variables already used in this file. */
+.forest-panel .forest-panel-row[aria-pressed='true'] {
+  border-color: var(--panel-green);
+  box-shadow: inset 0 0 0 1px var(--panel-green);
+  background: #f0f6eb;
+}
+.forest-panel .forest-panel-row[aria-pressed='true'] > svg {
+  color: var(--panel-green);
+}
+.forest-panel .profile-list .forest-panel-row-icon .friend-look {
+  width: 32px;
+  height: 32px;
+}
+.forest-panel .profile-list {
+  margin-bottom: 12px;
+}
+.forest-panel .forest-account-form .studio-group {
+  margin: 4px 0 0;
+}
+/* Learning dashboard (GuardianAccount.jsx). One column in both orientations, three parts split by a thin line.
+   Only sizes already used in this file: activity title 16px bold (.forest-panel-row-title), item 15px
+   (.forest-stamp-list li), big number 17px bold (input text), notes 13-14px muted (.forest-panel-row-detail). */
+.forest-panel.is-dashboard {
+  width: min(600px, calc(100vw - 36px));
+}
+.forest-panel.is-dashboard .forest-panel-head {
+  margin-bottom: 4px;
+}
+.forest-panel .dashboard-toggle {
+  display: inline-flex;
+  flex: none;
+  padding: 3px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: #fff;
+}
+.forest-panel .dashboard-toggle button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: none;
+  color: var(--forest-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+.forest-panel .dashboard-toggle button[aria-pressed='true'] {
+  border-color: var(--panel-green);
+  background: #f0f6eb;
+  color: var(--forest-ink);
+  font-weight: 720;
+}
+/* A long title ("…의 학습 대시보드") wraps onto a second line beside the toggle instead of squeezing it. */
+.forest-panel.is-dashboard .forest-panel-head h2 {
+  min-width: 0;
+  word-break: keep-all;
+}
+.forest-panel .dashboard-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--forest-ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+/* 48px touch area, but the row only takes 36px: the buttons overlap 6px above and below. */
+.forest-panel .dashboard-nav button {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: -6px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--forest-ink);
+}
+.forest-panel .dashboard-nav button:disabled {
+  color: var(--forest-muted);
+  opacity: 0.35;
+}
+.forest-panel .dashboard-prev {
+  display: grid;
+  transform: scaleX(-1);
+}
+.forest-panel .dashboard-section {
+  padding: 10px 0;
+}
+.forest-panel .dashboard-section + .dashboard-section {
+  border-top: 1px solid var(--panel-border);
+}
+.forest-panel .dashboard-section h3 {
+  margin: 0 0 8px;
+  color: var(--forest-ink);
+  font-size: 16px;
+  font-weight: 720;
+}
+.forest-panel .dashboard-line {
+  margin: 0;
+  color: var(--forest-ink);
+  font-size: 15px;
+}
+.forest-panel .dashboard-line strong,
+.forest-panel .dashboard-value {
+  color: var(--forest-ink);
+  font-size: 17px;
+  font-weight: 720;
+}
+.forest-panel .dashboard-dot {
+  margin: 0 10px;
+  color: var(--forest-muted);
+}
+.forest-panel .dashboard-rows {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.forest-panel .dashboard-rows li {
+  display: grid;
+  grid-template-columns: 4em minmax(0, 1fr) 3.5em;
+  align-items: center;
+  gap: 12px;
+}
+.forest-panel .dashboard-label {
+  color: var(--forest-ink);
+  font-size: 15px;
+  font-weight: 500;
+}
+.forest-panel .dashboard-bar {
+  display: block;
+  height: 10px;
+  border-radius: 99px;
+  background: #edf4e8;
+  overflow: hidden;
+}
+.forest-panel .dashboard-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--panel-green);
+}
+.forest-panel .dashboard-value {
+  text-align: right;
+}
+.forest-panel .dashboard-empty {
+  grid-column: 2 / -1;
+  color: var(--forest-muted);
+  font-size: 14px;
+  opacity: 0.7;
+}
+.forest-panel .dashboard-detail {
+  margin: 10px 0 0;
+  color: var(--forest-muted);
+  font-size: 14px;
+}
+.forest-panel .dashboard-week {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.forest-panel .dashboard-week li {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+.forest-panel .dashboard-circle {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--panel-border);
+  border-radius: 50%;
+}
+.forest-panel .dashboard-circle.got {
+  border-color: var(--panel-green);
+  background: var(--panel-green);
+  color: #fff;
+}
+.forest-panel .dashboard-week .dashboard-circle {
+  font-size: 15px;
+  font-weight: 720;
+}
+.forest-panel .dashboard-circle.is-zero {
+  color: var(--forest-muted);
+  font-weight: 500;
+  opacity: 0.7;
+}
+/* 월간 calendar: same circle size and column gap as the 주간 row, no cell borders. */
+/* 월간: sentence on the left, a small calendar on the right. Wraps the calendar under the sentence
+   when the panel is too narrow for both. */
+.forest-panel .dashboard-month {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+}
+/* 이번 달 / 지난달 beside the calendar: small faint name, large bold number. */
+.forest-panel .dashboard-stats {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.forest-panel .dashboard-stats div {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.forest-panel .dashboard-stats dt {
+  color: var(--forest-muted);
+  font-size: 13px;
+}
+.forest-panel .dashboard-stats dd {
+  margin: 0;
+  color: var(--forest-ink);
+  font-size: 17px;
+  font-weight: 720;
+}
+/* Six-month line chart: the existing green, the viewed month's point solid, the rest lighter. */
+.forest-panel .dashboard-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 8px;
+  overflow: visible;
+}
+.forest-panel .dashboard-chart polyline {
+  fill: none;
+  stroke: var(--panel-green);
+  stroke-width: 2;
+  opacity: 0.45;
+}
+.forest-panel .dashboard-chart circle {
+  fill: var(--panel-green);
+  opacity: 0.55;
+}
+.forest-panel .dashboard-chart .is-current circle {
+  opacity: 1;
+}
+.forest-panel .dashboard-chart text {
+  fill: var(--forest-muted);
+  font-size: 12px;
+}
+.forest-panel .dashboard-chart .is-current text {
+  fill: var(--forest-ink);
+  font-weight: 720;
+}
+.forest-panel .dashboard-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 28px);
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.forest-panel .dashboard-calendar .dashboard-weekday {
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
+.forest-panel .dashboard-calendar .dashboard-circle {
+  width: 28px;
+  height: 28px;
+  border-color: transparent;
+  font-size: 12px;
+}
+.forest-panel .dashboard-calendar .dashboard-circle.got {
+  font-weight: 720;
+}
+.forest-panel .dashboard-calendar .dashboard-circle.is-today {
+  border-color: var(--panel-green);
+  opacity: 1;
+}
+.forest-panel .dashboard-weekday {
+  color: var(--forest-muted);
+  font-size: 13px;
+}
+
+/* Guardian account panels have different heights, so centered they can cut through the scene title
+   behind them (ready sign, sticker book title). While one is open, that title is hidden. */
+#root:has(> dialog.forest-panel:is(.is-login, .is-signupAccount, .is-guardianAccount, .is-dashboard)[open])
+  :is(.praise-note, .sticker-book > h1) {
+  visibility: hidden;
+}

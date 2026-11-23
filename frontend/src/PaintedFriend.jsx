@@ -252,6 +252,8 @@ function WavingPose({ imageId, face }) {
   )
 }
 
+const DRAWN_FEELINGS = new Set(['neutral', 'joy', 'sad', 'surprise', 'anger'])
+
 export function PaintedFriend({
   kind,
   src,
@@ -265,6 +267,8 @@ export function PaintedFriend({
   cover = false,
   className = '',
 }) {
+  // Faces are drawn for these feelings only; a new emotion without a drawn face looks calm.
+  if (!DRAWN_FEELINGS.has(feeling)) feeling = 'neutral'
   const id = useId()
   const face = faces[kind]
   const imageId = id + '-original'

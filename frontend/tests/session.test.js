@@ -167,3 +167,14 @@ test('guardian sticker review preserves the unfinished lesson after a reload', (
   assert.equal(review.reviewTopicId, 'sad')
   assert.deepEqual(finishWalk(readSession(JSON.stringify(review), date)), daily)
 })
+
+test('a server walk id survives reloads, pauses for a guardian review and clears when the walk ends', () => {
+  const daily = { ...beginWalk({ ...emptySession(date), onboarded: true }, date), step: 1, walkId: 'w-daily' }
+  assert.equal(readSession(JSON.stringify(daily), date).walkId, 'w-daily')
+  assert.equal(readSession(JSON.stringify({ ...daily, walkId: 7 }), date).walkId, null)
+  const review = { ...reviewSticker(daily, { topic: '슬픔' }, true), walkId: 'w-review' }
+  const back = finishWalk(readSession(JSON.stringify(review), date))
+  assert.equal(back.walkId, 'w-daily')
+  assert.equal(finishWalk(back).walkId, null)
+  assert.equal(finishWalk(reviewSticker(finishWalk(daily), { topic: '기쁨' })).walkId, null)
+})

@@ -6,16 +6,16 @@ import { GuidePortrait, PaintedFriend } from './PaintedFriend.jsx'
 import './activities.css'
 import { TaleActions, TaleScene } from './ForestTale.jsx'
 import { forestTales } from './forestTales.js'
-import { StoryVoice } from './StoryVoice.jsx'
+import { emotions, tales } from './content.js'
+import { StoryVoice, voiceSupported } from './StoryVoice.jsx'
+import { api } from './api.js'
+import { friendFace, localReply, saidLine, startServerTalk, takeTurn, talkReply, usableTalk } from './storyTalk.js'
 
-const FEELINGS = {
+// Emotion words and clues, from the shared emotions.json (one entry per emotion).
+// LEGACY_TALK keeps the conversation that sessions saved before the picture books still use;
+// a new emotion does not need one (its tale talk is used instead).
+const LEGACY_TALK = {
   joy: {
-    label: '기쁨',
-    word: '기뻐요',
-    kin: '즐거워요',
-    opposite: '슬퍼요',
-    clue: '입꼬리가 위로 올라갔어요.',
-    motion: '입꼬리를 살짝 올려 봐요.',
     ask: '친구에게 어떤 말을 건네 볼까요?',
     choices: ['같이 놀자!', '불러 줘서 고마워.'],
     replies: ['좋아! 종이비행기를 함께 날려 보자.', '나도 고마워. 같이 노니까 즐거워.'],
@@ -24,12 +24,6 @@ const FEELINGS = {
     ends: ['하늘을 향해 비행기를 날렸어요.', '나무 쪽으로 비행기를 날렸어요.'],
   },
   sad: {
-    label: '슬픔',
-    word: '슬퍼요',
-    kin: '속상해요',
-    opposite: '기뻐요',
-    clue: '입꼬리가 아래로 내려갔어요.',
-    motion: '입꼬리를 살짝 내려 봐요.',
     ask: '친구에게 어떤 말을 건네 볼까요?',
     choices: ['옆에 있어 줄게.', '같이 다시 쌓을까?'],
     replies: ['내 옆에 있어 줘서 고마워.', '좋아. 함께 쌓으면 힘이 날 것 같아.'],
@@ -38,12 +32,6 @@ const FEELINGS = {
     ends: ['둘이 나란히 앉아 잠깐 쉬었어요.', '둘이 천천히 블록을 모았어요.'],
   },
   surprise: {
-    label: '놀람',
-    word: '놀랐어요',
-    kin: '깜짝 놀랐어요',
-    opposite: '슬퍼요',
-    clue: '눈과 입이 동그래졌어요.',
-    motion: '입을 동그랗게 벌려 봐요.',
     ask: '친구에게 어떤 말을 건네 볼까요?',
     choices: ['나비가 있었구나!', '괜찮아?'],
     replies: ['응! 잎이 움직여서 깜짝 놀랐어.', '응, 괜찮아. 이제 천천히 보고 싶어.'],
@@ -52,12 +40,6 @@ const FEELINGS = {
     ends: ['둘은 서서 나비를 가만히 바라보았어요.', '둘은 나란히 앉아 나비를 보았어요.'],
   },
   anger: {
-    label: '화남',
-    word: '화나요',
-    kin: '화가 나요',
-    opposite: '기뻐요',
-    clue: '눈썹이 가운데로 모였어요.',
-    motion: '눈썹을 살짝 모아 봐요.',
     ask: '차례를 지키도록 어떤 말을 해 볼까요?',
     choices: ['지금은 내 차례야.', '우리 차례로 타자.'],
     replies: ['맞아. 내가 먼저 기다렸다고 알려 줄래.', '좋아. 차례를 지키자고 말해 볼래.'],
@@ -66,26 +48,20 @@ const FEELINGS = {
     ends: ['선생님께 차례를 지키고 싶다고 말했어요.', '벤치에 앉아 잠깐 쉬었어요.'],
   },
 }
-const TOPIC_NAMES = {
-  happy: 'joy',
-  happiness: 'joy',
-  기쁨: 'joy',
-  즐거움: 'joy',
-  행복: 'joy',
-  sadness: 'sad',
-  슬픔: 'sad',
-  속상함: 'sad',
-  surprised: 'surprise',
-  놀람: 'surprise',
-  angry: 'anger',
-  화남: 'anger',
-}
+const FEELINGS = Object.fromEntries(
+  Object.entries(emotions).map(([id, emotion]) => [id, { ...(LEGACY_TALK[id] || tales[id].talk), ...emotion }]),
+)
+const FIRST_TOPIC = Object.keys(FEELINGS)[0]
+// Other names a topic may arrive with (label, English or similar Korean words) → emotion id.
+const TOPIC_NAMES = Object.fromEntries(
+  Object.entries(emotions).flatMap(([id, emotion]) => [emotion.label, ...(emotion.aliases || [])].map((name) => [name, id])),
+)
 function topicId(topic) {
   for (const key of [topic?.id, topic?.label, topic?.name, topic]) {
     if (typeof key === 'string' && (FEELINGS[key] || TOPIC_NAMES[key]))
       return TOPIC_NAMES[key] || key
   }
-  return 'joy'
+  return FIRST_TOPIC
 }
 function animalKind(friend) {
   if (/rabbit|bunny|토끼/i.test(friend?.id + ' ' + friend?.species)) return 'rabbit'
@@ -256,13 +232,17 @@ export function LevelTest({ progress, onUpdate, onDone, friend, active }) {
         ...state,
         index: idx,
         choice: value,
+        picks: [...(state.picks || []), value],
         usedHint: Boolean(state.usedHint) || value !== item.target,
       },
     })
   }
   function advance() {
-    if (idx === 0) onUpdate({ placement: { index: 1, usedHint: Boolean(state.usedHint) } })
-    else onDone(state.usedHint ? 'basic' : 'expand')
+    // Each question's taps are kept so the result can be recorded (backend: POST /children/{id}/placement).
+    const picks = [...(state.picks || []), item.target]
+    const answers = [...(state.answers || []), { target: item.target, picks, usedHint: picks.length > 1 }]
+    if (idx === 0) onUpdate({ placement: { index: 1, usedHint: Boolean(state.usedHint), answers } })
+    else onDone(state.usedHint ? 'basic' : 'expand', answers)
   }
   if (!state.introduced && !state.choice) {
     return (
@@ -312,7 +292,7 @@ export function LevelTest({ progress, onUpdate, onDone, friend, active }) {
     </Board>
   )
 }
-function EmotionActivity({ fact, feeling, friend, state, update, next, expanded, active }) {
+function EmotionActivity({ fact, feeling, friend, state, update, next, expanded, active, walkId }) {
   const practice = feelingPractice[feeling]
   // Older walks saved word choices before the introductory scenes existed.
   const phase = state.practicePhase || (state.selected || state.solved ? 'words' : 'intro')
@@ -386,24 +366,30 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
     )
   }
   const words = expanded ? [fact.word, fact.kin, fact.opposite] : [fact.word, fact.opposite]
-  // Rotate the answer position by topic while keeping it stable on repeat visits.
-  if (feeling === 'joy' || feeling === 'surprise') words.unshift(words.pop())
+  // Answer position per emotion (emotions.json 'oppositeFirst'), stable on repeat visits.
+  if (fact.oppositeFirst) words.unshift(words.pop())
   const selected = Array.isArray(state.selected)
     ? state.selected.filter((x) => words.includes(x))
     : []
   const done = Boolean(state.solved)
+  // The server only keeps a record; the screen judges answers on its own.
+  function record(choice) {
+    if (walkId) api.answerEmotion(walkId, { selected: choice, usedHint: Boolean(state.hinted) })
+  }
   function pick(word) {
     if (done) return
+    if (!expanded) record([word])
     if (!expanded && word === fact.word) return next()
-    if (!expanded) return update({ selected: [word], feedback: fact.clue })
+    if (!expanded) return update({ selected: [word], feedback: fact.clue, hinted: true })
     const current = selected.includes(word) ? selected.filter((x) => x !== word) : [...selected, word]
     update({ selected: current, feedback: '' })
   }
   function submit() {
+    record(selected)
     const correct =
       selected.length > 0 && selected.every((word) => word === fact.word || word === fact.kin)
     if (correct) return next()
-    update({ feedback: '그림을 다시 볼까요? ' + fact.clue })
+    update({ feedback: '그림을 다시 볼까요? ' + fact.clue, hinted: true })
   }
   return (
     <Board
@@ -532,8 +518,12 @@ function useCamera(active) {
   return { status, video, start, off, facePresent }
 }
 
-function MirrorActivity({ fact, feeling, friend, active, state, update, next }) {
+function MirrorActivity({ fact, feeling, friend, active, state, update, next, walkId }) {
   const camera = useCamera(active)
+  const cameraUsed = useRef(false)
+  useEffect(() => {
+    if (camera.status === 'on') cameraUsed.current = true
+  }, [camera.status])
   const [demonstration, setDemonstration] = useState(0)
   const ways = feelingPractice[feeling].expression
   if (state.mirrorPhase === 'express' || state.mirrorPhase === 'response') {
@@ -612,6 +602,7 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
         <Action
           onClick={() => {
             camera.off()
+            if (walkId) api.recordMirror(walkId, { mode: cameraUsed.current ? 'camera' : 'touch', score: null })
             update({ mirrorPhase: 'express' })
           }}
         >
@@ -632,24 +623,37 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
     </Board>
   )
 }
-function StoryQuestion({ fact, isExtra, onReply, active }) {
+// One note right under the choices holds both the voice guidance and the waiting line, on every device.
+// The choices are disabled while the reply is on its way.
+function StoryQuestion({ fact, isExtra, onReply, onHeard, onListening, waiting, active }) {
   const choices = isExtra ? fact.extra : fact.choices
+  const [voiceLine, setVoiceLine] = useState('')
+  const note = waiting ? '생각하고 있어요.' : voiceLine
   return (
     <>
       <p className="edu-prompt">{isExtra ? fact.again : fact.ask}</p>
       <div className="edu-choices" role="group" aria-label="친구에게 보낼 말">
         {choices.map((text, index) => (
-          <button key={text} type="button" className="edu-reply" onClick={() => onReply(index)}>
+          <button key={text} type="button" className="edu-reply" disabled={waiting} onClick={() => onReply(index)}>
             {text}
           </button>
         ))}
       </div>
-      <StoryVoice choices={choices} onReply={onReply} active={active} />
+      {(voiceSupported() || note) && (
+        <div className="edu-story-voice">
+          <p role="status" className="edu-note">{note}</p>
+          <StoryVoice choices={choices} onReply={onReply} onHeard={onHeard} waiting={waiting} active={active}
+            onStatus={({ listening, message }) => {
+              setVoiceLine(message)
+              onListening(listening)
+            }} />
+        </div>
+      )}
     </>
   )
 }
 
-function StoryActivity({ fact, feeling, friend, state, update, onComplete, active }) {
+function StoryActivity({ fact, feeling, friend, state, update, onComplete, active, walkId }) {
   const tale = forestTales[feeling]
   const pages = tale.pages
   const phase = [
@@ -675,10 +679,50 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
   const isExtra = phase === 'extra'
   const isEnding = phase === 'ending'
   const lines = isEnding ? conversation.ends : conversation.replies
-  const pickedLine = isEnding ? state.extraChoice : state.choice
-  const reply = lines[pickedLine]
+  const reply = talkReply(state, isEnding, lines)
   // Earlier sessions may have finished the exchange without selecting a line.
   const replyText = reply ? (isEnding ? reply : '“' + reply + '”') : '친구와 이야기를 나눴어요.'
+  const [waiting, setWaiting] = useState(false)
+  const [listening, setListening] = useState(false)
+  // A sentence the child said that got a reply. Memory only: never in session.js, so a reload drops it.
+  const [spoken, setSpoken] = useState(null)
+  const latest = useRef(null)
+  latest.current = { state, update }
+  const serverTalk = Boolean(walkId && outcome)
+  const talkId = usableTalk(state, phase, serverTalk)
+  useEffect(() => {
+    if (phase !== 'question' || !serverTalk || talkId) return
+    let current = true
+    startServerTalk(api, walkId).then((id) => {
+      if (current && id && latest.current.state.phase === 'question') latest.current.update({ talkId: id })
+    })
+    return () => {
+      current = false
+    }
+  }, [phase, serverTalk, talkId, walkId])
+  function sendTurn(turn) {
+    setWaiting(true)
+    const isCurrent = () => latest.current.state.phase === phase && latest.current.state.talkId === talkId
+    return takeTurn(api, { talkId, phase, ...turn }, { isCurrent }).then((answer) => {
+      setWaiting(false)
+      if (answer?.patch) latest.current.update(answer.patch)
+      return answer
+    })
+  }
+  function chooseReply(choice, inputMode = 'picture') {
+    if (waiting) return
+    if (!talkId) return update(localReply(choice, isExtra))
+    sendTurn({ choice, inputMode })
+  }
+  function sayReply(text) {
+    if (waiting || !talkId) return false
+    const next = isExtra ? 'ending' : 'reply'
+    return sendTurn({ text, inputMode: 'voice' }).then((answer) => {
+      if (answer?.answered) setSpoken({ phase: next, text })
+      return !answer || answer.answered
+    })
+  }
+  const said = saidLine(state, phase, conversation, spoken)
   let title = tale.title
   if (phase === 'situation') title = tale.situation
   if (phase === 'act') title = '이때 어떻게 할까요?'
@@ -689,6 +733,11 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
   let expression = feeling
   if (phase === 'book' && page < 2) expression = 'neutral'
   if (afterChoice) expression = outcome.expression
+  let gesture = phase === 'act' ? 'listen' : phase === 'consequence' ? 'nod' : 'speak'
+  // Talk scenes: listen while the child chooses or speaks, then each line's face with speak (reply) or nod (ending).
+  const face = inDialogue && outcome ? friendFace(state, phase, conversation, outcome.expression) : null
+  if (face) ({ expression, gesture } = face)
+  if (listening) gesture = 'listen'
   return (
     <Board
       title={title}
@@ -710,8 +759,8 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
             friend={friend}
             feeling={expression}
             active={active}
-            gesture={phase === 'act' ? 'listen' : phase === 'consequence' ? 'nod' : 'speak'}
-            actionKey={phase + '-' + page}
+            gesture={gesture}
+            actionKey={phase + '-' + page + (listening ? '-listen' : '')}
           />
         </TaleScene>
       }
@@ -739,7 +788,10 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
       {showActions && (
         <TaleActions
           actions={tale.actions}
-          onChoose={(branch) => update({ phase: 'consequence', branch })}
+          onChoose={(branch) => {
+            if (walkId) api.pickStoryAction(walkId, branch)
+            update({ phase: 'consequence', branch })
+          }}
         />
       )}
       {phase === 'consequence' && outcome && (
@@ -759,17 +811,22 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
           fact={conversation}
           isExtra={isExtra}
           active={active}
-          onReply={(choice) =>
-            update(isExtra ? { phase: 'ending', extraChoice: choice } : { phase: 'reply', choice })
-          }
+          waiting={waiting}
+          onReply={chooseReply}
+          onHeard={sayReply}
+          onListening={setListening}
         />
       )}
       {(phase === 'reply' || isEnding) && (
         <>
+          {said && <p className="edu-note">내가 한 말: {said}</p>}
           <p className="edu-story" role="status">
             {replyText}
           </p>
-          <Action onClick={onComplete}>산책 마무리하기</Action>
+          <Action onClick={() => {
+            if (phase === 'reply' && talkId) api.endTalk(talkId)
+            onComplete()
+          }}>산책 마무리하기</Action>
           {phase === 'reply' && (
             <button type="button" className="edu-link" onClick={() => update({ phase: 'extra' })}>
               조금 더 이야기하기
@@ -810,6 +867,7 @@ export function Lesson({ progress, onUpdate, onComplete, friend, topic, active =
         expanded={progress.level === 'expand'}
         active={active}
         next={next}
+        walkId={progress.walkId}
       />
     )
   if (step === 1)
@@ -822,6 +880,7 @@ export function Lesson({ progress, onUpdate, onComplete, friend, topic, active =
         state={state}
         update={update}
         next={next}
+        walkId={progress.walkId}
       />
     )
   return (
@@ -833,6 +892,7 @@ export function Lesson({ progress, onUpdate, onComplete, friend, topic, active =
       update={update}
       onComplete={onComplete}
       active={active}
+      walkId={progress.walkId}
     />
   )
 }

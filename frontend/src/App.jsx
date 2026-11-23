@@ -6,6 +6,21 @@ import { GuidePortrait } from './PaintedFriend.jsx'
 import { JourneyProgress } from './JourneyProgress.jsx'
 import { CardPortrait, LevelTest, Lesson } from './Activities.jsx'
 import { Panel } from './Panels.jsx'
+import { api, setLearner } from './api.js'
+import {
+  childNickname,
+  choseProfile,
+  createLinkGate,
+  deviceId,
+  expired,
+  learnerFor,
+  linkedDevice,
+  loadGuardian,
+  needsLink,
+  saveGuardian,
+  signOutDevice,
+  signedIn,
+} from './guardian.js'
 import {
   STORAGE_KEY,
   beginWalk,
@@ -31,6 +46,8 @@ const friends = [
   image: asset('art/' + friend.id + '.webp'),
   walkImage: asset('art/' + friend.id + '-walk.webp'),
 }))
+
+const friendName = (id) => (friends.find((f) => f.id === id) || friends[0]).name
 
 function startSession() {
   try {
@@ -169,6 +186,19 @@ function App() {
       return ''
     }
   })
+  // Guardian account (only with a server). Learning requests read it through setLearner below.
+  const [guardian, setGuardianState] = useState(loadGuardian)
+  const guardianRef = useRef(guardian)
+  const [linkNote, setLinkNote] = useState('')
+  const setGuardian = useCallback((update) => {
+    const next = typeof update === 'function' ? update(guardianRef.current) : update
+    guardianRef.current = next
+    saveGuardian(next)
+    setGuardianState(next)
+  }, [])
+  useEffect(() => {
+    setLearner(() => linkGate.current.learner())
+  }, [])
   const entry = useRef('welcome')
   const signupDraft = useRef(null)
   const history = useRef([])
@@ -192,6 +222,8 @@ function App() {
   const landscape = inTale ? 'art/tale-' + topic.id + '.webp' : 'art/forest-gate.webp'
   const finished = session.records.some((r) => r.date === session.day)
   const patch = useCallback((values) => setSession((current) => ({ ...current, ...values })), [])
+  const sessionRef = useRef(session)
+  sessionRef.current = session
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
@@ -222,6 +254,25 @@ function App() {
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [page, session.step, showEntrance])
+
+  // The walk is recorded on the server when available; the lesson never waits for it.
+  const pendingWalk = useRef(null)
+  const walkKey = page === 'lesson' && !session.walkId
+    ? [session.day, topic.id, session.level, Boolean(session.reviewTopicId)].join('|')
+    : null
+  useEffect(() => {
+    if (!walkKey || !api.enabled || pendingWalk.current === walkKey) return
+    pendingWalk.current = walkKey
+    const [day, topicId, level, review] = walkKey.split('|')
+    api.startWalk({ topicId, level, day, review: review === 'true' }).then((walk) => {
+      if (pendingWalk.current === walkKey) pendingWalk.current = null
+      if (!walk?.id) return
+      setSession((current) => current.page === 'lesson' && !current.walkId
+        && [current.day, current.reviewTopicId || current.topicId, current.level, Boolean(current.reviewTopicId)].join('|') === walkKey
+        ? { ...current, walkId: walk.id }
+        : current)
+    })
+  }, [walkKey])
 
   function move(values) {
     const { page, placement, step, activity, retestReturn, onboarded, level } = session
@@ -288,6 +339,14 @@ function App() {
     }
     patch(appearance)
     setPanel('guardian')
+    // Signed in: the child profile follows the forest friend and its name (sent, not awaited).
+    // Without a server, or if it fails, the change stays on this device as before.
+    const g = guardianRef.current
+    if (g.token && g.profileId) {
+      const childName = childNickname(nickname, friendName(id))
+      api.updateChild(g.token, g.profileId, { nickname: childName, character: id })
+      setGuardian((current) => ({ ...current, profileName: childName }))
+    }
   }
   function chooseFirstFriend(id) {
     patch({ friendId: id, friendCharm: null, friendHeadwear: null, friendNickname: '' })
@@ -297,7 +356,8 @@ function App() {
     patch({ page: 'placement', placement: null })
     setPanel(null)
   }
-  function afterTest(level) {
+  function afterTest(level, answers) {
+    if (answers?.length) api.savePlacement({ answers, level }) // 보내기만 하고 기다리지 않는다
     move({
       onboarded: true,
       level,
@@ -306,6 +366,95 @@ function App() {
       retestReturn: null,
     })
   }
+  // The first time a profile is chosen on this device, move the device records to it (retried until it works).
+  // The link note is shown only while the guardian account panel is open, right after linking.
+  // Leaving the panel clears it, so reopening the panel does not show an old note.
+  const panelRef = useRef(panel)
+  panelRef.current = panel
+  const showLinkNote = useCallback((text) => {
+    setLinkNote(panelRef.current === 'guardianAccount' ? text : '')
+  }, [])
+  useEffect(() => {
+    if (panel !== 'guardianAccount') setLinkNote('')
+  }, [panel])
+
+  // Learning, walk and talk requests made while linking wait in the gate; the screen does not.
+  const linkGate = useRef(null)
+  linkGate.current ??= createLinkGate(() => learnerFor(guardianRef.current, deviceId()))
+  const linkThisDevice = useCallback(() => {
+    const gate = linkGate.current
+    const current = guardianRef.current
+    const device = deviceId()
+    if (gate.linking || !needsLink(current, device)) return
+    gate.start()
+    showLinkNote('이 기기의 기록을 ' + current.profileName + ' 프로필로 옮기고 있어요.')
+    api.linkDevice(current.token, current.profileId, device).then((result) => {
+      if (result.data || result.status === 409) {
+        // The device id is tied to a profile now (409: already tied), so it is not used again either way.
+        setGuardian((g) => linkedDevice(g, device))
+        showLinkNote(result.data ? '이 기기의 기록을 ' + current.profileName + ' 프로필로 옮겼어요.' : '')
+      } else if (result.status === 401 && guardianRef.current.token === current.token) {
+        showLinkNote('')
+        setGuardian(expired)
+      } else {
+        showLinkNote('기록 옮기기는 다음에 다시 할게요.')
+      }
+      gate.finish() // waiting requests go out now: profile id and token, or the device id if linking failed
+    })
+  }, [setGuardian, showLinkNote])
+  useEffect(() => {
+    if (api.enabled) linkThisDevice()
+  }, [linkThisDevice])
+
+  // One account has one child. After sign-up or sign-in, use that child (or make it from this device's
+  // forest friend and its name), then link this device's records to it. Retried on the next start if it fails.
+  const settling = useRef(false)
+  const settleChild = useCallback(async () => {
+    const g = guardianRef.current
+    if (!api.enabled || !g.token || g.profileId || settling.current) return
+    settling.current = true
+    try {
+      const listed = await api.listChildren(g.token)
+      if (listed.status === 401) {
+        setGuardian(expired)
+        return
+      }
+      if (!listed.data) return
+      let child = listed.data[0] || null
+      if (child) {
+        // Another device made this child: show the same forest friend here.
+        const base = friends.find((f) => f.id === child.character) || friends[0]
+        patch({ friendId: base.id, friendNickname: child.nickname === base.name ? '' : child.nickname })
+      } else {
+        const current = sessionRef.current
+        const made = await api.createChild(g.token, {
+          nickname: childNickname(current.friendNickname, friendName(current.friendId)),
+          character: friends.some((f) => f.id === current.friendId) ? current.friendId : friends[0].id,
+        })
+        child = made.data || (made.status === 409 ? (await api.listChildren(g.token)).data?.[0] : null) || null
+      }
+      if (!child || guardianRef.current.token !== g.token) return
+      setGuardian((current) => choseProfile(current, child))
+      linkThisDevice()
+    } finally {
+      settling.current = false
+    }
+  }, [linkThisDevice, patch, setGuardian])
+  useEffect(() => {
+    settleChild()
+  }, [settleChild])
+  function signOut() {
+    signOutDevice()
+    guardianRef.current = loadGuardian()
+    setGuardianState(guardianRef.current)
+    setLinkNote('')
+    setPanel('guardian')
+  }
+  const onExpired = useCallback(() => {
+    setGuardian(expired)
+    setPanel('login')
+  }, [setGuardian])
+
   function closePanel() {
     if (entry.current === 'guardian' && panel !== 'guardian' && panel !== 'gate') {
       setPanel('guardian')
@@ -362,6 +511,7 @@ function App() {
                       onUpdate={move}
                       onComplete={() => {
                         history.current = []
+                        if (session.walkId) api.completeWalk(session.walkId)
                         setSession(finishWalk)
                       }}
                       friend={friend}
@@ -433,6 +583,17 @@ function App() {
         onSignupDraft={(email) => { signupDraft.current = email }}
         onAccountDone={completeAccount}
         onRetest={retest}
+        accountEnabled={api.enabled}
+        guardian={guardian}
+        linkNote={linkNote}
+        onSignedIn={(account) => {
+          setGuardian((g) => signedIn(g, account))
+          setPanel('guardianAccount')
+          settleChild()
+        }}
+        onEnsureChild={settleChild}
+        onSignOut={signOut}
+        onExpired={onExpired}
       />
     </NarrationVoice.Provider>
   )

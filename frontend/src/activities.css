@@ -690,8 +690,9 @@
   margin-top: 16px;
 }
 
+/* The one note (voice guidance or "생각하고 있어요") sits right under the choices, above the voice button. */
 .edu-story-voice .edu-note {
-  margin-bottom: 0;
+  margin: 0 0 12px;
 }
 
 .edu-story-voice .edu-note:empty {

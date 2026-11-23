@@ -1,10 +1,8 @@
+import { emotions } from './content.js'
+
 export const STORAGE_KEY = 'maeum-forest.walk.v1'
-export const topics = [
-  { id: 'joy', label: '기쁨', phrase: '기쁜 마음' },
-  { id: 'surprise', label: '놀람', phrase: '놀란 마음' },
-  { id: 'sad', label: '슬픔', phrase: '슬픈 마음' },
-  { id: 'anger', label: '화남', phrase: '화난 마음' },
-]
+// Daily topics in rotation order, from the shared emotions.json.
+export const topics = Object.entries(emotions).map(([id, emotion]) => ({ id, label: emotion.label, phrase: emotion.phrase }))
 const topicIds = topics.map((topic) => topic.id)
 const pages = ['welcome', 'placement', 'ready', 'lesson', 'praise', 'stickers']
 
@@ -20,7 +18,7 @@ export function emptySession(day = localDay()) {
   return {
     version: 1,
     day,
-    topicId: 'joy',
+    topicId: topicIds[0],
     reviewTopicId: null,
     reviewReturn: null,
     page: 'welcome',
@@ -35,6 +33,7 @@ export function emptySession(day = localDay()) {
     placement: null,
     activity: null,
     retestReturn: null,
+    walkId: null,
     records: [],
   }
 }
@@ -57,6 +56,7 @@ export function forToday(session, today = localDay()) {
     placement: null,
     activity: null,
     retestReturn: null,
+    walkId: null,
   }
 }
 
@@ -69,7 +69,7 @@ export function readSession(raw, today = localDay()) {
       ...defaults,
       day: saved.day,
       page: pages.includes(saved.page) ? saved.page : 'welcome',
-      topicId: topicIds.includes(saved.topicId) ? saved.topicId : 'joy',
+      topicId: topicIds.includes(saved.topicId) ? saved.topicId : topicIds[0],
       reviewTopicId: ['lesson', 'placement'].includes(saved.page) && topicIds.includes(saved.reviewTopicId)
         ? saved.reviewTopicId : null,
       cardPortrait: saved.cardPortrait === 'girl' ? 'girl' : 'boy',
@@ -88,6 +88,7 @@ export function readSession(raw, today = localDay()) {
       placement: saved.placement && typeof saved.placement === 'object' ? saved.placement : null,
       activity: saved.activity && typeof saved.activity === 'object' ? saved.activity : null,
       retestReturn: pages.includes(saved.retestReturn) ? saved.retestReturn : null,
+      walkId: typeof saved.walkId === 'string' && saved.walkId ? saved.walkId : null,
       records: Array.isArray(saved.records)
         ? saved.records.filter(
             (r) =>
@@ -103,6 +104,7 @@ export function readSession(raw, today = localDay()) {
         activity: back.activity && typeof back.activity === 'object' ? back.activity : null,
         placement: back.placement && typeof back.placement === 'object' ? back.placement : null,
         retestReturn: pages.includes(back.retestReturn) ? back.retestReturn : null,
+        walkId: typeof back.walkId === 'string' && back.walkId ? back.walkId : null,
       }
     }
     return forToday(state, today)
@@ -131,17 +133,18 @@ export function beginWalk(session, today = localDay()) {
     activity: null,
     placement: null,
     retestReturn: null,
+    walkId: null,
   }
 }
 
 export function reviewSticker(session, record, fromGuardian = false) {
   const topic = topics.find((item) => item.label === record.topic)
   if (!topic) return session
-  const { page, step, activity, placement, retestReturn } = session
+  const { page, step, activity, placement, retestReturn, walkId } = session
   const reviewReturn = session.reviewReturn || (fromGuardian && !session.reviewTopicId
-    ? { page, step, activity, placement, retestReturn }
+    ? { page, step, activity, placement, retestReturn, walkId }
     : null)
-  return { ...session, page: 'lesson', step: 0, activity: null, placement: null, retestReturn: null, reviewTopicId: topic.id, reviewReturn }
+  return { ...session, page: 'lesson', step: 0, activity: null, placement: null, retestReturn: null, walkId: null, reviewTopicId: topic.id, reviewReturn }
 }
 
 export function nextStickerTopic(session) {
@@ -164,11 +167,11 @@ export function startNextStickerLesson(session, today = localDay()) {
 
 export function finishWalk(session) {
   if (session.reviewTopicId) {
-    return { ...session, page: 'stickers', step: 2, activity: null, ...session.reviewReturn, reviewTopicId: null, reviewReturn: null }
+    return { ...session, page: 'stickers', step: 2, activity: null, walkId: null, ...session.reviewReturn, reviewTopicId: null, reviewReturn: null }
   }
   const topic = topics.find((entry) => entry.id === session.topicId)
   const records = session.records.some((record) => record.date === session.day)
     ? session.records
     : [...session.records, { date: session.day, topic: topic.label }]
-  return { ...session, page: 'praise', records, activity: null, step: 2 }
+  return { ...session, page: 'praise', records, activity: null, step: 2, walkId: null }
 }
