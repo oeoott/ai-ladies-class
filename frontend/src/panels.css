@@ -477,6 +477,16 @@
   align-items: center;
   gap: 12px;
 }
+/* iPad landscape (820px tall): the 월간 calendar and chart fill the panel, so the feeling rows sit closer
+   instead of the chart shrinking. Portrait keeps the wider spacing. */
+@media (orientation: landscape) and (max-height: 900px) {
+  .forest-panel .dashboard-rows {
+    gap: 0;
+  }
+  .forest-panel .dashboard-rows li {
+    line-height: 1.15;
+  }
+}
 .forest-panel .dashboard-label {
   color: var(--forest-ink);
   font-size: 15px;
@@ -547,11 +557,14 @@
 /* 월간 calendar: same circle size and column gap as the 주간 row, no cell borders. */
 /* 월간: sentence on the left, a small calendar on the right. Wraps the calendar under the sentence
    when the panel is too narrow for both. */
+/* The numbers sit right beside the calendar and the pair is centred, so its middle lines up with the
+   period name above (‹ 2026년 11월 ›), like the 주간 circles. */
 .forest-panel .dashboard-month {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
-  gap: 12px 24px;
+  gap: 12px 16px;
 }
 /* 이번 달 / 지난달 beside the calendar: small faint name, large bold number. */
 .forest-panel .dashboard-stats {
@@ -575,11 +588,12 @@
   font-weight: 720;
 }
 /* Six-month line chart: the existing green, the viewed month's point solid, the rest lighter. */
+/* 14px more room above and below the chart than the other parts; about 80px tall (dashboard.js monthChart). */
 .forest-panel .dashboard-chart {
   display: block;
   width: 100%;
   height: auto;
-  margin-top: 8px;
+  margin: 22px 0 14px;
   overflow: visible;
 }
 .forest-panel .dashboard-chart polyline {

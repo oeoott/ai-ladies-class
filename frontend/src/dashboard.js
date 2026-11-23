@@ -92,7 +92,8 @@ export function monthTotals(period, months, report) {
 
 // Points for the small line chart (SVG units). The viewed month is last (rightmost).
 // Room is left above the points for the numbers and below for the month names.
-export function monthChart(months, { width = 520, height = 62, side = 24, top = 18, bottom = 18 } = {}) {
+// Drawn at the panel's width (about 532px), so 78 units come out about 80px tall.
+export function monthChart(months, { width = 520, height = 78, side = 24, top = 18, bottom = 18 } = {}) {
   const max = Math.max(1, ...months.map((m) => m.walks))
   const step = months.length > 1 ? (width - 2 * side) / (months.length - 1) : 0
   const points = months.map((m, i) => ({
