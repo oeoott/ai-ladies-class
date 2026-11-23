@@ -28,7 +28,6 @@ import {
   finishWalk,
   forToday,
   readSession,
-  reviewSticker,
   nextStickerTopic,
   startNextStickerLesson,
   topics,
@@ -569,11 +568,6 @@ function App() {
         onUnlock={() => setPanel(entry.current === 'onboarding' ? 'portrait' : 'guardian')}
         onChooseFirstFriend={chooseFirstFriend}
         onStartPlacement={startPlacement}
-        onReview={(record) => {
-          history.current = []
-          setSession((current) => reviewSticker(current, record, true))
-          setPanel(null)
-        }}
         onClose={closePanel}
         friend={friend}
         friends={friends}

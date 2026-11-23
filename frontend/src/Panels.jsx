@@ -110,30 +110,35 @@ function dateLabel(value) {
   }).format(date)
 }
 
-function RecordBook({ records, onOpen, onReview }) {
+// "11월 20일" under each sticker.
+function shortDate(value) {
+  const date = new Date(String(value) + 'T12:00:00')
+  return Number.isNaN(date.getTime()) ? String(value) : `${date.getMonth() + 1}월 ${date.getDate()}일`
+}
+
+// Stickers are only shown here (no review from this panel): a count line, then a grid, newest first.
+// Many stickers scroll inside the grid only.
+function RecordBook({ records, onOpen }) {
   const ordered = [...records].sort((a, b) => String(b.date).localeCompare(String(a.date)))
   return (
     <>
-      <p className="forest-panel-note">스티커를 눌러 다시 해 봐요.</p>
       {ordered.length ? (
-        <ul className="forest-stamp-list">
-          {ordered.map((record, index) => (
-            <li key={record.date + '-' + index}>
-              <span className="forest-stamp-icon">
-                <Icon name="leaf" size={20} />
-              </span>
-              <button type="button" className="forest-panel-link" aria-label={record.topic + ' 다시 하기 · ' + dateLabel(record.date)} onClick={() => onReview(record)}>{record.topic} 스티커</button>
-              <time dateTime={record.date}>{dateLabel(record.date)}</time>
-            </li>
-          ))}
-        </ul>
+        <>
+          <p className="dashboard-line forest-sticker-count">모은 스티커 <strong>{ordered.length}장</strong></p>
+          <ul className="forest-sticker-grid" aria-label="모은 스티커">
+            {ordered.map((record, index) => (
+              <li key={record.date + '-' + index} aria-label={record.topic + ' 스티커 · ' + dateLabel(record.date)}>
+                <span className="forest-stamp-icon" aria-hidden="true">
+                  <Icon name="leaf" size={20} />
+                </span>
+                <span className="forest-sticker-name" aria-hidden="true">{record.topic}</span>
+                <time dateTime={record.date} aria-hidden="true">{shortDate(record.date)}</time>
+              </li>
+            ))}
+          </ul>
+        </>
       ) : (
-        <div className="forest-stamp-empty">
-          <span className="forest-stamp-icon">
-            <Icon name="stamp" size={26} />
-          </span>
-          <p>첫 산책을 마치면 스티커가 생겨요.</p>
-        </div>
+        <p className="forest-panel-note">아직 모은 스티커가 없어요.</p>
       )}
       <button className="forest-panel-secondary" type="button" onClick={() => onOpen('guardian')}>
         설정으로 돌아가기
@@ -231,7 +236,6 @@ function PanelDialog({
   onStartPlacement,
   onRetest,
   onUnlock,
-  onReview,
   records = [],
   onOpen,
   onAccountDone,
@@ -391,7 +395,7 @@ function PanelDialog({
         />
       )}
       {mode === 'report' && <LearningReport {...{ records, recipient, onOpen }} />}
-      {mode === 'records' && <RecordBook records={records} onOpen={onOpen} onReview={onReview} />}
+      {mode === 'records' && <RecordBook records={records} onOpen={onOpen} />}
       {mode === 'retest' && (
         <>
           <p className="forest-panel-note">

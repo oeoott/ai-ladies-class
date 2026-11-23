@@ -48,5 +48,18 @@ test('서버 없이 첫 방문부터 스티커판까지 진행한다', async ({ 
   await openGuardian(page)
   await expect(page.getByRole('button', { name: /보호자 계정/ })).toHaveCount(0)
   await expect(page.getByRole('button', { name: /학습 대시보드/ })).toHaveCount(0)
+
+  // Guardian sticker panel: a count line and a grid, shown only (no review buttons).
+  await page.getByRole('dialog', { name: '보호자 설정' }).getByRole('button', { name: /스티커판/ }).click()
+  const stickers = page.getByRole('dialog', { name: '스티커판' })
+  await expect(stickers.locator('.forest-sticker-count')).toHaveText('모은 스티커 1장')
+  const [, month, day] = today().split('-').map(Number)
+  const cell = stickers.getByRole('list', { name: '모은 스티커' }).getByRole('listitem')
+  await expect(cell).toHaveCount(1)
+  await expect(cell).toHaveText(`${emotions[topicId].label}${month}월 ${day}일`)
+  await expect(stickers.getByRole('button')).toHaveCount(2) // 닫기, 설정으로 돌아가기 only
+  await expect(stickers.getByRole('button', { name: '닫기' })).toBeVisible()
+  await expect(stickers.getByRole('button', { name: '설정으로 돌아가기' })).toBeVisible()
+  await expect(stickers.getByText('스티커를 눌러')).toHaveCount(0)
   expect(requests).toEqual([])
 })
