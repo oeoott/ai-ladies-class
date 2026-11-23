@@ -160,8 +160,8 @@ class CosmosStore(Store):
     def list_attempts(self, child_id):
         return self._query("attempts", partition_key=child_id)
 
-    def add_placement(self, child_id, answers, level):
-        row = placement_doc(child_id, answers, level)
+    def add_placement(self, child_id, answers, level, created_at=None):
+        row = placement_doc(child_id, answers, level, created_at)
         self._c["attempts"].create_item(row)
         return row
 

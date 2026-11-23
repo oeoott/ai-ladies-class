@@ -74,14 +74,16 @@ def seed(store: Store, today: date, password: str = DEMO_PASSWORD, email: str = 
     child_id = child["id"]
 
     store.add_placement(child_id, [{"target": "joy", "picks": ["sad", "joy"], "used_hint": True},
-                                   {"target": "surprise", "picks": ["surprise"], "used_hint": False}], "basic")
+                                   {"target": "surprise", "picks": ["surprise"], "used_hint": False}], "basic",
+                        created_at=_at(today - timedelta(days=PLAN[0][0]), 15))
     retested = False
     counts = {"walks": 0, "reviews": 0, "conversations": 0}
     for days_ago, topic_id, answer, mirror, action, turns, fallbacks, review in PLAN:
         day = today - timedelta(days=days_ago)
         if days_ago <= RETEST_DAYS_AGO and not retested:
             store.add_placement(child_id, [{"target": "joy", "picks": ["joy"], "used_hint": False},
-                                           {"target": "surprise", "picks": ["surprise"], "used_hint": False}], "expand")
+                                           {"target": "surprise", "picks": ["surprise"], "used_hint": False}], "expand",
+                               created_at=_at(day, 15))
             retested = True
         level = "expand" if days_ago <= RETEST_DAYS_AGO else "basic"
         walk = store.create_walk(child_id=child_id, topic_id=topic_id, level=level, day=day, review=review,
@@ -95,12 +97,16 @@ def seed(store: Store, today: date, password: str = DEMO_PASSWORD, email: str = 
 
         talk = tales()[topic_id]["talk"]
         conv = store.create_conversation(walk, friend=CHILD["character"])
+        # 그림으로 돌아간 턴: 말로 답했지만 답을 정하지 못해 보기로 돌아감 (문장은 남기지 않음)
+        conv["turns"].extend({"said": None, "reply": None, "input_mode": "voice", "resolved_by": "fallback"}
+                             for _ in range(fallbacks))
         for turn, (choice, mode) in enumerate(turns):
             said = (talk["choices"] if turn == 0 else talk["extra"])[choice]
             reply = (talk["replies"] if turn == 0 else talk["ends"])[choice]
-            conv["turns"].append({"said": said, "reply": reply, "input_mode": mode})
-        conv.update(turn=len(turns), fallbacks=fallbacks, created_at=_at(day, 16),
-                    ended_by="maxTurns" if len(turns) == 2 else "button")
+            # 보기 버튼은 button, 기기에서 알아들은 말이 보기와 같으면 exact
+            conv["turns"].append({"said": said, "reply": reply, "input_mode": mode,
+                                  "resolved_by": "exact" if mode == "voice" else "button"})
+        conv.update(turn=len(turns), created_at=_at(day, 16), ended_by="maxTurns" if len(turns) == 2 else "button")
         store.save_conversation(conv)
 
         walk.step, walk.status = 2, "completed"

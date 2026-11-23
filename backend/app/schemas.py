@@ -79,9 +79,17 @@ class MirrorLesson(BaseModel):
 
 
 class MirrorRecord(BaseModel):
+    """학습 2 기록. 영상·얼굴 특징·blendshape 값은 받지 않는다 (다른 칸을 보내면 422).
+    score·stars 등은 AI 담당 기준으로 기기에서 계산한 결과만 받는다. 프론트는 지금 score null만 보낸다."""
+    model_config = ConfigDict(extra="forbid")
     mode: Literal["camera", "touch"]
     score: float | None = Field(default=None, ge=0, le=100)  # AI 기준 확정 전에는 null
     skipped: bool = False
+    score_version: str | None = Field(default=None, max_length=32, pattern=r"^[A-Za-z0-9._-]+$")  # 채점 기준 버전
+    stars: int | None = Field(default=None, ge=0, le=3)
+    tracked_sec: float | None = Field(default=None, ge=0, le=600)  # 얼굴을 따라간 시간(초)
+    attempts: int | None = Field(default=None, ge=0, le=100)  # 연습 횟수
+    end_reason: Literal["locked", "skipped", "cameraDenied", "exit"] | None = None  # 연습이 끝난 이유
 
 
 # ---------- 학습 3: 동화 + 대화 ----------
@@ -248,14 +256,23 @@ class MirrorStat(BaseModel):
     touch_ratio: float | None
 
 
+class ResolvedCounts(BaseModel):
+    """대화 턴을 무엇으로 정했는지: 보기 버튼, 보기와 같은 말, 모델(LLM), 그림으로 돌아감."""
+    button: int = 0
+    exact: int = 0
+    llm: int = 0
+    fallback: int = 0
+
+
 class StoryStat(BaseModel):
     conversations: int
-    turns: int
+    turns: int  # 친구가 답한 턴 (fallback 제외)
     voice_turns: int
     voice_ratio: float | None  # 대화 턴 중 말로 답한 비율
     fallback_to_picture: int  # 그림 선택으로 돌아간 횟수
     blocked: int  # Content Safety 차단 횟수
     generation_limited: int = 0  # 하루 생성 호출 제한(DAILY_GENERATION_LIMIT)에 걸려 그림 선택으로 돌아간 횟수
+    resolved_by: ResolvedCounts = Field(default_factory=ResolvedCounts)
 
 
 class WalkStat(BaseModel):

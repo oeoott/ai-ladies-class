@@ -34,9 +34,9 @@ def sticker_id(child_id: str, day: date | str) -> str:
     return f"{child_id}_{day}"
 
 
-def placement_doc(child_id: str, answers: list[dict], level: str) -> dict:
+def placement_doc(child_id: str, answers: list[dict], level: str, created_at: str | None = None) -> dict:
     return {"id": new_id(), "child_id": child_id, "walk_id": None, "kind": "placement",
-            "answers": answers, "level": level, "created_at": now_iso()}
+            "answers": answers, "level": level, "created_at": created_at or now_iso()}
 
 
 def latest(rows) -> dict | None:
@@ -52,10 +52,12 @@ def empty_counts() -> dict:
 
 
 def new_conversation(walk: Walk, friend: str = "lion") -> dict:
+    # turns: 턴마다 {said(마스킹), reply, input_mode, resolved_by(button·exact·llm·fallback)}. fallback 턴은 문장 없음
     # safety: Content Safety 차단 기록 {blocked, categories}. 문장은 남기지 않는다.
-    # generated: 한국 날짜별 Azure OpenAI 생성 호출 수, limited: 하루 제한에 걸린 수 (비용 제한)
+    # generated: 한국 날짜별 Azure OpenAI 호출 수, limited: 하루 제한에 걸린 수 (비용 제한)
+    # (이전 문서의 fallbacks 칸은 그림으로 돌아간 수였다. 리포트가 함께 센다)
     return {"id": new_id(), "child_id": walk.child_id, "walk_id": walk.id, "topic_id": walk.topic_id,
-            "friend": friend, "turn": 0, "turns": [], "safety": [], "fallbacks": 0, "generated": {}, "limited": 0,
+            "friend": friend, "turn": 0, "turns": [], "safety": [], "generated": {}, "limited": 0,
             "ended_by": None, "created_at": now_iso()}
 
 
@@ -114,7 +116,8 @@ class Store(ABC):
 
     # --- 레벨 테스트: attempts에 kind="placement"로 둔다 (아이 파티션, 기기 기록도 같은 방식) ---
     @abstractmethod
-    def add_placement(self, child_id: str, answers: list[dict], level: str) -> dict: ...
+    def add_placement(self, child_id: str, answers: list[dict], level: str, created_at: str | None = None) -> dict:
+        """created_at은 시연 데이터처럼 지난 날짜로 넣을 때만 준다."""
 
     @abstractmethod
     def latest_placement(self, child_id: str) -> dict | None: ...
@@ -255,8 +258,8 @@ class MemoryStore(Store):
     def list_attempts(self, child_id):
         return [copy.deepcopy(a) for a in self.attempts if a["child_id"] == child_id]
 
-    def add_placement(self, child_id, answers, level):
-        row = placement_doc(child_id, answers, level)
+    def add_placement(self, child_id, answers, level, created_at=None):
+        row = placement_doc(child_id, answers, level, created_at)
         self.attempts.append(row)
         return copy.deepcopy(row)
 

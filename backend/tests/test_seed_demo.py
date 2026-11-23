@@ -35,6 +35,7 @@ def test_seed_fills_two_weeks_for_the_dashboard(store):
     assert (r.mirror.records, r.mirror.camera, r.mirror.touch) == (11, 5, 6)
     assert (r.story.conversations, r.story.turns, r.story.voice_turns) == (11, 21, 7)
     assert (r.story.fallback_to_picture, r.story.blocked) == (2, 0)
+    assert r.story.resolved_by.model_dump() == {"button": 14, "exact": 7, "llm": 0, "fallback": 2}
     assert store.latest_placement(out["child_id"])["level"] == "expand"
 
 
@@ -59,7 +60,7 @@ def test_seeded_lines_come_from_the_tale_script(store):
     out = seed_demo.seed(store, TODAY)
     for conv in store.list_conversations(out["child_id"]):
         talk = tales()[conv["topic_id"]]["talk"]
-        for turn, line in enumerate(conv["turns"]):
+        for turn, line in enumerate(t for t in conv["turns"] if t["resolved_by"] != "fallback"):
             assert line["said"] in (talk["choices"] if turn == 0 else talk["extra"])
             assert line["reply"] in (talk["replies"] if turn == 0 else talk["ends"])
 

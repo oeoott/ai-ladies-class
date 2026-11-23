@@ -65,7 +65,9 @@ tests/
   test_devices.py    기기 기록 연결 (실패 후 다시 하기, 다른 집 막기), 산책 재개
   test_store.py      저장소 테스트 (메모리·Cosmos 가짜 클라이언트에 같은 테스트)
   fake_cosmos.py     Cosmos SDK를 흉내 내는 가짜 컨테이너
-  test_conversation_ai.py  외부 호출을 가짜로 바꾼 대화 테스트
+  test_conversation_ai.py  외부 호출을 가짜로 바꾼 대화 테스트 (모델 응답은 가짜 JSON: match·offTopic·reply·재시도)
+  test_mirror_record.py    학습 2 기록 칸 (얼굴 특징 값은 422)
+  test_talk_friend.py      질문의 {친구} 자리
   test_generation_limit.py 하루 생성 호출 제한 (비용 제한)
 ```
 
@@ -95,11 +97,11 @@ tests/
 | 학습 1 | GET | /lessons/emotion/{topic}?level= | 단서, 낱말 보기 (기본 2개, 확장 3개·복수 선택) |
 | 학습 1 | POST | /lessons/emotion/walks/{id}/answer | 낱말 채점 (서버 판정), 오답이면 단서 반환 |
 | 학습 2 | GET | /lessons/mirror/{topic} | 따라 할 표정 안내 |
-| 학습 2 | POST | /lessons/mirror/walks/{id}/record | {mode: camera·touch, score: null, skipped} 기록 |
+| 학습 2 | POST | /lessons/mirror/walks/{id}/record | {mode: camera·touch, score: null, skipped} 기록. 선택: `score_version`, `stars`(0~3), `tracked_sec`, `attempts`, `end_reason`(locked·skipped·cameraDenied·exit). 영상·얼굴 특징·blendshape 값 등 다른 칸은 422 |
 | 학습 3 | GET | /lessons/story/{topic} | 동화 3장, 상황, 행동 보기 |
 | 학습 3 | POST | /lessons/story/walks/{id}/action | 행동 선택 → 결과 장면 |
 | 학습 3 | POST | /lessons/story/walks/{id}/talk | 대화 시작 → 질문, 보기. 본문(선택) `{character: lion·rabbit·bear}`로 질문의 `{친구}`를 정함 (없으면 라온). 아이가 붙인 별명은 받지 않음 |
-| 학습 3 | POST | /conversations/{id}/turn | {choice_index 또는 text, input_mode} → 친구 답과 표정 `expression`(joy·surprise·sad·anger·neutral, 그림 선택으로 돌아갈 때는 null) (2턴 후 종료) |
+| 학습 3 | POST | /conversations/{id}/turn | {choice_index 또는 text, input_mode} → 친구 답과 표정 `expression`(joy·surprise·sad·anger·neutral, 그림 선택으로 돌아갈 때는 null) (2턴 후 종료). 기록에는 턴마다 `resolved_by`(button·exact·llm·fallback) |
 | 학습 3 | POST | /conversations/{id}/end | 대화 종료 버튼 |
 
 ## 프론트 연결 메모
@@ -201,10 +203,10 @@ tests/
 | `walks.completed` | 마친 산책 수 (복습 제외). `walks.reviews`는 복습으로 마친 수 |
 | `emotion[]` | 감정마다(`emotions.json` 순서) 학습 1 답 수, 정답 수, 정답률(`accuracy`, 0~1, 기록 없으면 null), 단서를 본 뒤 낸 답 수(`hint_used`). 복습과 마치지 않은 산책의 답도 셉니다 |
 | `mirror` | 학습 2 기록 수, 카메라·터치 수와 비율 |
-| `story` | 대화 수, 친구가 답한 턴 수, 그중 말로 답한 턴 수와 비율, 그림 선택으로 돌아간 수(`fallback_to_picture`), Content Safety 차단 수(`blocked`), 하루 생성 제한에 걸린 수(`generation_limited`) |
+| `story` | 대화 수, 친구가 답한 턴 수, 그중 말로 답한 턴 수와 비율, 그림 선택으로 돌아간 수(`fallback_to_picture`), Content Safety 차단 수(`blocked`), 하루 생성 제한에 걸린 수(`generation_limited`), 턴을 무엇으로 정했는지(`resolved_by`: button·exact·llm·fallback 수) |
 | `sticker_days` | 기간 안에 스티커를 받은 날짜 |
 
-그림으로 돌아간 수는 대화 문서의 `fallbacks`에 셉니다. 키가 없어서 생성하지 못한 경우, 생성 응답이 검사를 통과하지 못한 경우, 차단된 경우, 하루 생성 제한에 걸린 경우가 모두 들어갑니다.
+그림으로 돌아간 수는 대화 기록에서 `resolved_by`가 `fallback`인 턴 수입니다. 키가 없는 경우, 모델이 이야기 밖이라고 본 경우, 형식·검사를 통과하지 못한 경우, 차단된 경우, 하루 생성 제한에 걸린 경우가 모두 들어갑니다. 친구가 답한 턴 수(`turns`)와 말로 답한 비율에는 fallback 턴을 넣지 않습니다. 이전 대화 문서는 턴에 `resolved_by`가 없고 그림으로 돌아간 수가 `fallbacks` 칸에 있어서, 리포트가 그 칸도 함께 셉니다.
 
 ## 저장소
 
@@ -249,11 +251,12 @@ Cosmos의 id와 고유 키는 **논리 파티션 안에서만** 중복을 막습
 // attempts (kind: placement, 레벨 테스트)
 {"id": "7d4f…", "child_id": "c71a…", "walk_id": null, "kind": "placement", "level": "basic",
  "answers": [{"target": "joy", "picks": ["sad", "joy"], "used_hint": true}, {"target": "surprise", "picks": ["surprise"], "used_hint": false}], "created_at": "…"}
-// conversations (said는 마스킹된 문장, safety에는 차단 여부와 범주만, fallbacks는 그림으로 돌아간 수,
-//                generated는 한국 날짜별 생성 호출 수, limited는 하루 생성 제한에 걸린 수)
-{"id": "d8f4…", "child_id": "c71a…", "walk_id": "a3e0…", "topic_id": "joy", "turn": 1,
- "turns": [{"said": "꽃을 그리자.", "reply": "…", "input_mode": "picture"}], "safety": [], "fallbacks": 0,
- "generated": {"2026-11-22": 1}, "limited": 0, "ended_by": "button", "created_at": "…"}
+// conversations (said는 마스킹된 문장, resolved_by는 턴을 무엇으로 정했는지, fallback 턴은 문장 없음,
+//                safety에는 차단 여부와 범주만, generated는 한국 날짜별 모델 호출 수, limited는 하루 제한에 걸린 수)
+{"id": "d8f4…", "child_id": "c71a…", "walk_id": "a3e0…", "topic_id": "joy", "friend": "lion", "turn": 1,
+ "turns": [{"said": null, "reply": null, "input_mode": "voice", "resolved_by": "fallback"},
+           {"said": "같이 놀자!", "reply": "…", "input_mode": "picture", "resolved_by": "button"}],
+ "safety": [], "generated": {"2026-11-22": 1}, "limited": 0, "ended_by": "button", "created_at": "…"}
 // stickers
 {"id": "c71a…_2026-11-22", "child_id": "c71a…", "day": "2026-11-22", "created_at": "…"}
 ```
@@ -330,56 +333,76 @@ Cosmos의 id와 고유 키는 **논리 파티션 안에서만** 중복을 막습
 - 감정 목록과 순서는 `app/content/emotions.json`의 키 순서입니다(지금 joy·surprise·sad·anger). 프론트 날짜별 순환, 스티커, `/topics`, 리포트, 대시보드가 모두 이 순서를 씁니다.
 - 학습 1 확장 과제는 화면과 같이 기본·비슷한 낱말 중 하나 이상을 고르고 반대 낱말이 없으면 정답입니다.
 - 학습 2 점수는 AI 기준 확정 전까지 null을 받습니다. 영상은 서버로 오지 않습니다.
-- 학습 3 대화의 보기 선택은 동화 대본(`tales.json`의 talk)으로 응답합니다. 말·글 입력은 아래 순서로 처리합니다.
+- 학습 3 대화의 보기 선택과 보기와 같은 말은 동화 대본(`tales.json`의 talk)으로 응답합니다. 보기와 다른 말은 아래 순서로 모델(LLM)에게 묻습니다.
 - 대화 기록과 로그에는 마스킹된 문장만 남깁니다. 로그에는 실패한 서비스와 오류 종류만 적습니다.
 
 ## 학습 3 대화와 Azure (AI 담당용)
 
 ### 한 턴의 순서
 
+API 모양(`POST /conversations/{id}/turn`)과 프론트 연결은 그대로입니다. 친구 답을 무엇으로 정했는지 턴마다 `resolved_by`로 남깁니다.
+
 ```
-아이 문장 → mask_pii → check(입력, 4 이상 막음) → 보기와 맞으면 대본 답
-                                                  → 아니면 _generate → check(출력, 0 초과 막음) → 친구 답
+보기 버튼 (choice_index, input_mode picture)                        → 대본 답                     button
+기기에서 알아들은 말이 보기와 같음 (choice_index, input_mode voice)  → 대본 답                     exact
+말·글 (text) → mask_pii → check(입력, 4 이상 막음)
+   → 띄어쓰기·문장부호를 빼고 보기와 글자가 같음                      → 대본 답                     exact
+   → 다름: 하루 제한 확인 → Azure OpenAI (JSON) → prompts.parse
+        (형식이 틀리면 4초 안에서 한 번 다시) → prompts.resolve
+        → match 0·1                  → 그 보기의 대본 답·대본 표정                              llm
+        → match null, offTopic false → 모델 reply → check_reply → check(출력, 0 초과 막음)    llm
+        → 그 밖 (offTopic, 형식·검사 불통과, 차단, 실패, 제한) → fallback_to_picture          fallback
 ```
 
-- 어느 단계에서든 막히거나 실패하면 `fallback_to_picture: true`를 돌려주고, 아이 화면은 보기 버튼으로 돌아갑니다.
-- 친구 표정: 대본 답은 `tales.json`의 `replyExpressions`·`endExpressions`(대사마다 하나), 생성 답은 모델이 `[표정] 문장` 형식으로 고른 값입니다. `prompts.split_expression()`이 태그를 떼고, 목록(`prompts.EXPRESSIONS`)에 없으면 `neutral`로 바꿉니다. 안전 검사와 `check_reply()`는 태그를 뗀 문장만 봅니다. 화면은 값이 없으면 고른 행동의 표정을 그대로 씁니다.
-- Content Safety에 막히면 대화 기록의 `safety`에 `{"blocked": true, "categories": [...]}`만 남깁니다. 문장은 남기지 않고 보호자 알림도 없습니다.
-- 외부 호출 전체는 한 턴에 `TURN_TIMEOUT`(4초, `conversation.py`) 안에 끝나야 합니다. 넘기면 실패로 처리합니다. 프론트 제한은 5초입니다.
+- 모델 응답 모양(`prompts.RESPONSE_SCHEMA`, Azure OpenAI structured outputs strict): `{"match": 0|1|null, "offTopic": bool, "reply": str|null, "expression": str}`
+- 요청 값(`prompts.GENERATION`): `temperature` 0.3, `max_tokens` 150, `response_format` json_schema.
+- 그림으로 돌아간 턴은 문장 없이 `{"said": null, "reply": null, "input_mode", "resolved_by": "fallback"}`만 남깁니다. 친구가 답한 턴 수(`turn`, 2턴이면 종료)는 늘지 않습니다.
+- 친구 표정: 대본 답(button·exact, llm의 match)은 `tales.json`의 `replyExpressions`·`endExpressions`, 모델 말은 JSON의 `expression`(목록에 없으면 `neutral`). 화면은 값이 없으면 고른 행동의 표정을 그대로 씁니다.
+- Content Safety에 막히면 대화 기록의 `safety`에 `{"blocked": true, "categories": [...]}`만 남깁니다. 문장은 남기지 않고 보호자 알림도 없습니다. 대본 답은 출력 검사를 하지 않습니다.
+- 외부 호출 전체(PII, 입력 검사, 모델 1~2번, 출력 검사)는 한 턴에 `TURN_TIMEOUT`(4초, `conversation.py`) 안에 끝나야 합니다. 형식 오류로 다시 묻는 것도 이 안에서만 합니다. 네트워크 오류·시간 초과는 다시 묻지 않습니다. 프론트 제한은 5초입니다.
 
-### 비용 제한 (하루 생성 호출 수)
+### 비용 제한 (하루 모델 호출 수)
 
-- 아이 한 명이 하루(한국 날짜)에 `_generate`를 부를 수 있는 횟수는 `prompts.DAILY_GENERATION_LIMIT`(30)입니다. 넘으면 `_generate`를 부르지 않고 `fallback_to_picture: true`로 돌아갑니다. 아이 화면은 지금처럼 보기 버튼으로 돌아갑니다.
-- 셉니다: 키가 있어 실제로 부른 호출. 실패·시간 초과·검사 불통과도 비용이 들 수 있어 셉니다.
-- 세지 않습니다: 보기 선택, 보기와 맞는 말(대본으로 답함), 키가 없을 때, 생성 전에 입력 안전 검사에서 막힌 경우.
+- 아이 한 명이 하루(한국 날짜)에 모델을 부를 수 있는 횟수는 `prompts.DAILY_GENERATION_LIMIT`(30)입니다. 넘으면 부르지 않고 `fallback_to_picture: true`로 돌아갑니다. 아이 화면은 지금처럼 보기 버튼으로 돌아갑니다.
+- 셉니다: 키가 있어 실제로 부른 호출. 형식 오류로 다시 부른 호출, 실패·시간 초과도 비용이 들 수 있어 셉니다.
+- 세지 않습니다: 보기 선택, 보기와 같은 말(대본으로 답함), 키가 없을 때, 모델 전에 입력 안전 검사에서 막힌 경우.
 - 횟수는 대화 문서의 `generated`(날짜별)에 두고, 턴마다 그 아이 대화들의 오늘 값을 더해 봅니다. 제한에 걸리면 그 대화의 `limited`를 늘리고 리포트 `story.generation_limited`에 나옵니다.
 - 기기 기록을 프로필로 옮기면 대화 문서가 함께 옮겨지므로 그날 센 횟수도 이어집니다.
 - 알려진 한계: 같은 아이의 말 턴이 정확히 동시에 오면 둘 다 같은 횟수를 읽어 한두 번 넘을 수 있습니다. 로그아웃으로 기기 id를 새로 만들면 새 아이로 셉니다.
 
 | 서비스 | 키가 없을 때 | 키가 있는데 실패·시간 초과일 때 |
 | --- | --- | --- |
-| Azure OpenAI (`_generate`) | `None` → 그림 선택 | `None` → 그림 선택 |
+| Azure OpenAI (`conversation._ask_model`) | 부르지 않음 → 그림 선택 | 그림 선택 (형식 오류만 한 번 다시) |
 | Azure AI Language PII (`mask_pii`) | 로컬 규칙(전화번호·이메일) | 로컬 규칙 |
 | Azure AI Content Safety (`check`) | 통과 | 막음 |
 
 Azure로 마스킹한 뒤에도 로컬 규칙을 한 번 더 적용합니다.
 
-### 고칠 곳
+### AI 담당이 고칠 곳 (`app/services/prompts.py` 한 파일)
 
-| 하고 싶은 일 | 파일 | 고칠 부분 |
-| --- | --- | --- |
-| 친구 역할·말투·장면 제한 바꾸기 | `app/services/prompts.py` | `SYSTEM_PROMPT` |
-| 모델에 넘기는 정보 바꾸기 | `app/services/prompts.py` | `build_messages()` (아이 문장은 마스킹된 것) |
-| 생성 값 바꾸기 | `app/services/prompts.py` | `GENERATION` (`max_tokens`, `temperature`) |
-| 응답 기준 바꾸기 | `app/services/prompts.py` | `MAX_REPLY_CHARS`, `BANNED_WORDS`, `check_reply()` |
-| 하루 생성 호출 수 바꾸기 | `app/services/prompts.py` | `DAILY_GENERATION_LIMIT` (아이 한 명, 한국 날짜 기준, 지금 30) |
-| 안전 검사 기준 바꾸기 | `app/services/prompts.py` | `INPUT_MAX_SEVERITY`(아이 입력, 지금 2: 4 이상 막음), `OUTPUT_MAX_SEVERITY`(생성 응답, 지금 0) |
-| 검사 범주 바꾸기 | `app/services/safety.py` | `SAFETY_CATEGORIES` |
+| 하고 싶은 일 | 고칠 부분 |
+| --- | --- |
+| 친구 역할·말투 규칙·장면 제한 | `SYSTEM_PROMPT` (1~2문장, 질문 최대 1개, 반말, 비유·반어·농담·관용구 금지, 이야기 밖 주제·개인정보 질문 금지) |
+| 모델에 넘기는 정보 | `build_messages(tale, turn, friend_name, transcript)`. `turn` 0은 첫 질문과 choices, 1은 again과 extra. `friend_name`은 받침에 따라 라온이·보리·두리(`content.friend_name`). `transcript`는 마스킹된 아이 말 |
+| 응답 모양 | `RESPONSE_SCHEMA` (바꾸면 `parse()`도 함께) |
+| 응답으로 친구 답 정하기 | `resolve(tale, turn, output)`: match면 대본 답·표정, match null·offTopic false면 reply, 그 밖은 None |
+| 형식 확인 | `parse(content)`: 모양이 틀리면 None (conversation.py가 한 번 다시 부름) |
+| 생성 값 | `GENERATION` (`temperature`, `max_tokens`, `response_format`) |
+| 코드 검사 기준 | `MAX_SENTENCES`(2), `MAX_QUESTIONS`(1), `MAX_REPLY_CHARS`(60), `BANNED_WORDS`, `check_reply()` |
+| 하루 모델 호출 수 | `DAILY_GENERATION_LIMIT` (아이 한 명, 한국 날짜 기준, 지금 30) |
+| 안전 검사 기준 | `INPUT_MAX_SEVERITY`(아이 입력, 지금 2: 4 이상 막음), `OUTPUT_MAX_SEVERITY`(모델 말, 지금 0) |
+| 검사 범주 | `app/services/safety.py`의 `SAFETY_CATEGORIES` |
 
-- 친구 말투는 동화 대본과 같은 반말입니다. `check_reply()`는 지금 한 문장, 40자 이내, 반말('~요'·'~니다'로 끝나지 않음), 영어·숫자·기호·비속어 없음, 줄바꿈 없음을 검사합니다.
-- 화남 주제에서 아이가 '짜증나', '때리고 싶어'처럼 감정을 말하는 것은 막지 않도록 아이 입력 기준을 생성 응답보다 느슨하게 둡니다. 통과하지 못하면 `None`을 돌려주고 그림 선택으로 돌아갑니다.
-- `prompts.py`만 고치면 되도록 나눴습니다. `conversation.py`와 `safety.py`의 호출 순서와 실패 처리는 바꾸지 않아도 됩니다.
-- 기준을 바꾸면 `tests/test_conversation_ai.py`의 응답 검사 예시도 함께 고칩니다.
+- 말투(반말, 비유·관용구 등)는 프롬프트로 맡기고, 코드(`check_reply`)는 문장 수·질문 수·길이·금지어만 봅니다.
+- 화남 주제에서 아이가 '짜증나', '때리고 싶어'처럼 감정을 말하는 것은 막지 않도록 아이 입력 기준을 모델 말보다 느슨하게 둡니다.
+- `conversation.py`(호출 순서, 시간, 재시도, 비용 제한, 기록)와 `safety.py`는 고치지 않아도 됩니다.
+- 기준을 바꾸면 `tests/test_conversation_ai.py`의 예시도 함께 고칩니다. 테스트는 모델 응답을 가짜 JSON으로 넣어 match·offTopic·reply·형식 오류·재시도를 확인합니다.
+
+### 학습 2 점수 (AI 표정 담당)
+
+- `POST /lessons/mirror/walks/{id}/record`에 기기에서 계산한 결과만 선택 항목으로 보냅니다: `score`(0~100), `score_version`(기준 버전, 예 `face-v1.0`), `stars`(0~3), `tracked_sec`, `attempts`, `end_reason`(locked·skipped·cameraDenied·exit).
+- 영상, 얼굴 특징점, blendshape 값은 받지 않습니다. 정해지지 않은 칸을 보내면 422입니다 (`schemas.MirrorRecord`).
+- 프론트는 지금 `score: null`만 보냅니다. 기준이 정해지면 `frontend/src/Activities.jsx`의 `api.recordMirror` 호출에 값을 더합니다.
 
 ### 키 설정
 
@@ -395,8 +418,9 @@ Azure로 마스킹한 뒤에도 로컬 규칙을 한 번 더 적용합니다.
 1. `POST /walks`에 `{"child_id": "test", "topic_id": "joy"}` → `id`
 2. `POST /lessons/story/walks/{id}/talk` → `conversation_id`
 3. `POST /conversations/{conversation_id}/turn`에 `{"text": "비행기가 멀리 날아갔으면 좋겠어", "input_mode": "voice"}`
-   - 짧은 반말 한 문장이 `reply`로 오고 `fallback_to_picture: false`이면 생성 성공입니다.
-   - `fallback_to_picture: true`이면 서버 로그에서 어느 단계가 실패했는지 봅니다. 예: `Azure OpenAI 실패: HTTPStatusError`, `생성 응답이 검사를 통과하지 못함`
+   - 짧은 반말이 `reply`로 오고 `fallback_to_picture: false`이면 모델 답 성공입니다. 보기와 같은 뜻의 말(예: "같이 놀고 싶어")은 대본 답이 옵니다.
+   - `fallback_to_picture: true`이면 서버 로그에서 어느 단계가 실패했는지 봅니다. 예: `Azure OpenAI 실패: HTTPStatusError`, `모델 응답 형식이 맞지 않음`, `모델 응답으로 답을 정하지 못함`
+   - 처음 연결할 때 structured outputs(`response_format` json_schema, strict)를 그 배포(모델·API 버전 `2024-10-21`)가 받는지 봅니다. 400이 오면 배포 모델을 확인합니다.
 4. 개인정보: `backend` 폴더에서 아래 명령으로 `.env`의 Language 키를 써서 가린 결과를 봅니다. 이름과 번호가 `*` 또는 `[전화번호]`로 바뀌면 정상입니다.
    ```sh
    python -c "from app.services import safety; print(safety.mask_pii('내 이름은 김하늘이고 010-1234-5678이야'))"

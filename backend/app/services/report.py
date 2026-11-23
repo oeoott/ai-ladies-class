@@ -2,7 +2,7 @@
 from datetime import date
 
 from ..content import emotions, topic_ids
-from ..schemas import EmotionStat, MirrorStat, MonthlyReport, MonthWalks, Report, StoryStat, WalkStat
+from ..schemas import EmotionStat, MirrorStat, MonthlyReport, MonthWalks, Report, ResolvedCounts, StoryStat, WalkStat
 from ..store import Store
 
 
@@ -28,8 +28,13 @@ def build_report(store: Store, child_id: str, start: date, end: date) -> Report:
     camera = sum(1 for a in mirror if a.get("mode") == "camera")
     touch = sum(1 for a in mirror if a.get("mode") == "touch")
 
-    turns = [t for c in conversations for t in c["turns"]]
+    # 턴마다 resolved_by(button·exact·llm·fallback). fallback 턴은 친구가 답하지 않은 턴이다.
+    # 이전 문서는 resolved_by 없이 답한 턴만 있고, 그림으로 돌아간 수는 대화의 fallbacks 칸에 있다.
+    all_turns = [t for c in conversations for t in c["turns"]]
+    turns = [t for t in all_turns if t.get("resolved_by") != "fallback"]
     voice = sum(1 for t in turns if t.get("input_mode") == "voice")
+    resolved = {kind: sum(1 for t in all_turns if t.get("resolved_by") == kind)
+                for kind in ("button", "exact", "llm", "fallback")}
 
     return Report(
         child_id=child_id, from_day=start, to_day=end,
@@ -40,9 +45,10 @@ def build_report(store: Store, child_id: str, start: date, end: date) -> Report:
                           camera_ratio=_ratio(camera, len(mirror)), touch_ratio=_ratio(touch, len(mirror))),
         story=StoryStat(conversations=len(conversations), turns=len(turns), voice_turns=voice,
                         voice_ratio=_ratio(voice, len(turns)),
-                        fallback_to_picture=sum(c.get("fallbacks", 0) for c in conversations),
+                        fallback_to_picture=resolved["fallback"] + sum(c.get("fallbacks", 0) for c in conversations),
                         blocked=sum(1 for c in conversations for s in c.get("safety", []) if s.get("blocked")),
-                        generation_limited=sum(c.get("limited", 0) for c in conversations)),
+                        generation_limited=sum(c.get("limited", 0) for c in conversations),
+                        resolved_by=ResolvedCounts(**resolved)),
         sticker_days=[d for d in store.sticker_days(child_id) if str(start) <= d <= str(end)],
     )
 

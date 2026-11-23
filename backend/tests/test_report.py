@@ -108,7 +108,8 @@ def test_report_numbers(c, monkeypatch):
     assert surprise["answers"] == 0 and surprise["accuracy"] is None
     assert r["mirror"] == {"records": 3, "camera": 1, "touch": 2, "camera_ratio": 0.33, "touch_ratio": 0.67}
     assert r["story"] == {"conversations": 2, "turns": 3, "voice_turns": 0, "voice_ratio": 0.0,
-                          "fallback_to_picture": 1, "blocked": 0, "generation_limited": 0}
+                          "fallback_to_picture": 1, "blocked": 0, "generation_limited": 0,
+                          "resolved_by": {"button": 3, "exact": 0, "llm": 0, "fallback": 1}}
     assert r["sticker_days"] == ["2026-11-20", "2026-11-21"]
 
 
@@ -122,7 +123,8 @@ def test_report_counts_voice_turns_and_blocks(c, monkeypatch):
                                               {"text": SAID, "input_mode": "voice"}))  # 입력 차단 → 그림으로
     r = c.get(f"/children/{child_id}/report?from=2026-11-20&to=2026-11-20", headers=h).json()
     assert r["story"] == {"conversations": 1, "turns": 1, "voice_turns": 1, "voice_ratio": 1.0,
-                          "fallback_to_picture": 1, "blocked": 1, "generation_limited": 0}
+                          "fallback_to_picture": 1, "blocked": 1, "generation_limited": 0,
+                          "resolved_by": {"button": 0, "exact": 0, "llm": 1, "fallback": 1}}
     text = json.dumps(r, ensure_ascii=False)
     assert SAID not in text and "바람을 타고" not in text and "said" not in text and "reply" not in text
 
@@ -187,3 +189,21 @@ def test_monthly_needs_owner_token(c):
     assert c.get(f"/children/{child_id}/report/monthly").status_code == 401
     assert c.get(f"/children/{child_id}/report/monthly", headers=other).status_code == 403
     assert c.get("/children/device-kid/report/monthly").status_code == 401
+
+
+def test_report_reads_conversations_saved_before_resolved_by():
+    """이전 문서: 턴에 resolved_by가 없고, 그림으로 돌아간 수는 fallbacks 칸에 있다."""
+    from datetime import date
+
+    from app.services.report import build_report
+    from app.store import MemoryStore
+
+    store = MemoryStore()
+    walk = store.create_walk(child_id="kid", topic_id="joy", level="basic", day=date(2026, 11, 20), review=False)
+    conv = store.create_conversation(walk)
+    conv.update(turn=2, fallbacks=2, turns=[{"said": "같이 놀자!", "reply": "…", "input_mode": "picture"},
+                                           {"said": "꽃을 그리자.", "reply": "…", "input_mode": "voice"}])
+    store.save_conversation(conv)
+    story = build_report(store, "kid", date(2026, 11, 20), date(2026, 11, 20)).story
+    assert (story.turns, story.voice_turns, story.fallback_to_picture) == (2, 1, 2)
+    assert story.resolved_by.model_dump() == {"button": 0, "exact": 0, "llm": 0, "fallback": 0}

@@ -87,6 +87,8 @@ test('서버를 켜면 학습 1·2·3과 대화 턴이 기록되고, 가입하�
   expect(report.emotion.filter((row) => row.topic_id !== topicId).every((row) => row.answers === 0)).toBe(true)
   expect(report.mirror).toMatchObject({ records: 1, camera: 1, touch: 0 })
   expect(report.story).toMatchObject({ conversations: 1, turns: 2, voice_turns: 1, voice_ratio: 0.5, fallback_to_picture: 0, blocked: 0 })
+  // Heard on the device as a choice → exact, tapped → button.
+  expect(report.story.resolved_by).toEqual({ button: 1, exact: 1, llm: 0, fallback: 0 })
   expect(report.sticker_days).toEqual([today()])
 
   // Dashboard: this week, then this month.

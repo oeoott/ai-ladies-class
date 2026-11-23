@@ -86,12 +86,13 @@ npm run dev                                           # frontend/.env의 VITE_AP
 
 **이미 된 것**
 - 학습 3 API: 행동 선택, 대화 시작(`/talk`, 선택 본문 `{character}`), 턴(`/conversations/{id}/turn`), 종료
-- 대화 엔진 `services/conversation.py`: 보기는 대본, 말은 마스킹 → 입력 안전 검사 → 보기와 맞추기 → 생성 → 출력 안전 검사. 한 턴의 외부 호출 전체 4초(`TURN_TIMEOUT`), 실패하면 `fallback_to_picture`
+- 대화 엔진 `services/conversation.py`: 보기와 보기와 같은 말은 대본. 보기와 다른 말은 마스킹 → 입력 안전 검사 → Azure OpenAI(JSON `{match, offTopic, reply, expression}`) → `prompts.resolve` → (모델 말이면) 출력 안전 검사. 형식이 틀리면 한 번 다시 묻고, 한 턴의 외부 호출 전체는 4초(`TURN_TIMEOUT`). 정하지 못하면 `fallback_to_picture`
+- 대화 기록 턴마다 `resolved_by`(button·exact·llm·fallback). 그림으로 돌아간 턴은 문장 없이 남기고, 리포트 `story.resolved_by`·`fallback_to_picture`가 이 값으로 셉니다
 - Azure OpenAI·AI Language PII·Content Safety 호출 자리(`services/azure.py`, `safety.py`). 키가 없으면 대본·로컬 규칙으로 동작
-- 하루 생성 호출 제한 `prompts.DAILY_GENERATION_LIMIT`(30), 리포트 `story.generation_limited`
+- 하루 모델 호출 제한 `prompts.DAILY_GENERATION_LIMIT`(30), 리포트 `story.generation_limited`
 - 프론트 연결: 보기·말로 답하기·인식 실패·서버 오류·늦은 응답이 모두 기존 화면 안에서 처리됨(`frontend/src/storyTalk.js`, `StoryVoice.jsx`, `Activities.jsx`)
 
-**채울 곳**: 실제 키로 확인(`backend/README.md` '실제 키로 확인'). 프롬프트·응답 기준은 AI 담당 영역입니다.
+**채울 곳**: 실제 키로 확인(`backend/README.md` '실제 키로 확인'). 특히 그 배포가 structured outputs(`response_format` json_schema, strict)를 받는지 봅니다. 프롬프트·응답 기준은 AI 담당 영역입니다.
 
 **확인 방법**: `pytest -q tests/test_conversation_ai.py tests/test_generation_limit.py tests/test_talk_friend.py`, `npm run e2e`의 `story-talk.spec.js`.
 
@@ -101,25 +102,38 @@ npm run dev                                           # frontend/.env의 VITE_AP
 
 ## AI (대화·표정)
 
-**이미 된 것**
-- 대화 프롬프트와 응답 검사를 `backend/app/services/prompts.py` 한 파일에 모았습니다.
-- 표정 거울 점수 자리: `POST /lessons/mirror/walks/{id}/record`의 `score`(지금은 null)
+**이미 된 것 (계획서대로 연결함)**
+- 대화: 아이 말이 보기와 다를 때만 모델을 부릅니다. 모델은 JSON `{"match": 0|1|null, "offTopic": bool, "reply": str|null, "expression": str}`로 답합니다.
+  - `match`가 있으면 그 보기의 대본 답(replies·ends)과 대본 표정
+  - `match`가 null이고 `offTopic`이 false면 `reply`
+  - 그 밖은 그림 선택으로 돌아감
+- 요청 값: temperature 0.3, max_tokens 150, structured outputs(strict). 형식이 틀리면 4초 안에서 한 번 다시 묻습니다.
+- 말투 규칙(1~2문장, 질문 최대 1개, 반말, 비유·반어·농담·관용구 금지, 이야기 밖 주제·개인정보 질문 금지)은 프롬프트에 있습니다. 코드는 문장 수·질문 수·길이(60자)·금지어만 검사합니다.
+- API 모양(`/conversations/{id}/turn`)과 프론트 연결은 바뀌지 않았습니다.
+- 표정 거울: `POST /lessons/mirror/walks/{id}/record`가 선택 항목 `score`, `score_version`, `stars`(0~3), `tracked_sec`, `attempts`, `end_reason`(locked·skipped·cameraDenied·exit)을 받습니다. 프론트는 지금 `score: null`만 보냅니다.
 
-**채울 곳**
+**채울 곳: `backend/app/services/prompts.py` 한 파일만 고칩니다**
 
-| 할 일 | 파일·함수 |
+| 할 일 | 함수·값 |
 | --- | --- |
-| 친구 역할·말투·장면 제한 | `prompts.py`의 `SYSTEM_PROMPT` |
-| 모델에 넘기는 정보 | `prompts.py`의 `build_messages()` |
-| 생성 값 | `prompts.py`의 `GENERATION` |
-| 응답 기준 | `prompts.py`의 `MAX_REPLY_CHARS`, `BANNED_WORDS`, `check_reply()` |
-| 안전 검사 기준 | `prompts.py`의 `INPUT_MAX_SEVERITY`, `OUTPUT_MAX_SEVERITY` |
-| 하루 생성 호출 수 | `prompts.py`의 `DAILY_GENERATION_LIMIT` |
-| 표정 유사도 기준 확정 후 점수 | `routers/mirror.py`, `schemas.py`의 `MirrorRecord` |
+| 친구 역할·말투·장면 제한 | `SYSTEM_PROMPT` |
+| 모델에 넘기는 정보 | `build_messages(tale, turn, friend_name, transcript)` (friend_name: 라온이·보리·두리, transcript: 마스킹된 아이 말) |
+| 응답 모양 / 형식 확인 | `RESPONSE_SCHEMA` / `parse(content)` |
+| 응답으로 친구 답 정하기 | `resolve(tale, turn, llm_output)` |
+| 생성 값 | `GENERATION` |
+| 코드 검사 기준 | `MAX_SENTENCES`, `MAX_QUESTIONS`, `MAX_REPLY_CHARS`, `BANNED_WORDS`, `check_reply()` |
+| 안전 검사 기준 | `INPUT_MAX_SEVERITY`, `OUTPUT_MAX_SEVERITY` |
+| 하루 모델 호출 수 | `DAILY_GENERATION_LIMIT` |
+| 표정 유사도 점수 | 기기에서 계산해 학습 2 기록의 선택 항목으로 보냄 (`frontend/src/Activities.jsx`의 `api.recordMirror`) |
 
-**확인 방법**: `pytest -q tests/test_conversation_ai.py` (외부 호출은 가짜). 기준을 바꾸면 이 파일의 응답 검사 예시도 함께 고칩니다.
+호출 순서·시간 제한·재시도·비용 제한·기록(`conversation.py`)과 안전 검사 호출(`safety.py`)은 고치지 않아도 됩니다. 자세한 흐름은 `backend/README.md` '학습 3 대화와 Azure'에 있습니다.
 
-**주의할 점**: 영상·얼굴 특징은 서버로 오지 않습니다. 점수는 기기에서 계산한 값만 받습니다.
+**확인 방법**: `pytest -q tests/test_conversation_ai.py tests/test_mirror_record.py` (모델 응답은 가짜 JSON). 기준을 바꾸면 `test_conversation_ai.py`의 예시도 함께 고칩니다. 실제 키 확인은 `backend/README.md` '실제 키로 확인'.
+
+**주의할 점**
+- 영상·얼굴 특징점·blendshape 값은 서버로 보내지 않습니다. 보내면 422입니다.
+- 모델이 고른 `match`는 대본 답을 쓰므로 출력 안전 검사를 하지 않고, 모델이 만든 `reply`만 검사합니다.
+- 감정은 지금 네 가지(기쁨·놀람·슬픔·화남)입니다. 두려움·싫음·평온은 교수님 자문 회신 전이라 넣지 않았습니다. 넣을 때는 `backend/README.md`의 '감정 추가 체크리스트'를 따릅니다.
 
 ## 프론트
 

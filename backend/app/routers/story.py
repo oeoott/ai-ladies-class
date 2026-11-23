@@ -42,19 +42,21 @@ def talk_turn(body: TalkTurnIn, conv: dict = Depends(conversation_or_404), store
     if body.choice_index is None and not body.text:
         raise HTTPException(422, "보기 번호나 문장이 필요해요.")
 
-    # 비용 제한: 말·글 입력일 때만 그 아이의 오늘 생성 호출 수를 센다 (보기 선택은 생성하지 않음)
+    # 비용 제한: 말·글 입력일 때만 그 아이의 오늘 모델 호출 수를 센다 (보기 선택은 부르지 않음)
     day = str(today_kst())
     used = (conversation.generated_on(store.list_conversations(conv["child_id"]), day)
             if body.choice_index is None and body.text else 0)
-    result = conversation.take_turn(conv, body.choice_index, body.text, day=day, generated_today=used)
+    result = conversation.take_turn(conv, body.choice_index, body.text, body.input_mode, day=day, generated_today=used)
     if result.get("fallback"):
-        conv["fallbacks"] = conv.get("fallbacks", 0) + 1  # 리포트의 '그림으로 돌아간 수'
-        store.save_conversation(conv)  # 차단 기록(safety)과 횟수(fallbacks, generated, limited)만 바뀐다
+        # 그림으로 돌아간 턴: 문장 없이 resolved_by만 남긴다 (리포트의 '그림으로 돌아간 수')
+        conv["turns"].append({"said": None, "reply": None, "input_mode": body.input_mode, "resolved_by": "fallback"})
+        store.save_conversation(conv)
         return TalkTurnOut(reply="그림으로 골라 볼까요?", finished=False, choices=result["choices"],
                            fallback_to_picture=True)
 
     # 마스킹된 문장만 저장
-    conv["turns"].append({"said": result["said"], "reply": result["reply"], "input_mode": body.input_mode})
+    conv["turns"].append({"said": result["said"], "reply": result["reply"], "input_mode": body.input_mode,
+                          "resolved_by": result["resolved_by"]})
     conv["turn"] += 1
     if conv["turn"] >= conversation.MAX_TURNS:
         conv["ended_by"] = "maxTurns"
@@ -62,12 +64,12 @@ def talk_turn(body: TalkTurnIn, conv: dict = Depends(conversation_or_404), store
         return TalkTurnOut(reply=result["reply"], finished=True, expression=result.get("expression"))
     store.save_conversation(conv)
     talk = tales()[conv["topic_id"]]["talk"]
-    return TalkTurnOut(reply=result["reply"], finished=False, ask=named(talk["again"], conv.get("friend")), choices=talk["extra"],
-                       expression=result.get("expression"))
+    return TalkTurnOut(reply=result["reply"], finished=False, ask=named(talk["again"], conv.get("friend")),
+                       choices=talk["extra"], expression=result.get("expression"))
 
 
 @router.post("/conversations/{conversation_id}/end")
 def end_talk(conv: dict = Depends(conversation_or_404), store: Store = Depends(get_store)):
     conv["ended_by"] = conv["ended_by"] or "button"
     store.save_conversation(conv)
-    return {"ended_by": conv["ended_by"], "turns": len(conv["turns"])}
+    return {"ended_by": conv["ended_by"], "turns": conv["turn"]}  # 친구가 답한 턴 수
