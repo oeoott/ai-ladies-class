@@ -3,3 +3,14 @@ frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 .playwright-cli/
+frontend/.env
+backend/.env
+backend/.venv/
+
+# 어느 폴더에 있어도 제외
+.env
+.venv/
+node_modules/
+__pycache__/
+.pytest_cache/
+dist/
