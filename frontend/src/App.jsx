@@ -84,7 +84,8 @@ function SceneTools({ onGuard, onRest, learning }) {
   )
 }
 
-function Stamp({ record, onReview, nextTopic, onNext }) {
+// Collected stickers are only shown (a picture, not a button). The first empty slot still starts the next lesson.
+function Stamp({ record, nextTopic, onNext }) {
   if (!record && nextTopic) {
     return (
       <button type="button" className="stamp stamp-next" onClick={onNext} aria-label={nextTopic.label + ' 학습 시작'}>
@@ -97,11 +98,10 @@ function Stamp({ record, onReview, nextTopic, onNext }) {
     return <span className="stamp" aria-hidden="true"><PawPrint /></span>
   }
   return (
-    <button type="button" className="stamp filled" onClick={() => onReview(record)}
-      aria-label={record.topic + ' 다시 하기 · ' + record.date}>
+    <span className="stamp filled" role="img" aria-label={record.topic + ' 스티커 · ' + record.date}>
       <Sprout aria-hidden="true" />
-      <span>{record.topic}</span>
-    </button>
+      <span aria-hidden="true">{record.topic}</span>
+    </span>
   )
 }
 
@@ -116,9 +116,10 @@ function LessonReady({ friend, onStart }) {
   )
 }
 
-function Reward({ page, friend, topic, records, onBook, onFinish, onReview, nextTopic, onNext }) {
+function Reward({ page, friend, topic, records, onBook, onFinish, nextTopic, onNext }) {
   const completionTitle = '동화 놀이를 마쳤어요'
-  useNarration(page === 'stickers' ? '다음 학습을 시작하거나, 스티커를 눌러 다시 해 봐요.' : completionTitle + '. 스티커를 보러 갈까요?')
+  const bookLine = nextTopic ? '다음 학습 칸을 누르면 시작해요.' : '지금까지 모은 스티커예요.'
+  useNarration(page === 'stickers' ? bookLine : completionTitle + '. 스티커를 보러 갈까요?')
   const title = useRef(null)
   useEffect(() => {
     title.current?.focus({ preventScroll: true })
@@ -135,10 +136,10 @@ function Reward({ page, friend, topic, records, onBook, onFinish, onReview, next
           <h1 ref={title} tabIndex="-1">
             마음숲 스티커판
           </h1>
-          <p>다음 학습을 시작하거나, 스티커를 눌러 다시 해 봐요.</p>
+          <p>{bookLine}</p>
           <div className="stamp-board">
             {Array.from({ length: 5 }, (_, i) => (
-              <Stamp key={i} record={group[i]} onReview={onReview}
+              <Stamp key={i} record={group[i]}
                 nextTopic={pageStart + i === records.length ? nextTopic : null} onNext={onNext} />
             ))}
           </div>
@@ -534,10 +535,6 @@ function App() {
                       onNext={() => {
                         history.current = []
                         setSession((current) => startNextStickerLesson(current))
-                      }}
-                      onReview={(record) => {
-                        history.current = []
-                        setSession((current) => reviewSticker(current, record))
                       }}
                       onBook={() => patch({ page: 'stickers' })}
                       onFinish={() => setSession((current) => forToday({ ...current, page: 'welcome' }))}

@@ -31,6 +31,14 @@ test('서버 없이 첫 방문부터 스티커판까지 진행한다', async ({ 
 
   await finishTalk(page, topicId, 1)
   await expect(page.getByText('지금까지 모은 스티커 1개')).toBeVisible()
+  // Stickers are only shown: a picture, not a button, and not in the Tab order. The next lesson slot stays.
+  const board = page.locator('.stamp-board')
+  const sticker = board.getByRole('img', { name: `${emotions[topicId].label} 스티커 · ${today()}` })
+  await expect(sticker).toBeVisible()
+  expect(await sticker.evaluate((el) => el.tagName === 'SPAN' && el.tabIndex < 0)).toBe(true)
+  await expect(page.getByText('다음 학습 칸을 누르면 시작해요.')).toBeVisible()
+  await expect(board.getByRole('button')).toHaveCount(1)
+  await expect(board.getByRole('button', { name: `${emotions[topicIds[1]].label} 학습 시작` })).toBeVisible()
 
   const session = await readStored(page, STORAGE_KEY)
   expect(session.records).toEqual([{ date: today(), topic: emotions[topicId].label }])
