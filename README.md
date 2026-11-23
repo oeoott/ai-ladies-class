@@ -40,6 +40,33 @@ npm run dev
 
 Node.js 22.12 이상을 권장합니다. `npm test`로 진행 상태를 검증하고 `npm run build`로 정적 웹 파일을 생성합니다. 실제 iPad에서 카메라 권한을 요청할 때는 HTTPS로 접속합니다. [앱 구현 계획](./PRD.md) · [프론트엔드 개발 지침](./AGENTS.md)
 
+## 배포 순서 (Azure, 준비만 함)
+
+아직 실제로 배포하지 않았습니다. 필요한 파일과 순서만 준비했습니다. 비밀값은 저장소에 넣지 않고 Azure 앱 설정과 GitHub Secrets에만 둡니다.
+
+| 파일 | 내용 |
+| --- | --- |
+| `backend/startup.sh` | App Service 시작 명령. `STORE=cosmos`일 때만 워커 여러 개(`WEB_CONCURRENCY`, 기본 2), 메모리 저장소면 1개 |
+| `frontend/public/staticwebapp.config.json` | Static Web Apps 설정. 빌드하면 `dist/`에 들어감. 얼굴 모델(`.task`)·WASM 형식, 카메라·마이크는 같은 출처만 |
+| `.github/workflows/backend-appservice.yml` | 백엔드 테스트 → zip → App Service (초안, Actions에서 직접 실행할 때만) |
+| `.github/workflows/frontend-staticwebapp.yml` | 프론트 테스트 → 빌드 → Static Web Apps (초안, 직접 실행할 때만) |
+
+1. **Azure 리소스 만들기**: Cosmos DB(NoSQL), App Service(Linux, Python 3.12), Static Web Apps. 대화에 AI를 쓰려면 Azure OpenAI, AI Language, AI Content Safety.
+2. **App Service 앱 설정** (이름은 `backend/.env.example`과 같음)
+   - `STORE=cosmos`, `COSMOS_ENDPOINT`, `COSMOS_KEY`, `COSMOS_DATABASE`
+   - `JWT_SECRET` (`python -c "import secrets; print(secrets.token_urlsafe(48))"`로 만든 값)
+   - `CORS_ORIGINS=https://<Static Web Apps 주소>`
+   - (선택) `AZURE_OPENAI_*`, `AZURE_LANGUAGE_*`, `AZURE_CONTENT_SAFETY_*`. 비워 두면 대본과 그림 선택으로 동작
+   - `SCM_DO_BUILD_DURING_DEPLOYMENT=true` (올릴 때 `requirements.txt` 설치)
+   - 시작 명령 `sh startup.sh`, 상태 확인 경로 `/health`
+3. **GitHub 설정**
+   - Secrets: `AZURE_WEBAPP_PUBLISH_PROFILE`, `AZURE_STATIC_WEB_APPS_API_TOKEN`
+   - Variables: `AZURE_WEBAPP_NAME`, `VITE_API_URL=https://<앱 이름>.azurewebsites.net`
+4. **백엔드 먼저 올리기**: Actions에서 `backend (App Service) - draft` 실행 → `https://<앱 이름>.azurewebsites.net/health`에서 `store`가 `cosmos`, `auth`가 `true`인지 봅니다.
+5. **프론트 올리기**: `frontend (Static Web Apps) - draft` 실행. `VITE_API_URL`은 빌드할 때 들어가므로 주소가 바뀌면 다시 실행합니다.
+   - 프론트 빌드에 `backend/app/content`(감정·동화 JSON)가 필요합니다. 그래서 워크플로가 저장소 전체를 받아 빌드하고, Static Web Apps에는 `frontend/dist`만 올립니다.
+6. **확인**: iPad Safari에서 HTTPS 주소로 첫 방문부터 스티커판까지 진행하고, 보호자 가입 → 학습 대시보드를 봅니다.
+
 ## 🌱 About the Project
 
 표정을 구분하는 방법도, 생각을 표현하는 방법도 아동마다 다릅니다.  
