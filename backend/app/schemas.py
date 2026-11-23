@@ -255,6 +255,7 @@ class StoryStat(BaseModel):
     voice_ratio: float | None  # 대화 턴 중 말로 답한 비율
     fallback_to_picture: int  # 그림 선택으로 돌아간 횟수
     blocked: int  # Content Safety 차단 횟수
+    generation_limited: int = 0  # 하루 생성 호출 제한(DAILY_GENERATION_LIMIT)에 걸려 그림 선택으로 돌아간 횟수
 
 
 class WalkStat(BaseModel):

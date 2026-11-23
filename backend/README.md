@@ -49,6 +49,7 @@ tests/
   test_store.py      저장소 테스트 (메모리·Cosmos 가짜 클라이언트에 같은 테스트)
   fake_cosmos.py     Cosmos SDK를 흉내 내는 가짜 컨테이너
   test_conversation_ai.py  외부 호출을 가짜로 바꾼 대화 테스트
+  test_generation_limit.py 하루 생성 호출 제한 (비용 제한)
 ```
 
 ## API
@@ -167,10 +168,10 @@ tests/
 | `walks.completed` | 마친 산책 수 (복습 제외). `walks.reviews`는 복습으로 마친 수 |
 | `emotion[]` | 감정마다(`emotions.json` 순서) 학습 1 답 수, 정답 수, 정답률(`accuracy`, 0~1, 기록 없으면 null), 단서를 본 뒤 낸 답 수(`hint_used`). 복습과 마치지 않은 산책의 답도 셉니다 |
 | `mirror` | 학습 2 기록 수, 카메라·터치 수와 비율 |
-| `story` | 대화 수, 친구가 답한 턴 수, 그중 말로 답한 턴 수와 비율, 그림 선택으로 돌아간 수(`fallback_to_picture`), Content Safety 차단 수(`blocked`) |
+| `story` | 대화 수, 친구가 답한 턴 수, 그중 말로 답한 턴 수와 비율, 그림 선택으로 돌아간 수(`fallback_to_picture`), Content Safety 차단 수(`blocked`), 하루 생성 제한에 걸린 수(`generation_limited`) |
 | `sticker_days` | 기간 안에 스티커를 받은 날짜 |
 
-그림으로 돌아간 수는 대화 문서의 `fallbacks`에 셉니다. 키가 없어서 생성하지 못한 경우, 생성 응답이 검사를 통과하지 못한 경우, 차단된 경우가 모두 들어갑니다.
+그림으로 돌아간 수는 대화 문서의 `fallbacks`에 셉니다. 키가 없어서 생성하지 못한 경우, 생성 응답이 검사를 통과하지 못한 경우, 차단된 경우, 하루 생성 제한에 걸린 경우가 모두 들어갑니다.
 
 ## 저장소
 
@@ -215,9 +216,11 @@ Cosmos의 id와 고유 키는 **논리 파티션 안에서만** 중복을 막습
 // attempts (kind: placement, 레벨 테스트)
 {"id": "7d4f…", "child_id": "c71a…", "walk_id": null, "kind": "placement", "level": "basic",
  "answers": [{"target": "joy", "picks": ["sad", "joy"], "used_hint": true}, {"target": "surprise", "picks": ["surprise"], "used_hint": false}], "created_at": "…"}
-// conversations (said는 마스킹된 문장, safety에는 차단 여부와 범주만, fallbacks는 그림으로 돌아간 수)
+// conversations (said는 마스킹된 문장, safety에는 차단 여부와 범주만, fallbacks는 그림으로 돌아간 수,
+//                generated는 한국 날짜별 생성 호출 수, limited는 하루 생성 제한에 걸린 수)
 {"id": "d8f4…", "child_id": "c71a…", "walk_id": "a3e0…", "topic_id": "joy", "turn": 1,
- "turns": [{"said": "꽃을 그리자.", "reply": "…", "input_mode": "picture"}], "safety": [], "fallbacks": 0, "ended_by": "button", "created_at": "…"}
+ "turns": [{"said": "꽃을 그리자.", "reply": "…", "input_mode": "picture"}], "safety": [], "fallbacks": 0,
+ "generated": {"2026-11-22": 1}, "limited": 0, "ended_by": "button", "created_at": "…"}
 // stickers
 {"id": "c71a…_2026-11-22", "child_id": "c71a…", "day": "2026-11-22", "created_at": "…"}
 ```
@@ -310,6 +313,15 @@ Cosmos의 id와 고유 키는 **논리 파티션 안에서만** 중복을 막습
 - Content Safety에 막히면 대화 기록의 `safety`에 `{"blocked": true, "categories": [...]}`만 남깁니다. 문장은 남기지 않고 보호자 알림도 없습니다.
 - 외부 호출 전체는 한 턴에 `TURN_TIMEOUT`(4초, `conversation.py`) 안에 끝나야 합니다. 넘기면 실패로 처리합니다. 프론트 제한은 5초입니다.
 
+### 비용 제한 (하루 생성 호출 수)
+
+- 아이 한 명이 하루(한국 날짜)에 `_generate`를 부를 수 있는 횟수는 `prompts.DAILY_GENERATION_LIMIT`(30)입니다. 넘으면 `_generate`를 부르지 않고 `fallback_to_picture: true`로 돌아갑니다. 아이 화면은 지금처럼 보기 버튼으로 돌아갑니다.
+- 셉니다: 키가 있어 실제로 부른 호출. 실패·시간 초과·검사 불통과도 비용이 들 수 있어 셉니다.
+- 세지 않습니다: 보기 선택, 보기와 맞는 말(대본으로 답함), 키가 없을 때, 생성 전에 입력 안전 검사에서 막힌 경우.
+- 횟수는 대화 문서의 `generated`(날짜별)에 두고, 턴마다 그 아이 대화들의 오늘 값을 더해 봅니다. 제한에 걸리면 그 대화의 `limited`를 늘리고 리포트 `story.generation_limited`에 나옵니다.
+- 기기 기록을 프로필로 옮기면 대화 문서가 함께 옮겨지므로 그날 센 횟수도 이어집니다.
+- 알려진 한계: 같은 아이의 말 턴이 정확히 동시에 오면 둘 다 같은 횟수를 읽어 한두 번 넘을 수 있습니다. 로그아웃으로 기기 id를 새로 만들면 새 아이로 셉니다.
+
 | 서비스 | 키가 없을 때 | 키가 있는데 실패·시간 초과일 때 |
 | --- | --- | --- |
 | Azure OpenAI (`_generate`) | `None` → 그림 선택 | `None` → 그림 선택 |
@@ -326,6 +338,7 @@ Azure로 마스킹한 뒤에도 로컬 규칙을 한 번 더 적용합니다.
 | 모델에 넘기는 정보 바꾸기 | `app/services/prompts.py` | `build_messages()` (아이 문장은 마스킹된 것) |
 | 생성 값 바꾸기 | `app/services/prompts.py` | `GENERATION` (`max_tokens`, `temperature`) |
 | 응답 기준 바꾸기 | `app/services/prompts.py` | `MAX_REPLY_CHARS`, `BANNED_WORDS`, `check_reply()` |
+| 하루 생성 호출 수 바꾸기 | `app/services/prompts.py` | `DAILY_GENERATION_LIMIT` (아이 한 명, 한국 날짜 기준, 지금 30) |
 | 안전 검사 기준 바꾸기 | `app/services/prompts.py` | `INPUT_MAX_SEVERITY`(아이 입력, 지금 2: 4 이상 막음), `OUTPUT_MAX_SEVERITY`(생성 응답, 지금 0) |
 | 검사 범주 바꾸기 | `app/services/safety.py` | `SAFETY_CATEGORIES` |
 

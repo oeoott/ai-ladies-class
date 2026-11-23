@@ -5,11 +5,16 @@
 - split_expression(): 모델 응답 '[표정] 문장'에서 표정을 떼어 낸다 (목록에 없으면 neutral)
 - check_reply(): 생성된 응답을 검사해 통과하면 다듬은 문장, 아니면 None (그림 선택으로 돌아감)
 - INPUT_MAX_SEVERITY, OUTPUT_MAX_SEVERITY: Content Safety 기준
+- DAILY_GENERATION_LIMIT: 아이 한 명이 하루(한국 날짜)에 쓸 수 있는 Azure OpenAI 생성 호출 수
 """
 import re
 
 # Azure OpenAI chat completions 요청에 함께 보내는 값
 GENERATION = {"max_tokens": 80, "temperature": 0.3}
+
+# 비용 제한. 아이 한 명이 오늘 이만큼 생성 호출을 했으면 더 부르지 않고 그림 선택으로 돌아간다.
+# 실패한 호출도 센다. 보기 선택과 보기와 맞는 말은 대본으로 답하므로 세지 않는다.
+DAILY_GENERATION_LIMIT = 30
 
 MAX_REPLY_CHARS = 40  # 공백 포함 글자 수
 

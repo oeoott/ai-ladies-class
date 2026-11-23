@@ -108,7 +108,7 @@ def test_report_numbers(c, monkeypatch):
     assert surprise["answers"] == 0 and surprise["accuracy"] is None
     assert r["mirror"] == {"records": 3, "camera": 1, "touch": 2, "camera_ratio": 0.33, "touch_ratio": 0.67}
     assert r["story"] == {"conversations": 2, "turns": 3, "voice_turns": 0, "voice_ratio": 0.0,
-                          "fallback_to_picture": 1, "blocked": 0}
+                          "fallback_to_picture": 1, "blocked": 0, "generation_limited": 0}
     assert r["sticker_days"] == ["2026-11-20", "2026-11-21"]
 
 
@@ -122,7 +122,7 @@ def test_report_counts_voice_turns_and_blocks(c, monkeypatch):
                                               {"text": SAID, "input_mode": "voice"}))  # 입력 차단 → 그림으로
     r = c.get(f"/children/{child_id}/report?from=2026-11-20&to=2026-11-20", headers=h).json()
     assert r["story"] == {"conversations": 1, "turns": 1, "voice_turns": 1, "voice_ratio": 1.0,
-                          "fallback_to_picture": 1, "blocked": 1}
+                          "fallback_to_picture": 1, "blocked": 1, "generation_limited": 0}
     text = json.dumps(r, ensure_ascii=False)
     assert SAID not in text and "바람을 타고" not in text and "said" not in text and "reply" not in text
 

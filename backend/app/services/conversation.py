@@ -3,6 +3,7 @@
 - 보기 선택: 동화(tales.json)의 talk 대본으로 응답 (프론트 내장 대본과 동일)
 - 말·글 입력: 아이 문장 → mask_pii → safety.check(입력 기준) → 보기와 맞으면 대본, 아니면 _generate → safety.check(출력 기준)
 - 중간에 막히거나 실패하면(전체 TURN_TIMEOUT초) 그림 선택으로 돌아감
+- 아이 한 명의 하루 생성 호출이 prompts.DAILY_GENERATION_LIMIT에 닿으면 _generate를 부르지 않고 그림 선택으로 돌아감
 - 저장·로그에는 마스킹된 문장만 남긴다. 프롬프트·응답 검사·안전 기준은 prompts.py
 - Content Safety에 막히면 conv["safety"]에 차단 여부와 범주만 남긴다 (문장은 남기지 않음)
 """
@@ -71,7 +72,28 @@ def _safe(conv: dict, text: str, max_severity: int, deadline: float) -> bool:
     return allowed
 
 
-def take_turn(conv: dict, choice_index: int | None, text: str | None) -> dict:
+def generated_on(conversations: list[dict], day: str) -> int:
+    """그 아이의 대화들에서 day(한국 날짜)에 한 생성 호출 수."""
+    return sum(c.get("generated", {}).get(day, 0) for c in conversations)
+
+
+def _may_generate(conv: dict, day: str, generated_today: int) -> bool:
+    """비용 제한(prompts.DAILY_GENERATION_LIMIT). 키가 없으면 호출 자체가 없으므로 세지 않는다.
+    부를 수 있으면 이번 호출을 conv["generated"][day]에 세고, 넘었으면 conv["limited"]를 늘린다."""
+    if not config.settings.openai_enabled:
+        return True
+    if generated_today >= prompts.DAILY_GENERATION_LIMIT:
+        conv["limited"] = conv.get("limited", 0) + 1
+        log.info("하루 생성 호출 제한에 걸림")
+        return False
+    counts = conv.setdefault("generated", {})
+    counts[day] = counts.get(day, 0) + 1
+    return True
+
+
+def take_turn(conv: dict, choice_index: int | None, text: str | None,
+              day: str = "", generated_today: int = 0) -> dict:
+    """day: 오늘(한국 날짜), generated_today: 그 아이가 오늘 이미 한 생성 호출 수 (generated_on)."""
     topic_id, turn = conv["topic_id"], conv["turn"]
     talk = tales()[topic_id]["talk"]
     choices = _choices_for(topic_id, turn)
@@ -83,6 +105,8 @@ def take_turn(conv: dict, choice_index: int | None, text: str | None) -> dict:
             return {"fallback": True, "choices": choices}
         choice_index = _match_text(masked, choices)
         if choice_index is None:
+            if not _may_generate(conv, day, generated_today):
+                return {"fallback": True, "choices": choices, "limited": True}
             ask = talk["ask"] if turn == 0 else talk["again"]
             generated = _generate(topic_id, masked, ask, deadline)
             if generated is None or not _safe(conv, generated[0], prompts.OUTPUT_MAX_SEVERITY, deadline):

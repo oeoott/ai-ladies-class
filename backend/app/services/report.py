@@ -41,7 +41,8 @@ def build_report(store: Store, child_id: str, start: date, end: date) -> Report:
         story=StoryStat(conversations=len(conversations), turns=len(turns), voice_turns=voice,
                         voice_ratio=_ratio(voice, len(turns)),
                         fallback_to_picture=sum(c.get("fallbacks", 0) for c in conversations),
-                        blocked=sum(1 for c in conversations for s in c.get("safety", []) if s.get("blocked"))),
+                        blocked=sum(1 for c in conversations for s in c.get("safety", []) if s.get("blocked")),
+                        generation_limited=sum(c.get("limited", 0) for c in conversations)),
         sticker_days=[d for d in store.sticker_days(child_id) if str(start) <= d <= str(end)],
     )
 

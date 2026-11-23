@@ -53,8 +53,10 @@ def empty_counts() -> dict:
 
 def new_conversation(walk: Walk) -> dict:
     # safety: Content Safety 차단 기록 {blocked, categories}. 문장은 남기지 않는다.
+    # generated: 한국 날짜별 Azure OpenAI 생성 호출 수, limited: 하루 제한에 걸린 수 (비용 제한)
     return {"id": new_id(), "child_id": walk.child_id, "walk_id": walk.id, "topic_id": walk.topic_id,
-            "turn": 0, "turns": [], "safety": [], "fallbacks": 0, "ended_by": None, "created_at": now_iso()}
+            "turn": 0, "turns": [], "safety": [], "fallbacks": 0, "generated": {}, "limited": 0,
+            "ended_by": None, "created_at": now_iso()}
 
 
 class Store(ABC):

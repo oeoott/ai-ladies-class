@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from ..content import tales
-from ..deps import conversation_or_404, open_walk
+from ..deps import conversation_or_404, open_walk, today_kst
 from ..schemas import StoryActionPick, StoryLesson, TaleAction, TalkStart, TalkTurnIn, TalkTurnOut, TopicId, Walk
 from ..services import conversation
 from ..store import Store, get_store
@@ -40,10 +40,14 @@ def talk_turn(body: TalkTurnIn, conv: dict = Depends(conversation_or_404), store
     if body.choice_index is None and not body.text:
         raise HTTPException(422, "보기 번호나 문장이 필요해요.")
 
-    result = conversation.take_turn(conv, body.choice_index, body.text)
+    # 비용 제한: 말·글 입력일 때만 그 아이의 오늘 생성 호출 수를 센다 (보기 선택은 생성하지 않음)
+    day = str(today_kst())
+    used = (conversation.generated_on(store.list_conversations(conv["child_id"]), day)
+            if body.choice_index is None and body.text else 0)
+    result = conversation.take_turn(conv, body.choice_index, body.text, day=day, generated_today=used)
     if result.get("fallback"):
         conv["fallbacks"] = conv.get("fallbacks", 0) + 1  # 리포트의 '그림으로 돌아간 수'
-        store.save_conversation(conv)  # 차단 기록(safety)과 횟수만 바뀐다
+        store.save_conversation(conv)  # 차단 기록(safety)과 횟수(fallbacks, generated, limited)만 바뀐다
         return TalkTurnOut(reply="그림으로 골라 볼까요?", finished=False, choices=result["choices"],
                            fallback_to_picture=True)
 
