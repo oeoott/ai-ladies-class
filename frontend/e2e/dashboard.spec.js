@@ -55,9 +55,10 @@ test('학습 대시보드: 기간 이름과 요일·달력 묶음의 가운데�
   const [stats, calendar, nameBox, chartBox] = await Promise.all([
     dashboard.locator('.dashboard-stats').boundingBox(), dashboard.locator('.dashboard-calendar').boundingBox(),
     name.boundingBox(), chart.boundingBox()])
-  const pair = { x: stats.x, width: calendar.x + calendar.width - stats.x }
-  expect(Math.abs(centre(nameBox) - centre(pair))).toBeLessThanOrEqual(1)
-  expect(calendar.x - (stats.x + stats.width)).toBeLessThanOrEqual(16) // numbers right beside the calendar
+  expect(Math.abs(centre(nameBox) - centre(calendar))).toBeLessThanOrEqual(1) // the calendar itself is centred
+  const gap = calendar.x - (stats.x + stats.width)
+  expect(gap).toBeGreaterThanOrEqual(0) // numbers on the left of the calendar
+  expect(gap).toBeLessThanOrEqual(16) // right beside it
   expect(chartBox.height).toBeGreaterThanOrEqual(76)
   expect(chartBox.height).toBeLessThanOrEqual(86)
   expect(await noScroll()).toBeLessThanOrEqual(0)
