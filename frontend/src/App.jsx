@@ -443,11 +443,16 @@ function App() {
   useEffect(() => {
     settleChild()
   }, [settleChild])
-  function signOut() {
+  // Sign-out and account deletion both forget the account and start a new device id.
+  // After deletion the panel stays open to show that it worked.
+  function forgetAccount() {
     signOutDevice()
     guardianRef.current = loadGuardian()
     setGuardianState(guardianRef.current)
     setLinkNote('')
+  }
+  function signOut() {
+    forgetAccount()
     setPanel('guardian')
   }
   const onExpired = useCallback(() => {
@@ -594,6 +599,7 @@ function App() {
         onEnsureChild={settleChild}
         onSignOut={signOut}
         onExpired={onExpired}
+        onDeleted={forgetAccount}
       />
     </NarrationVoice.Provider>
   )

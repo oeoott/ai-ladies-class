@@ -115,6 +115,8 @@ export function createApi(base, { send = globalThis.fetch, timeout = TIMEOUT_MS,
     updateChild: (token, childId, { nickname, character }) => (
       call('PATCH', `/children/${id(childId)}`, { body: { nickname, character }, token })
     ),
+    // 탈퇴: 비밀번호를 다시 보내 확인한다. 틀리면 403
+    deleteAccount: (token, password) => call('DELETE', '/me', { body: { password }, token }),
     linkDevice: (token, childId, deviceChildId) => (
       call('POST', `/children/${id(childId)}/link-device`, { body: { deviceChildId }, token })
     ),

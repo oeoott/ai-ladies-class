@@ -133,6 +133,25 @@ class Store(ABC):
         중간에 실패해도 다시 부르면 남은 것만 옮긴다(같은 id로 덮어써서 중복 없음).
         스티커는 프로필에 같은 날짜가 있으면 하나만 남긴다. 옮긴 수를 돌려준다."""
 
+    # --- 탈퇴 (services/account.py가 순서대로 부른다. 없는 문서를 지워도 오류 없이 넘어간다) ---
+    @abstractmethod
+    def delete_child_records(self, child_id: str) -> dict:
+        """그 아이 id의 산책·학습 기록·대화·스티커를 지운다. 지운 수 {walks, attempts, conversations, stickers}."""
+
+    @abstractmethod
+    def list_device_claims(self, child_id: str) -> list[dict]:
+        """그 아이 프로필에 연결한 기기 연결 문서들."""
+
+    @abstractmethod
+    def delete_device_claim(self, device_child_id: str) -> None: ...
+
+    @abstractmethod
+    def delete_child(self, guardian_id: str, child_id: str) -> None: ...
+
+    @abstractmethod
+    def delete_guardian(self, guardian_id: str, email: str) -> None:
+        """이메일 문서를 먼저, 보호자 계정을 마지막에 지운다."""
+
     # --- 대화 ---
     @abstractmethod
     def create_conversation(self, walk: Walk, friend: str = "lion") -> dict: ...
@@ -289,6 +308,41 @@ class MemoryStore(Store):
                     moved["stickers"] += 1
                 del self.stickers[key]
         return moved
+
+    # --- 탈퇴 ---
+    def delete_child_records(self, child_id):
+        with self._lock:
+            walks = [k for k, w in self.walks.items() if w.child_id == child_id]
+            convs = [k for k, c in self.conversations.items() if c["child_id"] == child_id]
+            stickers = [k for k, s in self.stickers.items() if s["child_id"] == child_id]
+            attempts = sum(1 for a in self.attempts if a["child_id"] == child_id)
+            for k in walks:
+                del self.walks[k]
+            for k in convs:
+                del self.conversations[k]
+            for k in stickers:
+                del self.stickers[k]
+            self.attempts = [a for a in self.attempts if a["child_id"] != child_id]
+        return {"walks": len(walks), "attempts": attempts, "conversations": len(convs), "stickers": len(stickers)}
+
+    def list_device_claims(self, child_id):
+        return [copy.deepcopy(c) for c in self.device_links.values() if c["child_id"] == child_id]
+
+    def delete_device_claim(self, device_child_id):
+        self.device_links.pop(device_child_id, None)
+
+    def delete_child(self, guardian_id, child_id):
+        with self._lock:
+            child = self.children.get(child_id)
+            if child and child["guardian_id"] == guardian_id:
+                del self.children[child_id]
+
+    def delete_guardian(self, guardian_id, email):
+        with self._lock:
+            email = normalize_email(email)
+            if self.guardian_emails.get(email) == guardian_id:
+                del self.guardian_emails[email]
+            self.guardians.pop(guardian_id, None)
 
     # --- 스티커 ---
     def give_sticker(self, child_id, day):

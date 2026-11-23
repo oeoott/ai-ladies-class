@@ -5,7 +5,7 @@ import { GuardianGate } from './GuardianGate.jsx'
 import React, { useId, useLayoutEffect, useRef, useState } from 'react'
 import { FriendStudio } from './FriendStudio.jsx'
 import { Icon, MenuRow } from './PanelIcon.jsx'
-import { GuardianAccountInfo, GuardianDashboard, GuardianSignIn, PeriodToggle } from './GuardianAccount.jsx'
+import { GuardianAccountInfo, GuardianDashboard, GuardianDeleteAccount, GuardianSignIn, PeriodToggle } from './GuardianAccount.jsx'
 import { dashboardTitle } from './dashboard.js'
 import './panels.css'
 
@@ -211,6 +211,7 @@ const titles = {
   signupAccount: '보호자 계정 만들기',
   guardianAccount: '보호자 계정',
   dashboard: '학습 대시보드',
+  deleteAccount: '계정과 기록 삭제',
 }
 
 export function Panel(props) {
@@ -245,6 +246,7 @@ function PanelDialog({
   onEnsureChild,
   onSignOut,
   onExpired,
+  onDeleted,
 }) {
   const [dashboardKind, setDashboardKind] = useState('week')
   const greeting = '안녕! 나는 ' + (friend.familiar || friend.name) + '야. 나랑 같이 놀자!'
@@ -376,7 +378,8 @@ function PanelDialog({
         <GuardianSignIn key={mode} signup={mode === 'signupAccount'} onOpen={onOpen} onSignedIn={onSignedIn}
           initialEmail={guardian.email || recipient || signupEmail} />
       )}
-      {mode === 'guardianAccount' && <GuardianAccountInfo {...{ guardian, linkNote, onSignOut }} />}
+      {mode === 'guardianAccount' && <GuardianAccountInfo {...{ guardian, linkNote, onSignOut, onOpen }} />}
+      {mode === 'deleteAccount' && <GuardianDeleteAccount {...{ guardian, onOpen, onDeleted, onExpired }} />}
       {mode === 'dashboard' && <GuardianDashboard key={dashboardKind} {...{ guardian, onOpen, onExpired, onEnsureChild }} kind={dashboardKind} />}
       {(mode === 'account' || mode === 'signup') && (
         <Account

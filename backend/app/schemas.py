@@ -316,3 +316,22 @@ class TalkStartIn(BaseModel):
     """대화 시작 (선택). 숲 친구 id만 받는다. 아이가 붙인 별명은 받지 않는다."""
     model_config = ConfigDict(extra="forbid")
     character: Character = "lion"
+
+
+class DeleteAccountIn(BaseModel):
+    """탈퇴: 비밀번호를 다시 받아 확인한다."""
+    model_config = ConfigDict(extra="forbid")
+    password: str = Field(min_length=1, max_length=128)
+
+
+class DeletedCounts(BaseModel):
+    children: int = 0
+    device_links: int = 0
+    walks: int = 0
+    attempts: int = 0
+    conversations: int = 0
+    stickers: int = 0
+
+
+class DeleteAccountOut(BaseModel):
+    deleted: DeletedCounts

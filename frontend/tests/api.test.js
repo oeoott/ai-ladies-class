@@ -36,3 +36,13 @@ test('api returns null on error status, network failure and timeout', async () =
   }) })
   assert.equal(await slow.completeWalk('w1'), null)
 })
+
+test('account deletion sends the password again with the guardian token', async () => {
+  const calls = []
+  const online = createApi('http://server', { send: async (url, options) => {
+    calls.push({ url, method: options.method, auth: options.headers.Authorization, body: JSON.parse(options.body) })
+    return { ok: false, status: 403, json: async () => ({ detail: '비밀번호를 확인해 주세요.' }) }
+  } })
+  assert.deepEqual(await online.deleteAccount('tok', 'secret-pass'), { status: 403, data: null })
+  assert.deepEqual(calls, [{ url: 'http://server/me', method: 'DELETE', auth: 'Bearer tok', body: { password: 'secret-pass' } }])
+})

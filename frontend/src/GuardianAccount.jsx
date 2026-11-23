@@ -72,8 +72,8 @@ export function GuardianSignIn({ signup, initialEmail, onOpen, onSignedIn }) {
   )
 }
 
-// --- 보호자 계정 (로그인 후): 이메일, 아이 별명, 로그아웃 ---
-export function GuardianAccountInfo({ guardian, linkNote, onSignOut }) {
+// --- 보호자 계정 (로그인 후): 이메일, 아이 별명, 로그아웃, 계정과 기록 삭제 ---
+export function GuardianAccountInfo({ guardian, linkNote, onSignOut, onOpen }) {
   return (
     <>
       {linkNote && <p className="forest-panel-note" role="status">{linkNote}</p>}
@@ -84,6 +84,59 @@ export function GuardianAccountInfo({ guardian, linkNote, onSignOut }) {
         아이 별명 <strong>{guardian.profileName || '불러오고 있어요'}</strong>
       </p>
       <button type="button" className="forest-panel-secondary" onClick={onSignOut}>로그아웃</button>
+      <button type="button" className="forest-panel-secondary" onClick={() => onOpen('deleteAccount')}>계정과 기록 삭제</button>
+    </>
+  )
+}
+
+// --- 계정과 기록 삭제: 비밀번호를 다시 받는 확인 단계 한 번 ---
+// After it works the account is gone (App.jsx forgets it and makes a new device id); this panel shows the result.
+export function GuardianDeleteAccount({ guardian, onOpen, onDeleted, onExpired }) {
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [done, setDone] = useState(false)
+  const id = useId()
+  const alive = useRef(true)
+  useEffect(() => () => { alive.current = false }, [])
+
+  async function submit(event) {
+    event.preventDefault()
+    if (busy) return
+    if (!password) return setError('비밀번호를 입력해 주세요.')
+    setBusy(true)
+    const result = await api.deleteAccount(guardian.token, password)
+    if (!alive.current) return
+    setBusy(false)
+    if (result.data) {
+      setDone(true)
+      return onDeleted()
+    }
+    if (result.status === 401) return onExpired()
+    if (result.status === 403) return setError('비밀번호를 확인해 주세요.')
+    setError(OFFLINE)
+  }
+
+  if (done) {
+    return (
+      <>
+        <p className="forest-panel-note" role="status">계정과 학습 기록을 지웠어요.</p>
+        <button type="button" className="forest-panel-secondary" onClick={() => onOpen('guardian')}>설정으로 돌아가기</button>
+      </>
+    )
+  }
+  return (
+    <>
+      <p className="forest-panel-note">보호자 계정과 아이의 학습 기록을 모두 지워요. 지운 기록은 되돌릴 수 없어요.</p>
+      <form className="forest-account-form" noValidate onSubmit={submit}>
+        <Field id={id + '-password'} label="비밀번호" error={error} type="password" autoComplete="current-password"
+          maxLength={128} value={password} onChange={(event) => { setPassword(event.target.value); setError('') }} />
+        {error && <p className="forest-field-error" role="alert">{error}</p>}
+        <button type="submit" className="forest-panel-primary" disabled={busy}>
+          {busy ? '지우고 있어요' : '삭제하기'}
+        </button>
+      </form>
+      <button type="button" className="forest-panel-link" onClick={() => onOpen('guardianAccount')}>취소</button>
     </>
   )
 }

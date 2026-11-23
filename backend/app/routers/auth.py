@@ -2,8 +2,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from ..deps import require_guardian
-from ..schemas import AuthOut, Credentials, GuardianOut
-from ..services import auth
+from ..schemas import AuthOut, Credentials, DeleteAccountIn, DeleteAccountOut, GuardianOut
+from ..services import account, auth
 from ..store import Store, get_store
 
 router = APIRouter(prefix="/auth", tags=["보호자 계정"])
@@ -42,3 +42,12 @@ def login(body: Credentials, store: Store = Depends(get_store)):
 @me_router.get("/me", response_model=GuardianOut)
 def me(guardian: dict = Depends(require_guardian)):
     return GuardianOut(id=guardian["id"], email=guardian["email"])
+
+
+@me_router.delete("/me", response_model=DeleteAccountOut)
+def delete_me(body: DeleteAccountIn, guardian: dict = Depends(require_guardian), store: Store = Depends(get_store)):
+    """탈퇴. 비밀번호를 다시 확인하고 계정·아이·모든 기록·이메일·기기 연결을 지운다.
+    틀린 비밀번호는 403 (401은 '다시 로그인'이라 구분한다). 중간에 실패하면 다시 부르면 된다."""
+    if not auth.verify_password(body.password, guardian["password_hash"]):
+        raise HTTPException(403, "비밀번호를 확인해 주세요.")
+    return DeleteAccountOut(deleted=account.delete_account(store, guardian))

@@ -221,6 +221,32 @@ class CosmosStore(Store):
             self._delete("stickers", doc["id"], from_child_id)
         return moved
 
+    # --- 탈퇴 (문서마다 지운다. 앞선 시도에서 지운 문서는 _delete가 넘어간다) ---
+    def delete_child_records(self, child_id):
+        deleted = {}
+        for name in ("walks", "attempts", "conversations", "stickers"):
+            docs = self._query(name, partition_key=child_id)
+            for doc in docs:
+                self._delete(name, doc["id"], child_id)
+            deleted[name] = len(docs)
+        return deleted
+
+    def list_device_claims(self, child_id):
+        return self._query("device_links", child_id=child_id)  # 기기 id 파티션이라 교차 파티션
+
+    def delete_device_claim(self, device_child_id):
+        self._delete("device_links", device_child_id, device_child_id)
+
+    def delete_child(self, guardian_id, child_id):
+        self._delete("children", child_id, guardian_id)
+
+    def delete_guardian(self, guardian_id, email):
+        email = normalize_email(email)
+        link = self._read("guardian_emails", email, email)
+        if link and link["guardian_id"] == guardian_id:
+            self._delete("guardian_emails", email, email)
+        self._delete("guardians", guardian_id, guardian_id)
+
     # --- 스티커 ---
     def give_sticker(self, child_id, day):
         doc = {"id": sticker_id(child_id, day), "child_id": child_id, "day": str(day), "created_at": now_iso()}
