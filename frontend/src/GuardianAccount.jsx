@@ -84,7 +84,9 @@ export function GuardianAccountInfo({ guardian, linkNote, onSignOut, onOpen }) {
         아이 별명 <strong>{guardian.profileName || '불러오고 있어요'}</strong>
       </p>
       <button type="button" className="forest-panel-secondary" onClick={onSignOut}>로그아웃</button>
-      <button type="button" className="forest-panel-secondary" onClick={() => onOpen('deleteAccount')}>계정과 기록 삭제</button>
+      <div className="forest-account-delete">
+        <button type="button" className="forest-panel-link" onClick={() => onOpen('deleteAccount')}>계정과 기록 삭제</button>
+      </div>
     </>
   )
 }

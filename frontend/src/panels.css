@@ -355,6 +355,16 @@
 .forest-panel .forest-account-form .studio-group {
   margin: 4px 0 0;
 }
+/* 보호자 계정: '계정과 기록 삭제'는 로그아웃 아래 얇은 선 너머에 작은 글자 링크로 둔다 (터치 48px 이상). */
+.forest-panel .forest-account-delete {
+  margin-top: 24px;
+  padding-top: 8px;
+  border-top: 1px solid var(--panel-border);
+}
+.forest-panel .forest-account-delete .forest-panel-link {
+  min-height: 48px;
+  font-size: 14px;
+}
 /* Learning dashboard (GuardianAccount.jsx). One column in both orientations, three parts split by a thin line.
    Only sizes already used in this file: activity title 16px bold (.forest-panel-row-title), item 15px
    (.forest-stamp-list li), big number 17px bold (input text), notes 13-14px muted (.forest-panel-row-detail). */

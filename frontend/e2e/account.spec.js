@@ -20,7 +20,18 @@ test('계정과 기록 삭제: 비밀번호를 한 번 더 확인하고, 지우�
   const before = await readStored(page, GUARDIAN_KEY)
   const deviceBefore = await page.evaluate((key) => localStorage.getItem(key), DEVICE_KEY)
 
-  await account.getByRole('button', { name: '계정과 기록 삭제' }).click()
+  // 로그아웃 stays the secondary button; the delete link sits under a thin line, 24px or more below, 48px tall.
+  const logout = account.getByRole('button', { name: '로그아웃' })
+  const remove = account.getByRole('button', { name: '계정과 기록 삭제' })
+  await expect(logout).toHaveClass('forest-panel-secondary')
+  await expect(remove).toHaveClass('forest-panel-link')
+  const [out, del, line] = await Promise.all([logout.boundingBox(), remove.boundingBox(),
+    account.locator('.forest-account-delete').boundingBox()])
+  expect(line.y - (out.y + out.height)).toBeGreaterThanOrEqual(24)
+  expect(del.y).toBeGreaterThan(line.y)
+  expect(del.height).toBeGreaterThanOrEqual(48)
+
+  await remove.click()
   const confirm = page.getByRole('dialog', { name: '계정과 기록 삭제' })
   await expect(confirm).toContainText('지운 기록은 되돌릴 수 없어요.')
   await confirm.getByLabel('비밀번호').fill('not-the-password')
