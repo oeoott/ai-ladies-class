@@ -9,7 +9,7 @@ import { forestTales } from './forestTales.js'
 import { emotions, tales } from './content.js'
 import { StoryVoice, voiceSupported } from './StoryVoice.jsx'
 import { api } from './api.js'
-import { friendFace, localReply, saidLine, startServerTalk, takeTurn, talkReply, usableTalk } from './storyTalk.js'
+import { friendFace, localReply, namedTalk, saidLine, startServerTalk, takeTurn, talkReply, usableTalk } from './storyTalk.js'
 
 // Emotion words and clues, from the shared emotions.json (one entry per emotion).
 // LEGACY_TALK keeps the conversation that sessions saved before the picture books still use;
@@ -675,7 +675,8 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
   const friendName = friend?.name || '숲속 친구'
   const inDialogue = ['question', 'reply', 'extra', 'ending'].includes(phase)
   // A conversation saved before the picture books existed keeps its original replies.
-  const conversation = outcome ? tale.talk : fact
+  // {친구} in the questions becomes the friend's name, as on the tale pages.
+  const conversation = namedTalk(outcome ? tale.talk : fact, friend?.familiar || friendName)
   const isExtra = phase === 'extra'
   const isEnding = phase === 'ending'
   const lines = isEnding ? conversation.ends : conversation.replies
@@ -693,7 +694,7 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
   useEffect(() => {
     if (phase !== 'question' || !serverTalk || talkId) return
     let current = true
-    startServerTalk(api, walkId).then((id) => {
+    startServerTalk(api, walkId, undefined, friend?.id).then((id) => {
       if (current && id && latest.current.state.phase === 'question') latest.current.update({ talkId: id })
     })
     return () => {

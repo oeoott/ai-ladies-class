@@ -97,7 +97,9 @@ export function createApi(base, { send = globalThis.fetch, timeout = TIMEOUT_MS,
     recordMirror: (walkId, { mode, score = null, skipped = false }) => post(`/lessons/mirror/walks/${id(walkId)}/record`, { mode, score, skipped }),
     // 학습 3 동화·대화 (대화 시작·턴은 화면이 답을 기다린다)
     pickStoryAction: (walkId, actionIndex) => post(`/lessons/story/walks/${id(walkId)}/action`, { actionIndex }),
-    startTalk: (walkId) => learn({ path: `/lessons/story/walks/${id(walkId)}/talk` }, { reply: true }),
+    startTalk: (walkId, { character } = {}) => (
+      learn({ path: `/lessons/story/walks/${id(walkId)}/talk`, body: character ? { character } : {} }, { reply: true })
+    ),
     sendTalkTurn: (conversationId, { choiceIndex = null, text = null, inputMode = 'picture' }) => (
       learn({ path: `/conversations/${id(conversationId)}/turn`, body: { choiceIndex, text, inputMode } }, { reply: true })
     ),

@@ -310,3 +310,9 @@ class LinkDeviceOut(BaseModel):
 
 class TodayWalk(BaseModel):
     walk: Walk | None  # 오늘(한국 날짜) 진행 중인 가장 최근 산책, 없으면 null
+
+
+class TalkStartIn(BaseModel):
+    """대화 시작 (선택). 숲 친구 id만 받는다. 아이가 붙인 별명은 받지 않는다."""
+    model_config = ConfigDict(extra="forbid")
+    character: Character = "lion"

@@ -11,8 +11,17 @@ export function usableTalk(state, phase, serverTalk, turns = talkTurns) {
   return serverTalk && state.talkId && (turns.get(state.talkId) ?? turn) === turn ? state.talkId : null
 }
 
-export async function startServerTalk(api, walkId, turns = talkTurns) {
-  const talk = await api.startTalk(walkId)
+// The talk questions (ask, again) may name the friend with {친구}, like the tale pages.
+// Only the questions: the friend's own lines never contain it, so a server reply and the script agree.
+export function namedTalk(talk, name) {
+  if (!talk) return talk
+  const named = (text) => (typeof text === 'string' ? text.replaceAll('{친구}', name) : text)
+  return { ...talk, ask: named(talk.ask), again: named(talk.again) }
+}
+
+// character: the forest friend's id (lion, rabbit, bear); the server names the friend from it.
+export async function startServerTalk(api, walkId, turns = talkTurns, character = undefined) {
+  const talk = await api.startTalk(walkId, character ? { character } : {})
   if (!talk?.conversationId) return null
   turns.set(talk.conversationId, 0)
   return talk.conversationId

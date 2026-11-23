@@ -51,11 +51,11 @@ def empty_counts() -> dict:
     return {"walks": 0, "attempts": 0, "conversations": 0, "stickers": 0, "stickers_merged": 0}
 
 
-def new_conversation(walk: Walk) -> dict:
+def new_conversation(walk: Walk, friend: str = "lion") -> dict:
     # safety: Content Safety 차단 기록 {blocked, categories}. 문장은 남기지 않는다.
     # generated: 한국 날짜별 Azure OpenAI 생성 호출 수, limited: 하루 제한에 걸린 수 (비용 제한)
     return {"id": new_id(), "child_id": walk.child_id, "walk_id": walk.id, "topic_id": walk.topic_id,
-            "turn": 0, "turns": [], "safety": [], "fallbacks": 0, "generated": {}, "limited": 0,
+            "friend": friend, "turn": 0, "turns": [], "safety": [], "fallbacks": 0, "generated": {}, "limited": 0,
             "ended_by": None, "created_at": now_iso()}
 
 
@@ -135,7 +135,7 @@ class Store(ABC):
 
     # --- 대화 ---
     @abstractmethod
-    def create_conversation(self, walk: Walk) -> dict: ...
+    def create_conversation(self, walk: Walk, friend: str = "lion") -> dict: ...
 
     @abstractmethod
     def get_conversation(self, conversation_id: str) -> dict | None: ...
@@ -245,8 +245,8 @@ class MemoryStore(Store):
         return latest(a for a in self.list_attempts(child_id) if a["kind"] == "placement")
 
     # --- 대화 ---
-    def create_conversation(self, walk):
-        conv = new_conversation(walk)
+    def create_conversation(self, walk, friend="lion"):
+        conv = new_conversation(walk, friend)
         self.conversations[conv["id"]] = conv
         return copy.deepcopy(conv)
 

@@ -3,7 +3,7 @@
 import { expect, test } from '@playwright/test'
 import { BACKEND, ONLINE } from './ports.js'
 import {
-  STORAGE_KEY, friendFace, friendLine, newDeviceId, planVoice, prepare, quote, readStored, replyButton, replyButtons,
+  STORAGE_KEY, friendFace, friendLine, named, newDeviceId, planVoice, prepare, quote, readStored, replyButton, replyButtons,
   saidNote, seedSession, startWalk, tales, talkTitle, topicIds, voiceNote,
 } from './helpers.js'
 
@@ -102,7 +102,7 @@ test('말로 답했는데 fallbackToPicture가 오면 보기 버튼으로 돌아
   await page.getByRole('button', { name: '말로 답하기' }).click()
   await expect(voiceNote(page)).toHaveText('잘 들었어요. 이번에는 하고 싶은 말을 눌러 보아요.')
   await expect(page.getByRole('heading', { name: talkTitle() })).toBeVisible()
-  await expect(page.locator('.edu-prompt')).toHaveText(talk.ask)
+  await expect(page.locator('.edu-prompt')).toHaveText(named(talk.ask))
   await expect(replyButtons(page)).toHaveCount(talk.choices.length)
   for (const choice of await replyButtons(page).all()) await expect(choice).toBeEnabled()
   expect(turns[0]).toEqual({ choice_index: null, text: HEARD, input_mode: 'voice' })

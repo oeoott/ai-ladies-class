@@ -24,6 +24,8 @@ export function withFriend(name) {
   return name + (code >= 0 && code < 11172 && code % 28 !== 0 ? '과' : '와')
 }
 export const talkTitle = (name = '라온') => withFriend(name) + ' 나누는 이야기'
+// Talk questions name the friend with {친구} (라온 → 라온이), as the screen shows them.
+export const named = (text, familiar = '라온이') => text.replaceAll('{친구}', familiar)
 
 // --- Fakes installed before the app loads ---
 // Narration: recordings and the speech voice "finish" at once, so the scenes that move on after the
@@ -218,7 +220,7 @@ export const quote = (line) => '“' + line + '”'
 export async function finishTalk(page, topicId, extraChoice = 0) {
   const talk = tales[topicId].talk
   await button(page, '조금 더 이야기하기').click()
-  await expect(page.locator('.edu-prompt')).toHaveText(talk.again)
+  await expect(page.locator('.edu-prompt')).toHaveText(named(talk.again))
   await replyButton(page, talk.extra[extraChoice]).click()
   await expect(heading(page, '이야기를 마쳤어요')).toBeVisible()
   await expect(friendLine(page)).toHaveText(talk.ends[extraChoice])

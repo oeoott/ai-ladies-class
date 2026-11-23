@@ -169,8 +169,8 @@ class CosmosStore(Store):
         return latest(self._query("attempts", partition_key=child_id, kind="placement"))
 
     # --- 대화 ---
-    def create_conversation(self, walk):
-        conv = new_conversation(walk)
+    def create_conversation(self, walk, friend="lion"):
+        conv = new_conversation(walk, friend)
         self._c["conversations"].create_item(conv)
         return conv
 

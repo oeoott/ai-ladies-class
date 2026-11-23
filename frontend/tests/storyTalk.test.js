@@ -3,7 +3,7 @@ import test from 'node:test'
 import { createApi } from '../src/api.js'
 import { emptySession, readSession } from '../src/session.js'
 import { forestTales } from '../src/forestTales.js'
-import { FACES, friendFace, localReply, saidLine, startServerTalk, takeTurn, talkReply, usableTalk } from '../src/storyTalk.js'
+import { FACES, friendFace, localReply, namedTalk, saidLine, startServerTalk, takeTurn, talkReply, usableTalk } from '../src/storyTalk.js'
 
 const date = '2026-11-22'
 const talk = forestTales.joy.talk
@@ -131,4 +131,31 @@ test('every talk line has one of the drawable faces', () => {
     assert.equal(tale.talk.endExpressions.length, tale.talk.ends.length, id)
     for (const face of [...tale.talk.replyExpressions, ...tale.talk.endExpressions]) assert.ok(FACES.includes(face), id + ' ' + face)
   }
+})
+
+test('{친구} names the friend in the talk questions only, never in what anyone says', () => {
+  for (const [id, tale] of Object.entries(forestTales)) {
+    for (const line of [...tale.talk.choices, ...tale.talk.replies, ...tale.talk.extra, ...tale.talk.ends]) {
+      assert.ok(!line.includes('{친구}'), id + ': ' + line)
+    }
+    const named = namedTalk(tale.talk, '보리')
+    assert.ok(!named.ask.includes('{친구}') && !named.again.includes('{친구}'), id)
+    assert.deepEqual(named.replies, tale.talk.replies, id)
+  }
+  assert.equal(namedTalk({ ask: '{친구}에게 말해요.', again: '또 {친구}와?' }, '라온이').ask, '라온이에게 말해요.')
+  assert.equal(namedTalk({ ask: '{친구}에게 말해요.', again: '또 {친구}와?' }, '라온이').again, '또 라온이와?')
+})
+
+test('the server talk starts with the forest friend id only', async () => {
+  const sent = []
+  const api = createApi('http://server', {
+    send: async (url, init) => {
+      sent.push(JSON.parse(init.body))
+      return { ok: true, status: 200, json: async () => ({ conversation_id: 'c9', ask: '', choices: [] }) }
+    },
+    learner: () => ({ childId: 'kid', token: null }),
+  })
+  assert.equal(await startServerTalk(api, 'w1', new Map(), 'rabbit'), 'c9')
+  assert.equal(await startServerTalk(api, 'w1', new Map()), 'c9')
+  assert.deepEqual(sent, [{ character: 'rabbit' }, {}])
 })

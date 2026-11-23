@@ -80,7 +80,7 @@ tests/
 | 학습 2 | POST | /lessons/mirror/walks/{id}/record | {mode: camera·touch, score: null, skipped} 기록 |
 | 학습 3 | GET | /lessons/story/{topic} | 동화 3장, 상황, 행동 보기 |
 | 학습 3 | POST | /lessons/story/walks/{id}/action | 행동 선택 → 결과 장면 |
-| 학습 3 | POST | /lessons/story/walks/{id}/talk | 대화 시작 → 질문, 보기 |
+| 학습 3 | POST | /lessons/story/walks/{id}/talk | 대화 시작 → 질문, 보기. 본문(선택) `{character: lion·rabbit·bear}`로 질문의 `{친구}`를 정함 (없으면 라온). 아이가 붙인 별명은 받지 않음 |
 | 학습 3 | POST | /conversations/{id}/turn | {choice_index 또는 text, input_mode} → 친구 답과 표정 `expression`(joy·surprise·sad·anger·neutral, 그림 선택으로 돌아갈 때는 null) (2턴 후 종료) |
 | 학습 3 | POST | /conversations/{id}/end | 대화 종료 버튼 |
 
@@ -274,7 +274,8 @@ Cosmos의 id와 고유 키는 **논리 파티션 안에서만** 중복을 막습
 **`tales.json` (동화 한 항목)**
 - [ ] 동화 3장: `title`, `pages` 3개(`{친구}` 자리에 친구 이름이 들어감), `situation`, `explanation`
 - [ ] 행동 2개 `actions`: `label`, `expression`(그 뒤 친구 표정 id 또는 `neutral`), `title`, `event`, `line`
-- [ ] 대화 대본 `talk`: `ask`, `choices` 2개와 `replies` 2개(같은 순서), `again`, `extra` 2개와 `ends` 2개. 답하는 사람이 대화 제목의 친구와 맞는지 확인합니다.
+- [ ] 대화 대본 `talk`: `ask`, `choices` 2개와 `replies` 2개(같은 순서), `again`, `extra` 2개와 `ends` 2개. 답하는 사람은 대화 제목의 숲 친구('라온과 나누는 이야기')이고, `choices`·`extra`는 아이가 친구에게 하는 말(반말)입니다.
+- [ ] 친구 이름이 필요하면 질문(`ask`·`again`)에만 `{친구}`를 씁니다(라온이·보리·두리로 바뀜). 대사(`choices`·`replies`·`extra`·`ends`)에는 쓰지 않습니다 (테스트가 확인함)
 - [ ] 대사별 친구 표정: `replyExpressions`(replies와 같은 수), `endExpressions`(ends와 같은 수). 값은 joy·surprise·sad·anger·neutral 중 하나 (테스트가 확인함)
 
 **그림 파일 (`frontend/public/art/`, WebP)**

@@ -10,7 +10,7 @@
 import logging
 
 from .. import config
-from ..content import tales
+from ..content import named, tales
 from . import azure, prompts, safety
 
 log = logging.getLogger("maeum.conversation")
@@ -107,7 +107,7 @@ def take_turn(conv: dict, choice_index: int | None, text: str | None,
         if choice_index is None:
             if not _may_generate(conv, day, generated_today):
                 return {"fallback": True, "choices": choices, "limited": True}
-            ask = talk["ask"] if turn == 0 else talk["again"]
+            ask = named(talk["ask"] if turn == 0 else talk["again"], conv.get("friend"))
             generated = _generate(topic_id, masked, ask, deadline)
             if generated is None or not _safe(conv, generated[0], prompts.OUTPUT_MAX_SEVERITY, deadline):
                 return {"fallback": True, "choices": choices}

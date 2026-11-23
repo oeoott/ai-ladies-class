@@ -1,9 +1,9 @@
 """학습 3: 동화 속 역할놀이 + 친구와 대화."""
 from fastapi import APIRouter, Depends, HTTPException
 
-from ..content import tales
+from ..content import named, tales
 from ..deps import conversation_or_404, open_walk, today_kst
-from ..schemas import StoryActionPick, StoryLesson, TaleAction, TalkStart, TalkTurnIn, TalkTurnOut, TopicId, Walk
+from ..schemas import StoryActionPick, StoryLesson, TaleAction, TalkStart, TalkStartIn, TalkTurnIn, TalkTurnOut, TopicId, Walk
 from ..services import conversation
 from ..store import Store, get_store
 
@@ -27,10 +27,12 @@ def pick_action(body: StoryActionPick, walk: Walk = Depends(open_walk), store: S
 
 
 @router.post("/lessons/story/walks/{walk_id}/talk", response_model=TalkStart)
-def start_talk(walk: Walk = Depends(open_walk), store: Store = Depends(get_store)):
-    conv = store.create_conversation(walk)
+def start_talk(body: TalkStartIn | None = None, walk: Walk = Depends(open_walk), store: Store = Depends(get_store)):
+    """body는 선택. 숲 친구 id(character)로 질문의 {친구}와 AI 응답의 친구 이름을 정한다 (없으면 라온)."""
+    character = (body or TalkStartIn()).character
+    conv = store.create_conversation(walk, friend=character)
     ask, choices = conversation.opening(walk.topic_id)
-    return TalkStart(conversation_id=conv["id"], ask=ask, choices=choices)
+    return TalkStart(conversation_id=conv["id"], ask=named(ask, character), choices=choices)
 
 
 @router.post("/conversations/{conversation_id}/turn", response_model=TalkTurnOut)
@@ -60,7 +62,7 @@ def talk_turn(body: TalkTurnIn, conv: dict = Depends(conversation_or_404), store
         return TalkTurnOut(reply=result["reply"], finished=True, expression=result.get("expression"))
     store.save_conversation(conv)
     talk = tales()[conv["topic_id"]]["talk"]
-    return TalkTurnOut(reply=result["reply"], finished=False, ask=talk["again"], choices=talk["extra"],
+    return TalkTurnOut(reply=result["reply"], finished=False, ask=named(talk["again"], conv.get("friend")), choices=talk["extra"],
                        expression=result.get("expression"))
 
 
