@@ -14,3 +14,7 @@ node_modules/
 __pycache__/
 .pytest_cache/
 dist/
+
+# 브라우저 테스트 결과 (npm run e2e)
+frontend/test-results/
+frontend/playwright-report/
