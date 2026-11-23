@@ -13,6 +13,18 @@ uvicorn app.main:app --reload      # http://localhost:8000/docs
 pytest -q
 ```
 
+### 발표용 시연 데이터
+
+```sh
+python scripts/seed_demo.py --serve                       # 메모리: 데이터를 채운 서버를 바로 띄움 (끄면 사라짐)
+python scripts/seed_demo.py --password '<시연 비밀번호>'   # Cosmos: STORE=cosmos와 COSMOS_* 설정으로 저장
+```
+
+- 시연 계정 `demo@example.com`, 아이 '하늘'(라온). 메모리 시연 비밀번호는 `maeum-demo-2026`, Cosmos는 `--password`(또는 `DEMO_PASSWORD`)로 꼭 정합니다.
+- 최근 2주: 산책 10번(스티커 10장)과 복습 1번, 네 감정, 정답·오답·단서, 카메라 사용·안 함, 보기·말로 답하기, 그림으로 돌아간 대화 2번. 오늘은 비워 둬서 시연에서 직접 산책할 수 있습니다. 학습 대시보드에서는 슬픔이 '더 연습해 볼 감정'으로 나옵니다.
+- 다시 실행하면 같은 이메일의 시연 계정을 탈퇴와 같은 방법으로 모두 지우고 새로 만듭니다.
+- 앱에서 보려면 프론트를 서버 주소로 켜고, 보호자 설정 → 보호자 계정 → 로그인합니다. 그 기기의 기록도 시연 아이에게 연결됩니다.
+
 ## 구조
 
 ```
@@ -41,11 +53,14 @@ app/
     auth.py          비밀번호 해시(scrypt), 로그인 토큰(JWT)
     account.py       탈퇴: 지우는 순서 (보호자 계정을 맨 마지막에)
     report.py        리포트 집계 (숫자만, 대화 문장 없음)
+scripts/
+  seed_demo.py       발표용 시연 데이터 (보호자 하나, 아이 하나, 최근 2주)
 tests/
   conftest.py        모든 테스트를 키 없음 + 외부 호출 차단 상태로 시작
   test_walk_flow.py
   test_auth.py       가입·로그인, 아이 프로필, 다른 보호자 접근 403
   test_delete_account.py  탈퇴 (쓰기마다 한 번 실패시킨 뒤 다시 하기)
+  test_seed_demo.py  시연 데이터 숫자, 다시 실행하면 바뀜
   test_report.py     레벨 테스트·리포트
   test_devices.py    기기 기록 연결 (실패 후 다시 하기, 다른 집 막기), 산책 재개
   test_store.py      저장소 테스트 (메모리·Cosmos 가짜 클라이언트에 같은 테스트)
