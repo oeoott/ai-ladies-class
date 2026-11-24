@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { defineConfig } from '@playwright/test'
 import { BACKEND, OFFLINE, ONLINE, PORTS } from './e2e/ports.js'
 
-// backend/.venv from the setup in CLAUDE.md. Quoted: the project path can contain spaces.
+// backend/.venv (made with `python -m venv .venv` in backend/). Quoted: the project path can contain spaces.
 const venv = process.platform === 'win32' ? '../backend/.venv/Scripts/python.exe' : '../backend/.venv/bin/python'
 const python = JSON.stringify(fileURLToPath(new URL(venv, import.meta.url)))
 const ipad = {
