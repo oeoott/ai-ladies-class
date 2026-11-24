@@ -216,16 +216,25 @@
   font-size: 14px;
   line-height: 1.6;
 }
-/* 보호자 스티커판: '모은 스티커 N장' 한 줄, 그 아래 5칸(좁으면 4칸) 격자. 칸마다 스티커 그림, 감정 이름(15px),
-   날짜(13px, muted)를 위아래로. 칸 테두리 없음. 많으면 격자 안에서만 스크롤. 보여 주기만 한다. */
+/* 보호자 스티커판: 아이 스티커판(styles.css .sticker-book, .stamp)과 같은 크림색 판과 둥근 스티커.
+   '모은 스티커 N장' 한 줄, 그 아래 판에 5칸씩(좁으면 4칸) 스티커와 날짜(13px, muted). 남는 칸은 발자국 빈칸.
+   많으면 판 안에서만 스크롤. 보여 주기만 한다. 색은 styles.css의 스티커판 색 그대로. */
 .forest-panel .forest-sticker-count {
-  margin: 0 0 14px;
+  margin: 0 0 12px;
+}
+.forest-panel .forest-sticker-board {
+  margin: 0 0 20px;
+  padding: 18px 10px 16px;
+  border: 1px solid #c2a776;
+  border-radius: 22px 26px 23px 21px;
+  background: #fff6df;
+  box-shadow: 0 3px 0 #dabf89;
 }
 .forest-panel .forest-sticker-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 16px 8px;
-  margin: 0 0 20px;
+  gap: 14px 6px;
+  margin: 0;
   padding: 4px 0;
   max-height: 40dvh;
   overflow-y: auto;
@@ -234,17 +243,27 @@
 .forest-panel .forest-sticker-grid li {
   display: grid;
   justify-items: center;
-  gap: 4px;
+  align-content: start;
+  gap: 6px;
   text-align: center;
 }
-.forest-panel .forest-sticker-name {
-  color: var(--panel-ink);
-  font-size: 15px;
-  font-weight: 650;
+.forest-panel .forest-sticker-grid .stamp {
+  width: 60px;
+  font-size: 13px;
+}
+.forest-panel .forest-sticker-grid .stamp svg {
+  width: 22px;
+  height: 22px;
 }
 .forest-panel .forest-sticker-grid time {
   color: var(--panel-muted);
   font-size: 13px;
+}
+.forest-panel .forest-sticker-empty {
+  margin: 14px 0 0;
+  color: var(--panel-muted);
+  font-size: 15px;
+  text-align: center;
 }
 @media (max-width: 420px) {
   .forest-panel .forest-sticker-grid {

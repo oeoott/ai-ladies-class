@@ -3,6 +3,7 @@ import { GuidePortrait } from './PaintedFriend.jsx'
 import { FriendLook } from './FriendLook.jsx'
 import { GuardianGate } from './GuardianGate.jsx'
 import React, { useId, useLayoutEffect, useRef, useState } from 'react'
+import { PawPrint, Sprout } from 'lucide-react'
 import { FriendStudio } from './FriendStudio.jsx'
 import { Icon, MenuRow } from './PanelIcon.jsx'
 import { GuardianAccountInfo, GuardianDashboard, GuardianDeleteAccount, GuardianSignIn, PeriodToggle } from './GuardianAccount.jsx'
@@ -116,30 +117,37 @@ function shortDate(value) {
   return Number.isNaN(date.getTime()) ? String(value) : `${date.getMonth() + 1}월 ${date.getDate()}일`
 }
 
-// Stickers are only shown here (no review from this panel): a count line, then a grid, newest first.
-// Many stickers scroll inside the grid only.
+// Stickers are only shown here (no review from this panel). Like the child's sticker board: a cream board
+// with round stickers (.stamp.filled), five a row, newest first, the date under each. The last row is filled
+// with empty paw slots. Many stickers scroll inside the board only.
+const BOARD_ROW = 5
 function RecordBook({ records, onOpen }) {
   const ordered = [...records].sort((a, b) => String(b.date).localeCompare(String(a.date)))
+  const empty = Math.max(BOARD_ROW, Math.ceil(ordered.length / BOARD_ROW) * BOARD_ROW) - ordered.length
   return (
     <>
-      {ordered.length ? (
-        <>
-          <p className="dashboard-line forest-sticker-count">모은 스티커 <strong>{ordered.length}장</strong></p>
-          <ul className="forest-sticker-grid" aria-label="모은 스티커">
-            {ordered.map((record, index) => (
-              <li key={record.date + '-' + index} aria-label={record.topic + ' 스티커 · ' + dateLabel(record.date)}>
-                <span className="forest-stamp-icon" aria-hidden="true">
-                  <Icon name="leaf" size={20} />
-                </span>
-                <span className="forest-sticker-name" aria-hidden="true">{record.topic}</span>
-                <time dateTime={record.date} aria-hidden="true">{shortDate(record.date)}</time>
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : (
-        <p className="forest-panel-note">아직 모은 스티커가 없어요.</p>
+      {ordered.length > 0 && (
+        <p className="dashboard-line forest-sticker-count">모은 스티커 <strong>{ordered.length}장</strong></p>
       )}
+      <div className="forest-sticker-board">
+        <ul className="forest-sticker-grid" aria-label="모은 스티커">
+          {ordered.map((record, index) => (
+            <li key={record.date + '-' + index} aria-label={record.topic + ' 스티커 · ' + dateLabel(record.date)}>
+              <span className="stamp filled" aria-hidden="true">
+                <Sprout />
+                <span>{record.topic}</span>
+              </span>
+              <time dateTime={record.date} aria-hidden="true">{shortDate(record.date)}</time>
+            </li>
+          ))}
+          {Array.from({ length: empty }, (_, i) => (
+            <li key={'empty-' + i} aria-hidden="true">
+              <span className="stamp"><PawPrint /></span>
+            </li>
+          ))}
+        </ul>
+        {ordered.length === 0 && <p className="forest-sticker-empty">아직 모은 스티커가 없어요.</p>}
+      </div>
       <button className="forest-panel-secondary" type="button" onClick={() => onOpen('guardian')}>
         설정으로 돌아가기
       </button>
