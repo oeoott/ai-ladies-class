@@ -113,6 +113,17 @@ svg {
     object-position: 18% center;
   }
 }
+/* 학습 3 동화만 차분하게: the original tale picture is toned down (a new calm picture in
+   public/art/tale/ is shown as drawn), and a soft cream wash sits behind the card so the text stands out.
+   Existing token colour only, nothing moves. */
+.tale-landscape.is-original {
+  filter: saturate(0.65) contrast(0.9);
+}
+.immersive-scene:has(> .tale-landscape) .edu-paper {
+  box-shadow:
+    var(--forest-card-shadow),
+    0 0 110px 70px color-mix(in srgb, var(--forest-card) 58%, transparent);
+}
 .scene-content {
   grid-area: 2 / 1;
   min-width: 0;

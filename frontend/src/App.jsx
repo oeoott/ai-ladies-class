@@ -7,6 +7,7 @@ import { JourneyProgress } from './JourneyProgress.jsx'
 import { CardPortrait, LevelTest, Lesson } from './Activities.jsx'
 import { Panel } from './Panels.jsx'
 import { api, setLearner } from './api.js'
+import { taleBackground } from './taleBackgrounds.js'
 import {
   childNickname,
   choseProfile,
@@ -178,6 +179,7 @@ function App() {
   const [session, setSession] = useState(startSession)
   const [hasEntered, setHasEntered] = useState(false)
   const [panel, setPanel] = useState(null)
+  const [missingArt, setMissingArt] = useState(() => new Set())
   const [storageUnavailable, setStorageUnavailable] = useState(false)
   const [recipient, setRecipient] = useState(() => {
     try {
@@ -219,7 +221,11 @@ function App() {
   const showEntrance = !hasEntered || page === 'welcome'
   const learning = !showEntrance && (page === 'lesson' || page === 'placement')
   const inTale = page === 'lesson' && session.step === 2
-  const landscape = inTale ? 'art/tale-' + topic.id + '.webp' : 'art/forest-gate.webp'
+  // Lesson 3: the scene's own picture when it exists in public/art/tale/, otherwise the tale's original
+  // (a missing file fails to load once and is remembered for this visit).
+  const tale = inTale ? taleBackground(topic.id, session.activity?.step === 2 ? session.activity : null) : null
+  const originalTale = Boolean(tale) && missingArt.has(tale.src)
+  const landscape = !tale ? 'art/forest-gate.webp' : originalTale ? tale.fallback : tale.src
   const finished = session.records.some((r) => r.date === session.day)
   const patch = useCallback((values) => setSession((current) => ({ ...current, ...values })), [])
   const sessionRef = useRef(session)
@@ -496,9 +502,12 @@ function App() {
           tabIndex="-1"
         >
           <img
-            className={'scene-landscape' + (inTale ? ' tale-landscape' : '')}
+            className={'scene-landscape' + (tale ? ' tale-landscape' : '') + (originalTale ? ' is-original' : '')}
             src={asset(landscape)}
             alt=""
+            onError={() => {
+              if (tale && landscape === tale.src) setMissingArt((missing) => new Set(missing).add(tale.src))
+            }}
           />
           {page === 'lesson' && <JourneyProgress friend={friend} step={session.step} />}
           <NarrationActive.Provider value={!panel}>
