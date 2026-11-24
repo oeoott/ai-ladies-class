@@ -18,3 +18,6 @@ dist/
 # 브라우저 테스트 결과 (npm run e2e)
 frontend/test-results/
 frontend/playwright-report/
+
+# 배경 그림 원본(PNG)은 저장소 밖 ../art-source/tale-backgrounds/에 둔다
+new-tales/

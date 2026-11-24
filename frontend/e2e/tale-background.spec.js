@@ -7,7 +7,7 @@ import { prepare, seedSession, topicIds } from './helpers.js'
 const NAMES = { joy: 'joy-yard', sad: 'sad-shore', surprise: 'surprise-garden', anger: 'anger-playground' }
 
 for (const topicId of topicIds) {
-  test(`${topicId} 동화는 모든 장면에 같은 새 그림을 보정 없이 쓴다`, async ({ page }) => {
+  test(`${topicId} 동화는 모든 장면에 같은 새 그림을 쓴다 (B안: 살짝 부드럽게)`, async ({ page }) => {
     await seedSession(page, { topicId, activity: { phase: 'book', bookPage: 0 } })
     await prepare(page)
     await page.goto(OFFLINE)
@@ -16,7 +16,7 @@ for (const topicId of topicIds) {
     const src = new RegExp(`art/tale/${NAMES[topicId]}\\.webp$`)
     await expect(landscape).toHaveAttribute('src', src)
     await page.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth > 0))
-    expect(await landscape.evaluate((el) => getComputedStyle(el).filter)).toBe('none')
+    expect(await landscape.evaluate((el) => getComputedStyle(el).filter)).toBe('brightness(0.95) saturate(0.95)')
     expect(await page.locator('.edu-paper').evaluate((el) => getComputedStyle(el).boxShadow)).toContain('110px 70px')
 
     // Same picture after choosing an action (outcome and talk scenes).

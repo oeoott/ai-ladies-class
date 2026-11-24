@@ -295,6 +295,55 @@
 [data-world='anger'][data-outcome='0'] .tale-cast {
   transform: translateX(11%);
 }
+
+/* ---- Layout with the 15% larger friend and props ----
+   The friend now reaches about 66% of the diorama's width, so every prop sits to its right (67-105%),
+   stacked up and down where they would touch, and nothing overlaps: friend, props and card
+   (e2e tale-look measures the visible part of each picture). Only these overlaps are part of a scene:
+   the pinwheel on its pole, the letter going into the postbox, the butterfly hiding under the leaf (2장)
+   and sitting on the flower, the friend sitting on the mat. Where moving was not enough, that scene's
+   props are smaller (`scale`): the pinwheel, the fallen lighthouse blocks, the turn leaves. */
+.tale-diorama[data-world] .tale-cast {
+  transform: none; /* 화남 결과 1: the friend no longer steps right, it would cover the slide steps */
+}
+/* 기쁨: pinwheel and postbox on the ground, the letter flies above them. */
+.tale-diorama[data-world='joy'] .tale-postbox { left: 63%; }
+.tale-diorama[data-world='joy'] .tale-windmill { left: 52%; }
+.tale-diorama[data-world='joy'] .tale-pinwheel { width: 10cqi; height: 10cqi; }
+.tale-diorama[data-world='joy'][data-page='1'] .tale-plane { left: 45%; bottom: 54%; }
+.tale-diorama[data-world='joy'][data-page='2'] .tale-plane { left: 46%; bottom: 60%; }
+.tale-diorama[data-world='joy'][data-page='3'] .tale-plane { left: 51%; bottom: 63%; }
+.tale-diorama[data-world='joy'][data-outcome='0'] .tale-plane { left: 61%; bottom: 64%; }
+.tale-diorama[data-world='joy'][data-outcome='1'] .tale-plane { left: 70%; bottom: 18%; } /* into the postbox */
+/* 슬픔: the lighthouse right of the friend. 1장: the lamp is already on top, still unlit (2장 lights it).
+   Fallen (3장, 상황, 행동, 쉬기 결과): the pieces lie in two rows, a little smaller. */
+.tale-diorama[data-world='sad'] .block-base { left: 45%; }
+.tale-diorama[data-world='sad'] .block-middle { left: 50%; }
+.tale-diorama[data-world='sad'] .block-cap { left: 54%; }
+.tale-diorama[data-world='sad'] .tale-beacon { left: 59%; bottom: 36.5%; transform: none; }
+.tale-diorama[data-world='sad'][data-page='3']:not([data-outcome='1']) :is(.tale-block, .tale-beacon) { scale: 0.75; }
+.tale-diorama[data-world='sad'][data-page='3']:not([data-outcome='1']) .block-base { left: 36%; bottom: 6.5%; }
+.tale-diorama[data-world='sad'][data-page='3']:not([data-outcome='1']) .block-middle { left: 38%; bottom: -4.5%; }
+.tale-diorama[data-world='sad'][data-page='3']:not([data-outcome='1']) .block-cap { left: 70%; bottom: -4.5%; }
+.tale-diorama[data-world='sad'][data-page='3']:not([data-outcome='1']) .tale-beacon { left: 88.5%; bottom: 14.5%; transform: rotate(-70deg); }
+/* 놀람: flower and stones on the ground, the leaf above them, the butterfly higher still. */
+.tale-diorama[data-world='surprise'] .tale-flower { left: 40%; }
+.tale-diorama[data-world='surprise'] .tale-rocks { left: 70%; }
+.tale-diorama[data-world='surprise'] .tale-leaf { left: 60%; bottom: 34%; }
+.tale-diorama[data-world='surprise'][data-page='2'] .tale-butterfly { left: 66%; bottom: 48%; }
+.tale-diorama[data-world='surprise'][data-page='3'] .tale-butterfly { bottom: 69%; }
+.tale-diorama[data-world='surprise'][data-outcome='0'] .tale-butterfly { left: 66%; bottom: 68%; }
+.tale-diorama[data-world='surprise'][data-outcome='1'] .tale-butterfly { left: 42%; bottom: 27%; } /* on the flower */
+.tale-diorama[data-world='surprise'][data-outcome='1'] .tale-leaf { left: 63%; bottom: 51%; }
+/* 화남: the cloud steps a little higher on the right, 구름이 above them, the turn leaves smaller below. */
+.tale-diorama[data-world='anger'] .tale-cloud-stairs { left: 41%; bottom: 15%; }
+.tale-diorama[data-world='anger'][data-page='2'] .tale-cloud-friend { left: 56%; bottom: 54%; }
+.tale-diorama[data-world='anger'][data-page='3'] .tale-cloud-friend { left: 60%; bottom: 47%; }
+.tale-diorama[data-world='anger'][data-outcome] .tale-cloud-friend { left: 72%; bottom: 53%; }
+.tale-diorama[data-world='anger'] .tale-turn { scale: 0.64; }
+.tale-diorama[data-world='anger'] .tale-turn.first-leaf { left: 40%; bottom: -6%; }
+.tale-diorama[data-world='anger'] .tale-turn.next-leaf { left: 60%; bottom: -7%; }
+
 @media (prefers-reduced-motion: no-preference) {
   .tale-plane,
   .tale-butterfly,
@@ -334,4 +383,36 @@
   .tale-diorama {
     height: clamp(142px, 24vh, 206px);
   }
+}
+
+/* Background, plan B: the tale picture a little softer, a soft round cream glow behind the friend and the
+   props, and a faint shadow under the friend's feet, so they stand out. Token colours only, nothing moves.
+   (The cream wash behind the card is in styles.css.) */
+.tale-landscape {
+  filter: brightness(0.95) saturate(0.95);
+}
+.tale-diorama::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  inset: -14% -8% -6% -16%;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--forest-card) 72%, transparent) 0%,
+    color-mix(in srgb, var(--forest-card) 46%, transparent) 55%,
+    transparent 100%
+  );
+}
+.tale-cast::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 14%;
+  right: 22%;
+  bottom: 0;
+  height: 8%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--forest-ink) 24%, transparent), transparent);
 }

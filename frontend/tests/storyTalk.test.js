@@ -161,8 +161,8 @@ test('the server talk starts with the forest friend id only', async () => {
 })
 
 test('the friend moves once when the face changes at a result, a reply or the ending, not while it stays', () => {
-  const walk = (steps) => steps.reduce((acc, [phase, face]) => {
-    const next = nextEmote(acc.last, phase, face)
+  const walk = (steps) => steps.reduce((acc, [phase, face, page = null]) => {
+    const next = nextEmote(acc.last, phase, face, page)
     if (next && next !== acc.last) acc.moves.push(next.feeling + '@' + phase)
     return { last: next, moves: acc.moves }
   }, { last: null, moves: [] }).moves
@@ -174,7 +174,13 @@ test('the friend moves once when the face changes at a result, a reply or the en
     ['neutral@consequence', 'surprise@reply', 'joy@ending'])
   // back to choosing another action: the next result moves again
   assert.deepEqual(walk([['consequence', 'sad'], ['act', 'sad'], ['consequence', 'sad']]), ['sad@consequence', 'sad@consequence'])
-  assert.equal(nextEmote(null, 'book', 'joy'), null)
+  assert.equal(nextEmote(null, 'book', 'joy', 0), null)
+  assert.equal(nextEmote(null, 'book', 'joy', 1), null)
   const kept = nextEmote(null, 'consequence', 'anger')
   assert.equal(nextEmote(kept, 'question', 'anger'), kept)
+  // 화남: the angry face first shows on page 3 (moves once), stays in 상황 (no repeat); choosing an action clears
+  assert.deepEqual(walk([['book', 'neutral', 0], ['book', 'neutral', 1], ['book', 'anger', 2], ['situation', 'anger'],
+    ['act', 'anger'], ['consequence', 'neutral']]), ['anger@book', 'neutral@consequence'])
+  // opening at 상황 (page 3 skipped, e.g. after a reload): the movement happens there
+  assert.deepEqual(walk([['situation', 'anger']]), ['anger@situation'])
 })

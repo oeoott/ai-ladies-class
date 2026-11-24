@@ -88,12 +88,14 @@ export async function takeTurn(api, { talkId, phase, choice = null, text = null,
 }
 
 // Whole-body feeling movement of the friend in the tale (PaintedFriend `emote`). It plays once when the face
-// changes at an action's result, the friend's reply or the ending, and not again while the face stays the
-// same (the listening scenes in between keep it). Other scenes (pages, choosing an action) clear it.
+// changes at the tale's third page (bookPage 2, where the feeling happens) or the scene after it, an action's
+// result, the friend's reply or the ending, and not again while the face stays the same (the listening
+// scenes in between keep it). Pages 1-2 and choosing an action clear it, so the next result moves again.
 // Returns { feeling, phase, key } or null; PaintedFriend does not move for 'neutral'.
-export const EMOTE_PHASES = ['consequence', 'reply', 'ending']
-export function nextEmote(previous, phase, expression) {
-  if (!EMOTE_PHASES.includes(phase)) return phase === 'question' || phase === 'extra' ? previous : null
+export const EMOTE_PHASES = ['situation', 'consequence', 'reply', 'ending']
+export function nextEmote(previous, phase, expression, bookPage = null) {
+  const moves = EMOTE_PHASES.includes(phase) || (phase === 'book' && bookPage === 2)
+  if (!moves) return phase === 'question' || phase === 'extra' ? previous : null
   if (previous?.feeling === expression) return previous
   return { feeling: expression, phase, key: phase + '-' + expression }
 }

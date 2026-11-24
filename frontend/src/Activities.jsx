@@ -739,11 +739,12 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
   const face = inDialogue && outcome ? friendFace(state, phase, conversation, outcome.expression) : null
   if (face) ({ expression, gesture } = face)
   if (listening) gesture = 'listen'
-  // One whole-body movement for the new face at a result, the friend's reply or the ending (storyTalk.nextEmote).
+  // One whole-body movement for the new face at page 3 / the scene, a result, the friend's reply or the
+  // ending (storyTalk.nextEmote).
   const [emote, setEmote] = useState(null)
   useLayoutEffect(() => {
-    setEmote((previous) => nextEmote(previous, phase, expression))
-  }, [phase, expression])
+    setEmote((previous) => nextEmote(previous, phase, expression, phase === 'book' ? page : null))
+  }, [phase, expression, page])
   return (
     <Board
       title={title}

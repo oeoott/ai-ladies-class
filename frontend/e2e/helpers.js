@@ -238,3 +238,89 @@ export async function openGuardian(page) {
   await gate.getByRole('button', { name: '열기' }).click()
   await expect(dialog(page, '보호자 설정')).toBeVisible()
 }
+
+// --- Lesson 3 layout: where the friend, each prop and the card are drawn ---
+// Boxes are the visible (non-transparent) part of each picture on screen, not the element's box:
+// every prop and the friend picture has transparent margins. Hidden props (opacity 0 / display none) are left out.
+export async function taleBoxes(page) {
+  return page.evaluate(async () => {
+    const opaque = new Map()
+    async function alphaBox(url) { // [x0, y0, x1, y1] as fractions of the picture
+      if (opaque.has(url)) return opaque.get(url)
+      const img = new Image()
+      img.src = url
+      await img.decode()
+      const c = document.createElement('canvas')
+      c.width = img.naturalWidth
+      c.height = img.naturalHeight
+      const g = c.getContext('2d')
+      g.drawImage(img, 0, 0)
+      const { data } = g.getImageData(0, 0, c.width, c.height)
+      let x0 = c.width, y0 = c.height, x1 = 0, y1 = 0
+      for (let y = 0; y < c.height; y += 2) {
+        for (let x = 0; x < c.width; x += 2) {
+          if (data[(y * c.width + x) * 4 + 3] > 24) {
+            if (x < x0) x0 = x
+            if (x > x1) x1 = x
+            if (y < y0) y0 = y
+            if (y > y1) y1 = y
+          }
+        }
+      }
+      const box = [x0 / c.width, y0 / c.height, (x1 + 2) / c.width, (y1 + 2) / c.height]
+      opaque.set(url, { box, w: img.naturalWidth, h: img.naturalHeight })
+      return opaque.get(url)
+    }
+    const rect = (r) => ({ x: r.left, y: r.top, width: r.width, height: r.height })
+    // The drawn part of a background picture inside an element (size contain or 100% 100%, any position),
+    // mapped onto the element's on-screen box (which includes its transforms).
+    async function drawn(el) {
+      const cs = getComputedStyle(el)
+      const screen = el.getBoundingClientRect()
+      const url = (cs.backgroundImage.match(/url\("?(.*?)"?\)/) || [])[1]
+      if (!url) return rect(screen)
+      const { box, w, h } = await alphaBox(url)
+      const W = el.offsetWidth, H = el.offsetHeight
+      let dw = W, dh = H
+      if (cs.backgroundSize === 'contain') {
+        const s = Math.min(W / w, H / h)
+        dw = w * s
+        dh = h * s
+      }
+      const [px, py] = cs.backgroundPosition.split(' ').map((v) => (v.endsWith('%') ? parseFloat(v) / 100 : 0.5))
+      const ox = (W - dw) * px, oy = (H - dh) * py
+      const fx0 = (ox + box[0] * dw) / W, fx1 = (ox + box[2] * dw) / W
+      const fy0 = (oy + box[1] * dh) / H, fy1 = (oy + box[3] * dh) / H
+      return { x: screen.left + fx0 * screen.width, y: screen.top + fy0 * screen.height,
+        width: (fx1 - fx0) * screen.width, height: (fy1 - fy0) * screen.height }
+    }
+    const items = []
+    const head = document.querySelector('.tale-cast .edu-character-head')
+    const friendImage = document.querySelector('.tale-cast image')
+    const { box } = await alphaBox(friendImage.href.baseVal)
+    const f = head.getBoundingClientRect()
+    items.push({ name: 'friend', x: f.left + box[0] * f.width, y: f.top + box[1] * f.height,
+      width: (box[2] - box[0]) * f.width, height: (box[3] - box[1]) * f.height })
+    for (const el of document.querySelectorAll('.tale-props > span, .tale-props .tale-pinwheel')) {
+      const cs = getComputedStyle(el)
+      if (cs.display === 'none' || Number(cs.opacity) === 0 || el.offsetWidth === 0) continue
+      items.push({ name: [...el.classList].filter((c) => c !== 'tale-turn').join(' '), ...(await drawn(el)) })
+    }
+    return { card: rect(document.querySelector('.edu-paper').getBoundingClientRect()), items }
+  })
+}
+
+export const boxOverlap = (a, b) => Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x))
+  * Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y))
+
+// Overlapping pairs (area > 1px²) among the friend and the props.
+export function propOverlaps({ items }, allowed = () => false) {
+  const pairs = []
+  for (let i = 0; i < items.length; i++) {
+    for (let j = i + 1; j < items.length; j++) {
+      const area = boxOverlap(items[i], items[j])
+      if (area > 1 && !allowed(items[i].name, items[j].name)) pairs.push(`${items[i].name} × ${items[j].name}: ${Math.round(area)}`)
+    }
+  }
+  return pairs
+}

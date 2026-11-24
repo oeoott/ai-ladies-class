@@ -1,17 +1,34 @@
-// Lesson 3 look: the friend and props are 15% larger yet never touch the card, and the friend's one-time
-// feeling movement follows the face (moves at a result or reply, not while the face stays, none with
-// reduced motion). Server off.
+// Lesson 3 look: the friend and props are 15% larger, and nothing covers anything else in any tale scene
+// (friend, props, card; only the overlaps a scene is about are allowed), and the friend's one-time feeling
+// movement follows the face (none with reduced motion). Server off.
 import { expect, test } from '@playwright/test'
 import { OFFLINE } from './ports.js'
-import { prepare, seedSession, tales, topicIds } from './helpers.js'
+import { boxOverlap, prepare, propOverlaps, seedSession, taleBoxes, tales, topicIds } from './helpers.js'
 
+// Every lesson 3 scene: pages 1-3, the scene, choosing an action, then for each action its result and talk.
 const SCENES = [
-  ['page1', { phase: 'book', bookPage: 0 }], ['page3', { phase: 'book', bookPage: 2 }], ['act', { phase: 'act' }],
-  ['result1', { phase: 'consequence', branch: 0 }], ['result2', { phase: 'consequence', branch: 1 }],
-  ['reply2', { phase: 'reply', branch: 1, choice: 1 }],
+  ['1장', { phase: 'book', bookPage: 0 }], ['2장', { phase: 'book', bookPage: 1 }], ['3장', { phase: 'book', bookPage: 2 }],
+  ['상황', { phase: 'situation' }], ['행동 고르기', { phase: 'act' }],
+  ...[0, 1].flatMap((branch) => [
+    [`결과 ${branch + 1}`, { phase: 'consequence', branch }],
+    [`질문 ${branch + 1}`, { phase: 'question', branch }],
+    [`친구 답 ${branch + 1}`, { phase: 'reply', branch, choice: 0 }],
+    [`조금 더 ${branch + 1}`, { phase: 'extra', branch, choice: 0 }],
+    [`마무리 ${branch + 1}`, { phase: 'ending', branch, choice: 0, extraChoice: 0 }],
+  ]),
 ]
-const overlap = (a, b) => Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x))
-  * Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y))
+
+// Overlaps that are the scene itself.
+const afterChoice = (a, branch) => a.branch === branch && a.phase !== 'book' && a.phase !== 'situation' && a.phase !== 'act'
+function allowedOverlap(topicId, activity) {
+  const is = (a, b, x, y) => (a === x && b === y) || (a === y && b === x)
+  return (a, b) => (topicId === 'joy' && is(a, b, 'tale-windmill', 'tale-pinwheel')) // the pinwheel on its pole
+    || (topicId === 'joy' && afterChoice(activity, 1) && is(a, b, 'tale-postbox', 'tale-plane')) // the letter goes in
+    || (topicId === 'sad' && afterChoice(activity, 0) && is(a, b, 'friend', 'tale-mat')) // sitting on the mat
+    || (topicId === 'surprise' && activity.phase === 'book' && activity.bookPage === 1
+      && is(a, b, 'tale-leaf', 'tale-butterfly')) // hiding under the leaf
+    || (topicId === 'surprise' && afterChoice(activity, 1) && is(a, b, 'tale-flower', 'tale-butterfly')) // on the flower
+}
 
 async function open(page, topicId, activity) {
   await seedSession(page, { topicId, activity })
@@ -22,16 +39,14 @@ async function open(page, topicId, activity) {
 }
 
 for (const topicId of topicIds) {
-  test(`${topicId}: 친구와 소품은 15% 커도 카드와 겹치지 않는다`, async ({ page }) => {
-    for (const [, activity] of SCENES) {
+  test(`${topicId}: 친구·소품·카드가 어느 장면에서도 서로 겹치지 않는다 (친구·소품 15% 크게)`, async ({ page }) => {
+    test.setTimeout(120_000)
+    for (const [name, activity] of SCENES) {
       await open(page, topicId, activity)
       expect(await page.locator('.tale-cast').evaluate((el) => getComputedStyle(el).scale)).toBe('1.15')
-      const card = await page.locator('.edu-paper').boundingBox()
-      expect(overlap(await page.locator('.tale-cast .edu-portrait').boundingBox(), card)).toBe(0)
-      for (const prop of await page.locator('.tale-props > span').all()) {
-        if (await prop.evaluate((el) => getComputedStyle(el).opacity === '0')) continue
-        expect(overlap(await prop.boundingBox(), card)).toBe(0)
-      }
+      const boxes = await taleBoxes(page)
+      expect(propOverlaps(boxes, allowedOverlap(topicId, activity)), name).toEqual([])
+      expect(boxes.items.filter((item) => boxOverlap(item, boxes.card) > 1).map((item) => item.name), name).toEqual([])
       await page.evaluate(() => localStorage.clear())
     }
   })
@@ -72,4 +87,21 @@ test.describe('감정 몸 움직임', () => {
 test('동작 줄이기에서는 몸이 움직이지 않는다', async ({ page }) => {
   await open(page, 'sad', { phase: 'consequence', branch: 0 })
   expect(await page.locator('.tale-cast .edu-character-body').evaluate((el) => getComputedStyle(el).animationName)).toBe('none')
+})
+
+test.describe('감정 몸 움직임 (3장)', () => {
+  test.use({ reducedMotion: 'no-preference' })
+
+  test('화남 동화 3장에서 화난 표정이 처음 나올 때 한 번 움직이고, 상황 장면에서는 다시 움직이지 않는다', async ({ page }) => {
+    await open(page, 'anger', { phase: 'book', bookPage: 1 })
+    const body = page.locator('.tale-cast .edu-character-body')
+    await expect(body).not.toHaveAttribute('data-emote', /.*/)
+    await page.getByRole('button', { name: '다음 장', exact: true }).click()
+    await expect(body).toHaveAttribute('data-emote', 'anger')
+    await expect(body).toHaveAttribute('data-emote-now', 'true')
+    expect(await body.evaluate((el) => getComputedStyle(el).animationName)).toBe('edu-emote-anger')
+    await page.getByRole('button', { name: '장면 살펴보기' }).click()
+    await expect(body).toHaveAttribute('data-emote', 'anger')
+    await expect(body).not.toHaveAttribute('data-emote-now', /.*/)
+  })
 })
