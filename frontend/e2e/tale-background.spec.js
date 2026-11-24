@@ -1,37 +1,31 @@
-// Lesson 3 backgrounds: a scene picture in public/art/tale/ is used when it exists; otherwise the tale's
-// original picture is shown, toned down (.is-original). Server off.
-import { readFileSync } from 'node:fs'
+// Lesson 3 background: each tale shows its one picture (public/art/tale/) in every scene, as drawn,
+// with only the cream wash behind the card. Server off.
 import { expect, test } from '@playwright/test'
 import { OFFLINE } from './ports.js'
-import { prepare, seedSession } from './helpers.js'
+import { prepare, seedSession, topicIds } from './helpers.js'
 
-const picture = readFileSync(new URL('../public/art/original/tale-sad.webp', import.meta.url))
+const NAMES = { joy: 'joy-yard', sad: 'sad-shore', surprise: 'surprise-garden', anger: 'anger-playground' }
 
-async function open(page, activity) {
-  await seedSession(page, { topicId: 'joy', activity })
-  await prepare(page)
-  await page.goto(OFFLINE)
-  await page.getByRole('button', { name: '산책 이어가기' }).click()
-  return page.locator('.tale-landscape')
-}
+for (const topicId of topicIds) {
+  test(`${topicId} 동화는 모든 장면에 같은 새 그림을 보정 없이 쓴다`, async ({ page }) => {
+    await seedSession(page, { topicId, activity: { phase: 'book', bookPage: 0 } })
+    await prepare(page)
+    await page.goto(OFFLINE)
+    await page.getByRole('button', { name: '산책 이어가기' }).click()
+    const landscape = page.locator('.tale-landscape')
+    const src = new RegExp(`art/tale/${NAMES[topicId]}\\.webp$`)
+    await expect(landscape).toHaveAttribute('src', src)
+    await page.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth > 0))
+    expect(await landscape.evaluate((el) => getComputedStyle(el).filter)).toBe('none')
+    expect(await page.locator('.edu-paper').evaluate((el) => getComputedStyle(el).boxShadow)).toContain('110px 70px')
 
-test('장면 그림이 없으면 원본 동화 그림을 차분하게 보여 준다', async ({ page }) => {
-  await page.route('**/art/tale/*.webp', (route) => route.fulfill({ status: 404, body: '' }))
-  const landscape = await open(page, { phase: 'act' })
-  await expect(landscape).toHaveAttribute('src', /art\/tale-joy\.webp$/)
-  await expect(landscape).toHaveClass(/is-original/)
-  expect(await landscape.evaluate((el) => getComputedStyle(el).filter)).toBe('saturate(0.65) contrast(0.9)')
-})
-
-test('장면 그림을 넣으면 그 장면에 그대로 쓰인다 (행동 결과는 고른 행동의 그림)', async ({ page }) => {
-  const asked = []
-  await page.route('**/art/tale/*.webp', (route) => {
-    asked.push(new URL(route.request().url()).pathname.split('/').pop())
-    return route.fulfill({ status: 200, contentType: 'image/webp', body: picture })
+    // Same picture after choosing an action (outcome and talk scenes).
+    for (const step of ['다음 장', '다음 장', '장면 살펴보기', '내가 해 보기']) {
+      await page.getByRole('button', { name: step, exact: true }).click()
+    }
+    await page.getByRole('group', { name: '이야기 속에서 할 행동' }).getByRole('button').nth(1).click()
+    await expect(landscape).toHaveAttribute('src', src)
+    await page.getByRole('button', { name: '친구와 대화하기' }).click()
+    await expect(landscape).toHaveAttribute('src', src)
   })
-  const landscape = await open(page, { phase: 'consequence', branch: 1 })
-  await expect(landscape).toHaveAttribute('src', /art\/tale\/joy-post\.webp$/)
-  await expect(landscape).not.toHaveClass(/is-original/)
-  expect(await landscape.evaluate((el) => getComputedStyle(el).filter)).toBe('none')
-  expect(asked).toContain('joy-post.webp')
-})
+}

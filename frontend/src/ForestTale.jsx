@@ -68,7 +68,7 @@ const scenery = {
 // The story marks a child's choice with a lasting change to a pictured object.
 // The same outcome is described in the story text.
 export function TaleScene({ feeling, page, branch, active, children }) {
-  // A new emotion without its own props shows the tale picture only (art/tale-{id}.webp).
+  // A new emotion without its own props shows the tale picture only (taleBackgrounds.js).
   const Props = scenery[feeling] || (() => null)
   return (
     <figure className="edu-figure tale-figure">

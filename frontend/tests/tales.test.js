@@ -3,6 +3,7 @@ import { access, readFile } from 'node:fs/promises'
 import test from 'node:test'
 import { forestTales } from '../src/forestTales.js'
 import { topics } from '../src/session.js'
+import { taleBackground } from '../src/taleBackgrounds.js'
 
 test('every learning topic has a WebP emotion card', async () => {
   for (const prefix of ['', 'girl-']) {
@@ -18,7 +19,7 @@ test('every learning topic has a WebP emotion card', async () => {
 test('every daily emotion opens an illustrated tale with two playable outcomes', async () => {
   for (const { id } of topics) {
     const tale = forestTales[id]
-    await access(new URL('../public/art/tale-' + id + '.webp', import.meta.url))
+    await access(new URL('../public/' + taleBackground(id), import.meta.url))
     assert.ok(tale.title && tale.pages.length === 3 && tale.pages.every(Boolean), id)
     assert.ok(tale.situation && tale.explanation, id)
     assert.equal(tale.actions.length, 2, id)

@@ -316,7 +316,7 @@ Cosmos의 id와 고유 키는 **논리 파티션 안에서만** 중복을 막습
 
 **그림 파일 (`frontend/public/art/`, WebP)**
 - [ ] 감정 카드 `cards/{id}.webp`, `cards/girl-{id}.webp` (테스트가 확인함)
-- [ ] 동화 그림 `tale-{id}.webp` (테스트가 확인함)
+- [ ] 동화 배경 `public/art/tale/{id}-{장소}.webp` (1536×1024) 1장과 `frontend/src/taleBackgrounds.js`에 이름 한 줄 (테스트가 확인함)
 - [ ] 학습 1 장면 `practice/{id}-before.webp`, `practice/{id}-after.webp`
 
 **없어도 동작하지만 넣으면 좋은 것 (코드)**

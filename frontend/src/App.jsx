@@ -179,7 +179,6 @@ function App() {
   const [session, setSession] = useState(startSession)
   const [hasEntered, setHasEntered] = useState(false)
   const [panel, setPanel] = useState(null)
-  const [missingArt, setMissingArt] = useState(() => new Set())
   const [storageUnavailable, setStorageUnavailable] = useState(false)
   const [recipient, setRecipient] = useState(() => {
     try {
@@ -221,11 +220,8 @@ function App() {
   const showEntrance = !hasEntered || page === 'welcome'
   const learning = !showEntrance && (page === 'lesson' || page === 'placement')
   const inTale = page === 'lesson' && session.step === 2
-  // Lesson 3: the scene's own picture when it exists in public/art/tale/, otherwise the tale's original
-  // (a missing file fails to load once and is remembered for this visit).
-  const tale = inTale ? taleBackground(topic.id, session.activity?.step === 2 ? session.activity : null) : null
-  const originalTale = Boolean(tale) && missingArt.has(tale.src)
-  const landscape = !tale ? 'art/forest-gate.webp' : originalTale ? tale.fallback : tale.src
+  // Lesson 3: the tale's one background picture for every scene (taleBackgrounds.js).
+  const landscape = inTale ? taleBackground(topic.id) : 'art/forest-gate.webp'
   const finished = session.records.some((r) => r.date === session.day)
   const patch = useCallback((values) => setSession((current) => ({ ...current, ...values })), [])
   const sessionRef = useRef(session)
@@ -502,12 +498,9 @@ function App() {
           tabIndex="-1"
         >
           <img
-            className={'scene-landscape' + (tale ? ' tale-landscape' : '') + (originalTale ? ' is-original' : '')}
+            className={'scene-landscape' + (inTale ? ' tale-landscape' : '')}
             src={asset(landscape)}
             alt=""
-            onError={() => {
-              if (tale && landscape === tale.src) setMissingArt((missing) => new Set(missing).add(tale.src))
-            }}
           />
           {page === 'lesson' && <JourneyProgress friend={friend} step={session.step} />}
           <NarrationActive.Provider value={!panel}>
