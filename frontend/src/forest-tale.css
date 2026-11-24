@@ -19,6 +19,16 @@
   display: grid;
   align-items: end;
 }
+/* The friend and the props 15% larger than the diorama box: the most that still keeps clear of the card
+   in landscape and portrait (e2e tale-size checks overlap 0). `scale` leaves each prop's own transform alone. */
+.tale-cast {
+  scale: 1.15;
+  transform-origin: left bottom;
+}
+.tale-props {
+  scale: 1.15;
+  transform-origin: center bottom;
+}
 .tale-cast > .edu-portrait {
   height: 100%;
   width: 100%;

@@ -489,6 +489,55 @@
   .edu-portrait[data-active='false'] * {
     animation-play-state: paused !important;
   }
+
+  /* Lesson 3: once, when the friend's face changes (an action's result, the friend's reply), the whole
+     body moves for that feeling, then stops. Sad stays a little lowered while the face stays sad.
+     The scene's gesture (listen, nod, speak) waits until the movement is done. Reduced motion: none. */
+  .edu-character-body {
+    transform-box: view-box;
+    transform-origin: 131px 300px; /* between the feet (view box starts at x = 7) */
+  }
+  .edu-character-body[data-emote='joy'] {
+    --emote-time: 800ms;
+    animation: edu-emote-joy 800ms ease-in-out;
+  }
+  .edu-character-body[data-emote='surprise'] {
+    --emote-time: 750ms;
+    animation: edu-emote-surprise 750ms ease-out;
+  }
+  .edu-character-body[data-emote='sad'] {
+    --emote-time: 1000ms;
+    animation: edu-emote-sad 1000ms ease-in-out forwards;
+  }
+  .edu-character-body[data-emote='anger'] {
+    --emote-time: 700ms;
+    animation: edu-emote-anger 700ms ease-in-out;
+  }
+  /* More specific than the gesture rules above (their `animation` shorthand would reset the delay). */
+  .edu-portrait .edu-character-body[data-emote-now] [data-gesture] * {
+    animation-delay: var(--emote-time);
+  }
+}
+/* Distances are in the portrait's view-box units: 1 unit is about 1.1px (portrait) to 1.35px (landscape) in
+   the tale, so joy rises 9-11px then 8-9px, sad lowers 5-6px, surprise hops 7-8px, anger lifts 6-7px. */
+@keyframes edu-emote-joy {
+  0%, 40%, 80%, 100% { transform: none; }
+  20% { transform: translateY(-8px); }
+  60% { transform: translateY(-7px); }
+}
+@keyframes edu-emote-surprise {
+  0%, 45%, 88%, 100% { transform: none; }
+  22% { transform: translateY(-1.5px) rotate(-5deg); }
+  68% { transform: translateY(-6px); }
+}
+@keyframes edu-emote-sad {
+  from { transform: none; }
+  to { transform: translateY(4.5px) rotate(2deg); }
+}
+@keyframes edu-emote-anger {
+  0%, 36%, 76%, 100% { transform: none; }
+  12%, 52% { transform: translateY(-5px); }
+  24%, 64% { transform: translateY(1px) scale(1.02, 0.97); }
 }
 @keyframes edu-listen {
   45%,

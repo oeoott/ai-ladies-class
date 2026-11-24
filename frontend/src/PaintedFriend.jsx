@@ -266,9 +266,15 @@ export function PaintedFriend({
   headwear,
   cover = false,
   className = '',
+  emote = null,
+  emoteKey,
+  emoteNow = false,
 }) {
   // Faces are drawn for these feelings only; a new emotion without a drawn face looks calm.
   if (!DRAWN_FEELINGS.has(feeling)) feeling = 'neutral'
+  // emote: a one-time whole-body movement for a feeling (activities.css edu-emote-*), replayed only when
+  // emoteKey changes. emoteNow: it plays in this scene, so the scene's gesture waits until it is done.
+  if (!DRAWN_FEELINGS.has(emote) || emote === 'neutral') emote = null
   const id = useId()
   const face = faces[kind]
   const imageId = id + '-original'
@@ -295,6 +301,8 @@ export function PaintedFriend({
         </radialGradient>
       </defs>
       {!cover && <ellipse cx="138" cy="300" rx="57" ry="6" fill="#454a28" opacity=".18" />}
+      <g className="edu-character-body" key={emote ? emoteKey : 'still'} data-emote={emote || undefined}
+        data-emote-now={(emote && emoteNow) || undefined}>
       <g transform={cover ? undefined : `translate(${insetLeft} ${insetTop}) scale(${scale})`}>
         <g key={actionKey} data-gesture={gesture} data-feeling={feeling}>
           <g className="edu-character-head">
@@ -309,6 +317,7 @@ export function PaintedFriend({
             <FriendCharm kind={kind} charm={charm} headwear={headwear} />
           </g>
         </g>
+      </g>
       </g>
     </svg>
   )

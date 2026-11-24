@@ -3,7 +3,7 @@ import test from 'node:test'
 import { createApi } from '../src/api.js'
 import { emptySession, readSession } from '../src/session.js'
 import { forestTales } from '../src/forestTales.js'
-import { FACES, friendFace, localReply, namedTalk, saidLine, startServerTalk, takeTurn, talkReply, usableTalk } from '../src/storyTalk.js'
+import { FACES, friendFace, localReply, namedTalk, nextEmote, saidLine, startServerTalk, takeTurn, talkReply, usableTalk } from '../src/storyTalk.js'
 
 const date = '2026-11-22'
 const talk = forestTales.joy.talk
@@ -158,4 +158,23 @@ test('the server talk starts with the forest friend id only', async () => {
   assert.equal(await startServerTalk(api, 'w1', new Map(), 'rabbit'), 'c9')
   assert.equal(await startServerTalk(api, 'w1', new Map()), 'c9')
   assert.deepEqual(sent, [{ character: 'rabbit' }, {}])
+})
+
+test('the friend moves once when the face changes at a result, a reply or the ending, not while it stays', () => {
+  const walk = (steps) => steps.reduce((acc, [phase, face]) => {
+    const next = nextEmote(acc.last, phase, face)
+    if (next && next !== acc.last) acc.moves.push(next.feeling + '@' + phase)
+    return { last: next, moves: acc.moves }
+  }, { last: null, moves: [] }).moves
+  // joy result, the same face while listening and replying: one movement only
+  assert.deepEqual(walk([['act', 'joy'], ['consequence', 'joy'], ['question', 'joy'], ['reply', 'joy'], ['extra', 'joy'], ['ending', 'joy']]),
+    ['joy@consequence'])
+  // the face changes at the reply and at the ending: a movement each time
+  assert.deepEqual(walk([['consequence', 'neutral'], ['question', 'neutral'], ['reply', 'surprise'], ['extra', 'surprise'], ['ending', 'joy']]),
+    ['neutral@consequence', 'surprise@reply', 'joy@ending'])
+  // back to choosing another action: the next result moves again
+  assert.deepEqual(walk([['consequence', 'sad'], ['act', 'sad'], ['consequence', 'sad']]), ['sad@consequence', 'sad@consequence'])
+  assert.equal(nextEmote(null, 'book', 'joy'), null)
+  const kept = nextEmote(null, 'consequence', 'anger')
+  assert.equal(nextEmote(kept, 'question', 'anger'), kept)
 })

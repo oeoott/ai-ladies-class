@@ -1,5 +1,5 @@
 import { useNarration } from './narration.js'
-import React, { createContext, useContext, useEffect, useRef, useState, useId } from 'react'
+import React, { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, useId } from 'react'
 import { startFacePreview } from './facePreview.js'
 import { feelingPractice, PracticeObject } from './FeelingPractice.jsx'
 import { GuidePortrait, PaintedFriend } from './PaintedFriend.jsx'
@@ -9,7 +9,7 @@ import { forestTales } from './forestTales.js'
 import { emotions, tales } from './content.js'
 import { StoryVoice, voiceSupported } from './StoryVoice.jsx'
 import { api } from './api.js'
-import { friendFace, localReply, namedTalk, saidLine, startServerTalk, takeTurn, talkReply, usableTalk } from './storyTalk.js'
+import { friendFace, localReply, namedTalk, nextEmote, saidLine, startServerTalk, takeTurn, talkReply, usableTalk } from './storyTalk.js'
 
 // Emotion words and clues, from the shared emotions.json (one entry per emotion).
 // LEGACY_TALK keeps the conversation that sessions saved before the picture books still use;
@@ -110,7 +110,7 @@ function EmotionCard({ feeling, alt = FEELINGS[feeling].clue }) {
     />
   )
 }
-function Portrait({ friend, feeling, gesture, actionKey, active = true }) {
+function Portrait({ friend, feeling, gesture, actionKey, active = true, emote = null, emoteKey, emoteNow = false }) {
   const kind = animalKind(friend)
   const clue = feeling === 'neutral' ? '편안하게 기다리고 있어요.' : FEELINGS[feeling].clue
   return (
@@ -120,7 +120,7 @@ function Portrait({ friend, feeling, gesture, actionKey, active = true }) {
       kind={kind}
       src={friend?.image || import.meta.env.BASE_URL + 'art/' + kind + '.webp'}
       label={`${friend?.name || '숲속 친구'}의 얼굴. ${clue}`}
-      {...{ feeling, gesture, actionKey, active }}
+      {...{ feeling, gesture, actionKey, active, emote, emoteKey, emoteNow }}
     />
   )
 }
@@ -739,6 +739,11 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
   const face = inDialogue && outcome ? friendFace(state, phase, conversation, outcome.expression) : null
   if (face) ({ expression, gesture } = face)
   if (listening) gesture = 'listen'
+  // One whole-body movement for the new face at a result, the friend's reply or the ending (storyTalk.nextEmote).
+  const [emote, setEmote] = useState(null)
+  useLayoutEffect(() => {
+    setEmote((previous) => nextEmote(previous, phase, expression))
+  }, [phase, expression])
   return (
     <Board
       title={title}
@@ -762,6 +767,9 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
             active={active}
             gesture={gesture}
             actionKey={phase + '-' + page + (listening ? '-listen' : '')}
+            emote={emote?.feeling}
+            emoteKey={emote?.key}
+            emoteNow={emote?.phase === phase}
           />
         </TaleScene>
       }
