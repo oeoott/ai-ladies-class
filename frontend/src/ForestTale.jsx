@@ -67,11 +67,18 @@ const scenery = {
 
 // The story marks a child's choice with a lasting change to a pictured object.
 // The same outcome is described in the story text.
-export function TaleScene({ feeling, page, branch, active, children }) {
+// speech: what the friend says in this scene (an action's result line, the friend's reply), shown in a
+// speech bubble above the friend's head instead of in the card. speechLive announces it (a new reply).
+export function TaleScene({ feeling, page, branch, active, speech = null, speechLive = false, children }) {
   // A new emotion without its own props shows the tale picture only (taleBackgrounds.js).
   const Props = scenery[feeling] || (() => null)
   return (
     <figure className="edu-figure tale-figure">
+      {speech && (
+        <div className="tale-speech-row">
+          <p className="tale-speech" role={speechLive ? 'status' : undefined}>{speech}</p>
+        </div>
+      )}
       <div
         className="tale-diorama"
         data-world={feeling}

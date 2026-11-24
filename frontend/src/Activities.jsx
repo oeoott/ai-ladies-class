@@ -683,6 +683,11 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
   const reply = talkReply(state, isEnding, lines)
   // Earlier sessions may have finished the exchange without selecting a line.
   const replyText = reply ? (isEnding ? reply : '“' + reply + '”') : '친구와 이야기를 나눴어요.'
+  // What the friend says, shown in a speech bubble by the friend (no quotation marks): the chosen action's
+  // result line and the friend's reply. The ending is narration and stays in the card.
+  const friendSays = phase === 'consequence' && outcome ? outcome.line
+    : phase === 'reply' && reply ? reply
+    : null
   const [waiting, setWaiting] = useState(false)
   const [listening, setListening] = useState(false)
   // A sentence the child said that got a reply. Memory only: never in session.js, so a reload drops it.
@@ -761,6 +766,8 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
           page={page}
           branch={phase === 'consequence' || inDialogue ? chosen : null}
           active={active}
+          speech={friendSays}
+          speechLive={phase === 'reply'}
         >
           <Portrait
             friend={friend}
@@ -809,7 +816,6 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
           <p className="edu-story">
             {outcome.event}
           </p>
-          <blockquote>“{outcome.line}”</blockquote>
           <Action onClick={() => update({ phase: 'question' })}>친구와 대화하기</Action>
           <button type="button" className="edu-link" onClick={() => update({ phase: 'act' })}>
             다른 방법 해 보기
@@ -830,9 +836,12 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
       {(phase === 'reply' || isEnding) && (
         <>
           {said && <p className="edu-note">내가 한 말: {said}</p>}
-          <p className="edu-story" role="status">
-            {replyText}
-          </p>
+          {/* The friend's reply is in the speech bubble; the ending (what happened) stays here. */}
+          {!(phase === 'reply' && friendSays) && (
+            <p className="edu-story" role="status">
+              {replyText}
+            </p>
+          )}
           <Action onClick={() => {
             if (phase === 'reply' && talkId) api.endTalk(talkId)
             onComplete()

@@ -385,24 +385,10 @@
   }
 }
 
-/* Background, plan B: the tale picture a little softer, a soft round cream glow behind the friend and the
-   props, and a faint shadow under the friend's feet, so they stand out. Token colours only, nothing moves.
-   (The cream wash behind the card is in styles.css.) */
+/* Background: the tale picture only a touch softer, and a faint shadow under the friend's feet.
+   No glow or wash (too bright). Token colours only, nothing moves. */
 .tale-landscape {
-  filter: brightness(0.95) saturate(0.95);
-}
-.tale-diorama::before {
-  content: '';
-  position: absolute;
-  z-index: 0;
-  inset: -14% -8% -6% -16%;
-  pointer-events: none;
-  background: radial-gradient(
-    closest-side,
-    color-mix(in srgb, var(--forest-card) 72%, transparent) 0%,
-    color-mix(in srgb, var(--forest-card) 46%, transparent) 55%,
-    transparent 100%
-  );
+  filter: brightness(0.92) saturate(0.92);
 }
 .tale-cast::after {
   content: '';
@@ -415,4 +401,72 @@
   border-radius: 50%;
   pointer-events: none;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--forest-ink) 24%, transparent), transparent);
+}
+
+/* The tale card: opaque card colour, ink text, body size with roomy lines (contrast 10:1, e2e tale-look).
+   It holds the title, the question, '내가 한 말', the choices and the guidance; the friend's words are in
+   the speech bubble below. */
+.edu-board:has(.tale-figure) .edu-paper {
+  background: var(--forest-card);
+  color: var(--forest-ink);
+}
+.edu-board:has(.tale-figure) .edu-paper :is(.edu-story, .edu-prompt, .edu-note, p) {
+  color: var(--forest-ink);
+  line-height: 1.75;
+}
+.edu-board:has(.tale-figure) .edu-paper .edu-story {
+  font-size: var(--forest-body-size);
+}
+
+/* What the friend says: a speech bubble above the friend's head, in the card's colour and edge, with a tail
+   pointing down at the friend. It sits in the same column as the diorama (in normal flow), so it never
+   covers the card or the props (e2e tale-look measures it). */
+.tale-speech-row {
+  width: min(100%, 620px);
+  display: flex;
+  justify-content: flex-start;
+  padding-left: 6%;
+}
+.tale-speech {
+  position: relative;
+  max-width: 82%;
+  margin: 0 0 22px;
+  padding: 12px 18px;
+  border: 2px solid var(--forest-card-edge);
+  border-radius: var(--forest-card-radius);
+  background: var(--forest-card);
+  color: var(--forest-ink);
+  font-size: var(--forest-body-size);
+  font-weight: 650;
+  line-height: 1.6;
+  text-align: left;
+  word-break: keep-all;
+}
+/* Tail: the edge colour, then the card colour 2px inside it, pointing down-left at the friend's head. */
+.tale-speech::before,
+.tale-speech::after {
+  content: '';
+  position: absolute;
+  left: 22%;
+  border-style: solid;
+  border-color: transparent;
+}
+.tale-speech::before {
+  bottom: -18px;
+  border-width: 18px 16px 0 0;
+  border-top-color: var(--forest-card-edge);
+}
+.tale-speech::after {
+  bottom: -13px;
+  left: calc(22% + 2px);
+  border-width: 14px 12px 0 0;
+  border-top-color: var(--forest-card);
+}
+@media (max-aspect-ratio: 1/1), (max-width: 650px) {
+  .tale-speech-row {
+    width: min(100%, 480px);
+  }
+  .tale-speech {
+    margin-bottom: 18px;
+  }
 }

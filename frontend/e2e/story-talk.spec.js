@@ -3,7 +3,7 @@
 import { expect, test } from '@playwright/test'
 import { BACKEND, ONLINE } from './ports.js'
 import {
-  STORAGE_KEY, friendFace, friendLine, named, newDeviceId, planVoice, prepare, quote, readStored, replyButton, replyButtons,
+  STORAGE_KEY, friendFace, friendLine, storyLine, named, newDeviceId, planVoice, prepare, readStored, replyButton, replyButtons,
   saidNote, seedSession, startWalk, tales, talkTitle, topicIds, voiceNote,
 } from './helpers.js'
 
@@ -44,14 +44,14 @@ const fallback = (choices = talk.choices) => ({
 test('보기를 누르면 서버로 턴을 보내고, 답을 친구 말풍선에 대사의 표정으로 보인다', async ({ page, request }) => {
   const turns = await openTalk(page, request)
   await replyButton(page, talk.choices[1]).click()
-  await expect(friendLine(page)).toHaveText(quote(talk.replies[1]))
+  await expect(friendLine(page)).toHaveText(talk.replies[1])
   await expect(saidNote(page)).toHaveText('내가 한 말: ' + talk.choices[1])
   await expect(friendFace(page)).toHaveAttribute('data-feeling', talk.replyExpressions[1])
   await expect(friendFace(page)).toHaveAttribute('data-gesture', 'speak')
 
   await page.getByRole('button', { name: '조금 더 이야기하기' }).click()
   await replyButton(page, talk.extra[0]).click()
-  await expect(friendLine(page)).toHaveText(talk.ends[0])
+  await expect(storyLine(page)).toHaveText(talk.ends[0])
   await expect(friendFace(page)).toHaveAttribute('data-feeling', talk.endExpressions[0])
   await expect(friendFace(page)).toHaveAttribute('data-gesture', 'nod')
   expect(turns).toEqual([
@@ -74,16 +74,16 @@ test('서버 답이 6초 늦으면 생각하고 있어요를 보이다가 5초 �
   for (const choice of await replyButtons(page).all()) await expect(choice).toBeDisabled()
   await expect(page.getByRole('button', { name: '말로 답하기' })).toBeDisabled()
 
-  await expect(friendLine(page)).toHaveText(quote(talk.replies[0]), { timeout: 8000 })
+  await expect(friendLine(page)).toHaveText(talk.replies[0], { timeout: 8000 })
   expect(Date.now() - started).toBeGreaterThan(4500)
   await page.waitForTimeout(1500) // past the late answer at 6 seconds
-  await expect(friendLine(page)).toHaveText(quote(talk.replies[0]))
+  await expect(friendLine(page)).toHaveText(talk.replies[0])
   await expect(page.getByText(THINKING)).toHaveCount(0)
 
   // The rest of the talk stays on the script: no second turn is sent.
   await page.getByRole('button', { name: '조금 더 이야기하기' }).click()
   await replyButton(page, talk.extra[1]).click()
-  await expect(friendLine(page)).toHaveText(talk.ends[1])
+  await expect(storyLine(page)).toHaveText(talk.ends[1])
   expect(turns).toHaveLength(1)
 })
 
@@ -91,7 +91,7 @@ test('보기를 눌렀는데 fallbackToPicture가 오면 대본의 답으로 이
   await openTalk(page, request)
   await page.route(TURN, (route) => route.fulfill(fallback()))
   await replyButton(page, talk.choices[1]).click()
-  await expect(friendLine(page)).toHaveText(quote(talk.replies[1]))
+  await expect(friendLine(page)).toHaveText(talk.replies[1])
   await expect(friendFace(page)).toHaveAttribute('data-feeling', talk.replyExpressions[1])
 })
 
@@ -109,7 +109,7 @@ test('말로 답했는데 fallbackToPicture가 오면 보기 버튼으로 돌아
 
   await page.unroute(TURN)
   await replyButton(page, talk.choices[0]).click()
-  await expect(friendLine(page)).toHaveText(quote(talk.replies[0]))
+  await expect(friendLine(page)).toHaveText(talk.replies[0])
   expect(turns).toHaveLength(2)
 })
 
@@ -131,7 +131,7 @@ test('서버가 오류를 돌려주면 대본의 답으로 이어 간다', async
   await openTalk(page, request)
   await page.route(TURN, (route) => route.fulfill({ status: 500, contentType: 'application/json', body: '{"detail":"error"}' }))
   await replyButton(page, talk.choices[0]).click()
-  await expect(friendLine(page)).toHaveText(quote(talk.replies[0]))
+  await expect(friendLine(page)).toHaveText(talk.replies[0])
   await expect(page.getByRole('alert')).toHaveCount(0)
 })
 
@@ -143,7 +143,7 @@ test('말로 답해 받은 서버 답은 새로고침 뒤에도 남고, 내가 �
   }))
   await planVoice(page, { transcript: HEARD })
   await page.getByRole('button', { name: '말로 답하기' }).click()
-  await expect(friendLine(page)).toHaveText(quote(SERVER_LINE))
+  await expect(friendLine(page)).toHaveText(SERVER_LINE)
   await expect(saidNote(page)).toHaveText('내가 한 말: ' + HEARD)
   await expect(friendFace(page)).toHaveAttribute('data-feeling', 'surprise')
   await expect(friendFace(page)).toHaveAttribute('data-gesture', 'speak')
@@ -151,7 +151,7 @@ test('말로 답해 받은 서버 답은 새로고침 뒤에도 남고, 내가 �
 
   await page.reload()
   await page.getByRole('button', { name: '산책 이어가기' }).click()
-  await expect(friendLine(page)).toHaveText(quote(SERVER_LINE))
+  await expect(friendLine(page)).toHaveText(SERVER_LINE)
   await expect(friendFace(page)).toHaveAttribute('data-feeling', 'surprise')
   // The spoken sentence lives in memory only: not on screen after the reload, not in storage.
   await expect(saidNote(page)).toHaveCount(0)

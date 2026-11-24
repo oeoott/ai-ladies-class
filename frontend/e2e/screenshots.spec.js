@@ -5,7 +5,7 @@
 import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
 import { OFFLINE } from './ports.js'
-import { friendFace, friendLine, prepare, quote, replyButton, seedSession, tales, talkTitle, topicIds } from './helpers.js'
+import { friendFace, friendLine, prepare, replyButton, seedSession, tales, talkTitle, topicIds } from './helpers.js'
 
 const folder = fileURLToPath(new URL('../../../screenshots-final/lesson3/', import.meta.url))
 
@@ -19,7 +19,7 @@ for (const [index, topicId] of topicIds.entries()) {
     await page.getByRole('button', { name: '산책 이어가기' }).click()
     await expect(page.getByRole('heading', { name: talkTitle() })).toBeVisible()
     await replyButton(page, talk.choices[0]).click()
-    await expect(friendLine(page)).toHaveText(quote(talk.replies[0]))
+    await expect(friendLine(page)).toHaveText(talk.replies[0])
     await expect(friendFace(page)).toHaveAttribute('data-feeling', talk.replyExpressions[0])
     await expect(friendFace(page)).toHaveAttribute('data-gesture', 'speak')
     await page.evaluate(() => document.fonts.ready)

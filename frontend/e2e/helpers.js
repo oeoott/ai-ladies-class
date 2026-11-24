@@ -210,11 +210,13 @@ export async function storyToTalk(page, topicId, branch = 0) {
 
 export const replyButtons = (page) => page.getByRole('group', { name: '친구에게 보낼 말' }).getByRole('button')
 export const replyButton = (page, text) => page.getByRole('group', { name: '친구에게 보낼 말' }).getByRole('button', { name: text, exact: true })
-export const friendLine = (page) => page.locator('.edu-story[role="status"]')
+// The friend's words (an action's result line, the friend's reply): the speech bubble by the friend.
+export const friendLine = (page) => page.locator('.tale-speech')
+// Narration in the card (the ending of the talk).
+export const storyLine = (page) => page.locator('.edu-story[role="status"]')
 export const saidNote = (page) => page.locator('p.edu-note', { hasText: '내가 한 말' })
 export const voiceNote = (page) => page.locator('.edu-story-voice .edu-note')
 export const friendFace = (page) => page.locator('.tale-cast [data-feeling][data-gesture]')
-export const quote = (line) => '“' + line + '”'
 
 // After the talk's first reply: one more line, then the ending and the sticker board.
 export async function finishTalk(page, topicId, extraChoice = 0) {
@@ -223,7 +225,7 @@ export async function finishTalk(page, topicId, extraChoice = 0) {
   await expect(page.locator('.edu-prompt')).toHaveText(named(talk.again))
   await replyButton(page, talk.extra[extraChoice]).click()
   await expect(heading(page, '이야기를 마쳤어요')).toBeVisible()
-  await expect(friendLine(page)).toHaveText(talk.ends[extraChoice])
+  await expect(storyLine(page)).toHaveText(talk.ends[extraChoice])
   await button(page, '산책 마무리하기').click()
   await expect(heading(page, '동화 놀이를 마쳤어요')).toBeVisible()
   await button(page, '스티커판 보기').click()
@@ -305,6 +307,12 @@ export async function taleBoxes(page) {
       const cs = getComputedStyle(el)
       if (cs.display === 'none' || Number(cs.opacity) === 0 || el.offsetWidth === 0) continue
       items.push({ name: [...el.classList].filter((c) => c !== 'tale-turn').join(' '), ...(await drawn(el)) })
+    }
+    // The friend's speech bubble, with its tail below it (::before, 18px).
+    const speech = document.querySelector('.tale-speech')
+    if (speech) {
+      const r = speech.getBoundingClientRect()
+      items.push({ name: 'speech', x: r.left, y: r.top, width: r.width, height: r.height + 18 })
     }
     return { card: rect(document.querySelector('.edu-paper').getBoundingClientRect()), items }
   })

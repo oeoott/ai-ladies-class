@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test'
 import { BACKEND, ONLINE } from './ports.js'
 import {
   GUARDIAN_KEY, STORAGE_KEY, emotionLesson, emotions, finishTalk, friendLine, mirrorLesson, onboard, openGuardian,
-  placement, planVoice, prepare, quote, readStored, saidNote, storyToTalk, tales, today, topicIds,
+  placement, planVoice, prepare, readStored, saidNote, storyToTalk, tales, today, topicIds,
 } from './helpers.js'
 
 test('서버를 켜면 학습 1·2·3과 대화 턴이 기록되고, 가입하면 대시보드에 같은 숫자가 보인다', async ({ page, request }, info) => {
@@ -34,7 +34,7 @@ test('서버를 켜면 학습 1·2·3과 대화 턴이 기록되고, 가입하�
   // First line by voice (recognised as a choice), the second by tapping.
   await planVoice(page, { transcript: talk.choices[0] })
   await page.getByRole('button', { name: '말로 답하기' }).click()
-  await expect(friendLine(page)).toHaveText(quote(talk.replies[0]))
+  await expect(friendLine(page)).toHaveText(talk.replies[0])
   await expect(saidNote(page)).toHaveText('내가 한 말: ' + talk.choices[0])
   await finishTalk(page, topicId, 0)
 

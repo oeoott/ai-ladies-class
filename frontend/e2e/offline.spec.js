@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 import { OFFLINE } from './ports.js'
 import {
   emotionLesson, emotions, finishTalk, friendFace, friendLine, mirrorLesson, onboard, openGuardian, placement,
-  prepare, quote, readStored, replyButton, saidNote, STORAGE_KEY, storyToTalk, tales, today, topicIds,
+  prepare, readStored, replyButton, saidNote, STORAGE_KEY, storyToTalk, tales, today, topicIds,
 } from './helpers.js'
 
 test('서버 없이 첫 방문부터 스티커판까지 진행한다', async ({ page }) => {
@@ -24,7 +24,7 @@ test('서버 없이 첫 방문부터 스티커판까지 진행한다', async ({ 
 
   // The built-in script answers; the friend speaks with that line's expression.
   await replyButton(page, talk.choices[1]).click()
-  await expect(friendLine(page)).toHaveText(quote(talk.replies[1]))
+  await expect(friendLine(page)).toHaveText(talk.replies[1])
   await expect(saidNote(page)).toHaveText('내가 한 말: ' + talk.choices[1])
   await expect(friendFace(page)).toHaveAttribute('data-feeling', talk.replyExpressions[1])
   await expect(friendFace(page)).toHaveAttribute('data-gesture', 'speak')
