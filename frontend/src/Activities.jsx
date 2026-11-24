@@ -835,13 +835,14 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
       )}
       {(phase === 'reply' || isEnding) && (
         <>
-          {said && <p className="edu-note">내가 한 말: {said}</p>}
-          {/* The friend's reply is in the speech bubble; the ending (what happened) stays here. */}
+          {/* The friend's reply is in the speech bubble; the ending (what happened) stays here, first,
+              with '내가 한 말' under it. */}
           {!(phase === 'reply' && friendSays) && (
             <p className="edu-story" role="status">
               {replyText}
             </p>
           )}
+          {said && <p className="edu-note edu-said">내가 한 말: {said}</p>}
           <Action onClick={() => {
             if (phase === 'reply' && talkId) api.endTalk(talkId)
             onComplete()

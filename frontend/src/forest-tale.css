@@ -417,49 +417,88 @@
 .edu-board:has(.tale-figure) .edu-paper .edu-story {
   font-size: var(--forest-body-size);
 }
+/* Card order, top to bottom: title, the scene or question (body size, the boldest line), '내가 한 말' (small,
+   muted), the choices (12px apart), the guidance note (small), then the voice / next buttons. One 20px gap
+   between sections, left-aligned, lines kept to a readable width; an empty note takes no room. */
+.edu-board:has(.tale-figure) .edu-paper .edu-header:not(:last-child) {
+  margin-bottom: 20px;
+}
+.edu-board:has(.tale-figure) .edu-task {
+  gap: 20px;
+  text-align: left;
+}
+.edu-board:has(.tale-figure) .edu-task > *,
+.edu-board:has(.tale-figure) .edu-story-voice > * {
+  margin: 0;
+}
+.edu-board:has(.tale-figure) .edu-task :is(.edu-story, .edu-prompt) {
+  max-width: 34em;
+  font-size: var(--forest-body-size);
+  font-weight: 700;
+}
+.edu-board:has(.tale-figure) .edu-paper .edu-note {
+  max-width: 34em;
+  color: var(--forest-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.6;
+}
+.edu-board:has(.tale-figure) .edu-choices {
+  gap: 12px;
+}
+.edu-board:has(.tale-figure) .edu-story-voice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
 
-/* What the friend says: a speech bubble above the friend's head, in the card's colour and edge, with a tail
-   pointing down at the friend. It sits in the same column as the diorama (in normal flow), so it never
-   covers the card or the props (e2e tale-look measures it). */
+/* What the friend says: a speech bubble right above the friend's head. Its centre lines up with the centre of
+   the friend's head (35.6% of the diorama width for every friend, both orientations), and its tail points
+   straight down from the middle of its lower edge. Prompt size, roomy padding; at most 71% of the row wide so
+   it stays inside the column and a tale line fits in two lines. It is in normal flow above the diorama, so it
+   never covers the card or the props (e2e tale-look measures it). */
 .tale-speech-row {
   width: min(100%, 620px);
-  display: flex;
-  justify-content: flex-start;
-  padding-left: 6%;
+  display: block;
 }
 .tale-speech {
   position: relative;
-  max-width: 82%;
-  margin: 0 0 22px;
-  padding: 12px 18px;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 71%;
+  margin: 0 0 20px 35.6%;
+  translate: -50% 0;
+  padding: 16px 24px;
   border: 2px solid var(--forest-card-edge);
   border-radius: var(--forest-card-radius);
   background: var(--forest-card);
   color: var(--forest-ink);
-  font-size: var(--forest-body-size);
+  font-size: var(--forest-prompt-size);
   font-weight: 650;
-  line-height: 1.6;
-  text-align: left;
+  line-height: 1.5;
+  text-align: center;
   word-break: keep-all;
+  overflow-wrap: anywhere;
 }
-/* Tail: the edge colour, then the card colour 2px inside it, pointing down-left at the friend's head. */
+/* Tail: the edge colour, then the card colour 2px inside it, from the bottom middle down to the head. */
 .tale-speech::before,
 .tale-speech::after {
   content: '';
   position: absolute;
-  left: 22%;
+  left: 50%;
+  translate: -50% 0;
   border-style: solid;
   border-color: transparent;
 }
 .tale-speech::before {
   bottom: -18px;
-  border-width: 18px 16px 0 0;
+  border-width: 18px 14px 0;
   border-top-color: var(--forest-card-edge);
 }
 .tale-speech::after {
-  bottom: -13px;
-  left: calc(22% + 2px);
-  border-width: 14px 12px 0 0;
+  bottom: -14px;
+  border-width: 15px 11px 0;
   border-top-color: var(--forest-card);
 }
 @media (max-aspect-ratio: 1/1), (max-width: 650px) {

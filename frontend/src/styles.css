@@ -108,9 +108,43 @@ svg {
   grid-area: 1 / 1;
   justify-self: center;
 }
+/* Tale pictures are shown mirrored, so the place (post office, slide) sits on the card's side. A little zoom
+   from one corner (--tale-zoom, with the matching shift) lifts the post office and the slide above the card's
+   left part instead of hiding them behind it. The scale stays at least 1 from a corner, so the picture still
+   covers the screen. Shift = (zoom - 1) x 50% toward that corner. */
+.tale-landscape {
+  transform: translate(var(--tale-shift-x, 0%), var(--tale-shift-y, 0%))
+    scale(calc(-1 * var(--tale-zoom, 1)), var(--tale-zoom, 1));
+}
+/* Landscape: zoom from the bottom-right corner, picture at its left edge. */
+.tale-landscape[data-tale='joy'] {
+  object-position: 0% center;
+  --tale-zoom: 1.2;
+  --tale-shift-x: -10%;
+  --tale-shift-y: -10%;
+}
+.tale-landscape[data-tale='anger'] {
+  object-position: 0% center;
+  --tale-zoom: 1.3;
+  --tale-shift-x: -15%;
+  --tale-shift-y: -15%;
+}
 @media (orientation: portrait) {
   .tale-landscape {
     object-position: 18% center;
+  }
+  /* Portrait: zoom from the top-right corner. */
+  .tale-landscape[data-tale='joy'] {
+    object-position: 5% center;
+    --tale-zoom: 1.2;
+    --tale-shift-x: -10%;
+    --tale-shift-y: 10%;
+  }
+  .tale-landscape[data-tale='anger'] {
+    object-position: 10% center;
+    --tale-zoom: 1.2;
+    --tale-shift-x: -10%;
+    --tale-shift-y: 10%;
   }
 }
 .scene-content {

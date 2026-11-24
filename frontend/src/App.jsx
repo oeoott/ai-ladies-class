@@ -500,6 +500,7 @@ function App() {
           <img
             className={'scene-landscape' + (inTale ? ' tale-landscape' : '')}
             src={asset(landscape)}
+            data-tale={inTale ? topic.id : undefined}
             alt=""
           />
           {page === 'lesson' && <JourneyProgress friend={friend} step={session.step} />}

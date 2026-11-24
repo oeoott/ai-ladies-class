@@ -5,41 +5,48 @@ import { GuardianGate } from './GuardianGate.jsx'
 import React, { useId, useLayoutEffect, useRef, useState } from 'react'
 import { PawPrint, Sprout } from 'lucide-react'
 import { FriendStudio } from './FriendStudio.jsx'
-import { Icon, MenuRow } from './PanelIcon.jsx'
+import { Icon, MenuTile } from './PanelIcon.jsx'
 import { GuardianAccountInfo, GuardianDashboard, GuardianDeleteAccount, GuardianSignIn, PeriodToggle } from './GuardianAccount.jsx'
 import { dashboardTitle } from './dashboard.js'
 import './panels.css'
 
+// Guardian settings: groups with a heading and a two-column tile grid. Without a server address the
+// dashboard and account tiles are left out (and the account group with them); the rest fill the grid.
 function Guardian({ onOpen, cardPortrait, guardian, accountEnabled }) {
+  const groups = [
+    ['아이 학습', [
+      accountEnabled && { icon: 'chart', name: '학습 대시보드', open: 'dashboard',
+        detail: guardian.token && guardian.profileName ? guardian.profileName : undefined },
+      { icon: 'letter', name: '학습 리포트', open: 'report' },
+      { icon: 'sticker', name: '스티커판', open: 'records' },
+      { icon: 'book', name: '학습 진단 다시 하기', open: 'retest' },
+    ]],
+    ['꾸미기', [
+      { icon: 'paw', name: '숲 친구', open: 'friends' },
+      { icon: 'faceCard', name: '표정 카드', open: 'portrait', detail: cardPortrait === 'girl' ? '여자아이' : '남자아이' },
+    ]],
+    ['계정', [
+      accountEnabled && { icon: 'guardian', name: '보호자 계정', open: guardian.token ? 'guardianAccount' : 'login',
+        detail: guardian.token ? guardian.email : '로그인 안 함' },
+    ]],
+  ]
   return (
-    <div className="forest-panel-menu">
-      <MenuRow icon="paw" onClick={() => onOpen('friends')}>
-        숲 친구
-      </MenuRow>
-      <MenuRow icon="book" onClick={() => onOpen('retest')}>
-        학습 진단 다시 하기
-      </MenuRow>
-      <MenuRow icon="stamp" onClick={() => onOpen('records')}>
-        스티커판
-      </MenuRow>
-      <MenuRow icon="person" onClick={() => onOpen('report')}>
-        학습 리포트
-      </MenuRow>
-      <MenuRow icon="person" detail={cardPortrait === 'girl' ? '여자아이' : '남자아이'} onClick={() => onOpen('portrait')}>
-        표정 카드
-      </MenuRow>
-      {accountEnabled && (
-        <>
-          <MenuRow icon="person" detail={guardian.token ? guardian.email : '로그인 안 함'}
-            onClick={() => onOpen(guardian.token ? 'guardianAccount' : 'login')}>
-            보호자 계정
-          </MenuRow>
-          <MenuRow icon="chart" detail={guardian.token && guardian.profileName ? guardian.profileName : undefined}
-            onClick={() => onOpen('dashboard')}>
-            학습 대시보드
-          </MenuRow>
-        </>
-      )}
+    <div className="forest-panel-groups">
+      {groups.map(([title, items]) => {
+        const shown = items.filter(Boolean)
+        return shown.length > 0 && (
+          <section key={title} className="forest-panel-group">
+            <h3>{title}</h3>
+            <div className="forest-panel-tiles">
+              {shown.map((item) => (
+                <MenuTile key={item.name} icon={item.icon} detail={item.detail} onClick={() => onOpen(item.open)}>
+                  {item.name}
+                </MenuTile>
+              ))}
+            </div>
+          </section>
+        )
+      })}
     </div>
   )
 }

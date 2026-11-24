@@ -161,6 +161,60 @@
   font-size: 14px;
   color: var(--panel-muted);
 }
+/* Guardian settings: a heading per group and a two-column grid of tiles (icon, name, small detail).
+   Same colours and border as the menu rows; every tile is the same height. */
+.forest-panel .forest-panel-groups {
+  display: grid;
+  gap: 18px;
+}
+.forest-panel .forest-panel-group h3 {
+  margin: 0 0 8px;
+  color: var(--panel-muted);
+  font-size: 14px;
+  font-weight: 720;
+}
+.forest-panel .forest-panel-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 10px;
+}
+.forest-panel .forest-panel-tile {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 112px; /* one height for every tile, with or without a detail line */
+  padding: 12px 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 15px;
+  background: #fff;
+  color: var(--panel-ink);
+  text-align: center;
+}
+/* An odd last tile (e.g. without a server address) takes the whole row, so no cell is left empty. */
+.forest-panel .forest-panel-tile:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+.forest-panel .forest-panel-tile-title {
+  font-size: 16px;
+  font-weight: 670;
+  line-height: 1.35;
+}
+.forest-panel .forest-panel-tile .forest-panel-row-detail {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+@media (hover: hover) {
+  .forest-panel .forest-panel-tile:hover {
+    background: #edf5e9;
+  }
+}
 .forest-panel .forest-account-form {
   display: grid;
   gap: 9px;
