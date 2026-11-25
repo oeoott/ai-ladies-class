@@ -24,14 +24,14 @@ export const feelingPractice = {
       },
       {
         action: '손뼉으로 전하기',
-        practice: '손바닥을 살며시 마주쳐 봐요. 소리를 내지 않아도 돼요.',
+        practice: '소리를 내지 않아도 되니 손바닥을 살며시 마주쳐 봐요.',
         answer: '“손뼉을 쳤네! 나도 같이 기뻐.”',
       },
     ],
   },
   sad: {
     meaning: '보고 싶은 친구가 떠나면 슬플 수 있어요.',
-    example: '친구가 집에 갔어요. 조금 더 놀고 싶어요.',
+    example: '친구가 집에 가서 조금 더 놀고 싶었어요.',
     beforeTitle: '비에 젖은 그림이에요',
     before: '접힌 종이를 눌러 친구가 그린 그림을 펴 봐요.',
     result: '빗물에 번진 그림',
@@ -52,7 +52,7 @@ export const feelingPractice = {
       },
       {
         action: '옆자리를 톡톡 두드리기',
-        practice: '옆자리를 손으로 살짝 두드려 봐요. 곁에 있어 달라는 뜻을 보여 줄 수 있어요.',
+        practice: '곁에 있어 달라는 뜻으로 옆자리를 살짝 두드려 봐요.',
         answer: '“여기 앉아 달라는 거구나. 같이 있을게.”',
       },
     ],
@@ -71,7 +71,7 @@ export const feelingPractice = {
     cueQuestion: '친구 얼굴에서 동그래진 곳을 찾아요.',
     cues: ['눈과 입', '귀'],
     target: '눈과 입',
-    cueHint: '두 눈이 커졌어요. 입도 동그랗게 벌어졌어요.',
+    cueHint: '두 눈이 커지고 입이 동그랗게 벌어졌어요.',
     expression: [
       {
         action: '“깜짝 놀랐어.” 말풍선',
@@ -80,7 +80,7 @@ export const feelingPractice = {
       },
       {
         action: '가슴에 손 올리기',
-        practice: '손을 가슴에 가만히 얹어 봐요. 잠깐 멈춰도 좋아요.',
+        practice: '잠깐 멈추고 손을 가슴에 가만히 얹어 봐요.',
         answer: '“많이 놀랐구나. 천천히 기다릴게.”',
       },
     ],
@@ -108,7 +108,7 @@ export const feelingPractice = {
       },
       {
         action: '멈춤 손짓 하기',
-        practice: '손바닥을 편 채로 앞으로 내밀어 봐요. 잠깐 멈추고 싶다는 뜻이에요.',
+        practice: '잠깐 멈추고 싶을 때 손바닥을 펴서 앞으로 내밀어요.',
         answer: '“잠깐 멈추자는 거구나. 여기서 기다릴게.”',
       },
     ],

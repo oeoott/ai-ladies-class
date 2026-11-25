@@ -255,11 +255,18 @@
 }
 .forest-panel.is-rest {
   text-align: center;
-  max-width: 380px;
+  max-width: 470px;
 }
 .forest-panel.is-rest .forest-panel-head {
   justify-content: center;
-  margin: 0 0 20px;
+  margin: 0 0 24px;
+}
+.forest-panel.is-rest h2 {
+  font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+}
+.forest-panel.is-rest .forest-panel-primary {
+  min-height: var(--forest-action-height);
+  font-size: var(--forest-body-size);
 }
 .forest-panel .forest-rest-symbol {
   display: grid;

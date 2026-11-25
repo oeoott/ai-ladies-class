@@ -124,6 +124,9 @@
 .entrance-pose-back {
   opacity: 0;
 }
+.forest-entrance.is-in-forest .entrance-walker {
+  visibility: hidden;
+}
 
 .entrance-button {
   display: inline-flex;
@@ -166,6 +169,15 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  .entrance-landscape {
+    transform-origin: 50% 65%;
+  }
+  .forest-entrance.is-entering .entrance-landscape {
+    animation: enter-the-landscape var(--entrance-walk-duration) ease-in-out both;
+  }
+  .forest-entrance.is-in-forest .entrance-landscape {
+    transform: scale(1.045);
+  }
   .forest-entrance.is-entering .entrance-walker {
     animation: enter-the-forest var(--entrance-walk-duration) ease-in-out both;
   }
@@ -179,6 +191,12 @@
   .forest-entrance.is-entering [data-walk-ready='true'] .entrance-pose-back {
     opacity: 1;
     transition: opacity 110ms ease-out 30ms;
+  }
+}
+
+@keyframes enter-the-landscape {
+  to {
+    transform: scale(1.045);
   }
 }
 

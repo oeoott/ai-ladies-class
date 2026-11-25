@@ -4,10 +4,10 @@
   position: relative;
   isolation: isolate;
   container-type: inline-size;
-  width: min(100%, 18.5rem);
+  width: min(100%, 22rem);
   min-width: 0;
   color: #415747;
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
 .journey-progress::before {
@@ -51,12 +51,22 @@
 
 .journey-stop::before {
   content: '';
+  z-index: 1;
   width: 0.4rem;
   height: 0.4rem;
   margin-top: -0.14rem;
   border-radius: 50%;
   background: #9c906d;
   box-shadow: 0 0 0 2px var(--forest-trail);
+}
+
+.journey-stop.is-complete:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 100%;
+  border-top: 2px solid #386348;
 }
 
 .journey-stop.is-complete::before,
@@ -92,6 +102,7 @@
 
 .journey-walker {
   position: absolute;
+  z-index: 2;
   bottom: calc(100% - var(--trail-height) - 1px);
   left: 0;
   display: flex;

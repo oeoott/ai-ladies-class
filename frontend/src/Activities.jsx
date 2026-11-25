@@ -1,3 +1,4 @@
+import { Camera, CameraOff } from 'lucide-react'
 import { useNarration } from './narration.js'
 import React, { createContext, useContext, useEffect, useRef, useState, useId } from 'react'
 import { startFacePreview } from './facePreview.js'
@@ -103,17 +104,15 @@ function Action({ children, ...props }) {
     </button>
   )
 }
-function Choice({ selected, children, ...props }) {
+function Choice({ selected, bubble = false, children, ...props }) {
   return (
     <button
       type="button"
-      className={'edu-choice' + (selected ? ' is-selected' : '')}
+      className={'edu-choice' + (bubble ? ' edu-word-bubble' : '') + (selected ? ' is-selected' : '')}
       aria-pressed={Boolean(selected)}
       {...props}
     >
-      <span className="edu-choice-mark" aria-hidden="true">
-        {selected ? '✓' : ''}
-      </span>
+      {!bubble && <span className="edu-choice-mark" aria-hidden="true" />}
       {children}
     </button>
   )
@@ -151,8 +150,10 @@ function Portrait({ friend, feeling, gesture, actionKey, active = true }) {
 function FaceDetail({ feeling }) {
   return (
     <div className={'face-detail face-detail-' + feeling}>
-      <EmotionCard feeling={feeling} />
-      <span aria-hidden="true" />
+      <div className="face-detail-image">
+        <EmotionCard feeling={feeling} />
+        <span aria-hidden="true" />
+      </div>
     </div>
   )
 }
@@ -197,14 +198,14 @@ function Board({ title, description, illustration, guide, className = '', childr
     </section>
   )
 }
-function EmotionIntroduction({ feeling, friend, active, meaning, example, onNext }) {
+function EmotionIntroduction({ feeling, friend, active, text, onNext }) {
   const heading = useRef(null)
   const id = useId()
-  useNarration(meaning + ' ' + example, onNext)
+  useNarration(text)
   useEffect(() => {
     heading.current?.focus({ preventScroll: true })
     window.scrollTo(0, 0)
-  }, [feeling])
+  }, [text])
 
   return (
     <section className="edu-board edu-intro" aria-labelledby={id}>
@@ -217,8 +218,8 @@ function EmotionIntroduction({ feeling, friend, active, meaning, example, onNext
           <div className="edu-header">
             <h1 id={id} ref={heading} tabIndex="-1">{FEELINGS[feeling].label}</h1>
           </div>
-          <p>{meaning}</p>
-          <p>{example}</p>
+          <p>{text}</p>
+          <div className="edu-intro-actions"><Action onClick={onNext}>다음</Action></div>
         </div>
       </div>
     </section>
@@ -243,146 +244,168 @@ const PLACEMENT = [
     hint: '눈과 입이 동그래진 얼굴을 찾아봐요.',
   },
 ]
+function QuizFeedback({ correct, hint, illustration, friend, active, onContinue, nextLabel = '다음' }) {
+  const title = correct ? '딩동댕! 맞았어요!' : '아까워요! 다시 생각해 볼까요?'
+  return (
+    <Board
+      title={title}
+      description={hint}
+      voiceLine={title + ' ' + hint}
+      illustration={illustration}
+      guide={<GuidePortrait friend={friend} active={active} />}
+    >
+      <Action onClick={onContinue}>{correct ? nextLabel : '다시 골라 보기'}</Action>
+    </Board>
+  )
+}
+
 export function LevelTest({ progress, onUpdate, onDone, friend, active }) {
   const state = progress.placement || {}
   const idx = state.index === 1 ? 1 : 0
   const item = PLACEMENT[idx]
-  const solved = state.choice === item.target
-  function choose(value) {
-    if (solved) return
-    if (value === item.target) return advance()
-    onUpdate({
-      placement: {
-        ...state,
-        index: idx,
-        choice: value,
-        usedHint: Boolean(state.usedHint) || value !== item.target,
-      },
-    })
+  function update(values) {
+    onUpdate({ placement: { ...state, index: idx, ...values } })
   }
   function advance() {
     if (idx === 0) onUpdate({ placement: { index: 1, usedHint: Boolean(state.usedHint) } })
     else onDone(state.usedHint ? 'basic' : 'expand')
   }
-  if (!state.introduced && !state.choice) {
+  if (item.alternatives.includes(state.choice)) {
+    const correct = state.choice === item.target
+    return (
+      <QuizFeedback
+        correct={correct}
+        hint={correct ? FEELINGS[item.target].clue : item.hint}
+        illustration={<figure className="edu-figure"><EmotionCard feeling={state.choice} /></figure>}
+        friend={friend}
+        active={active}
+        onContinue={correct ? advance : () => update({ choice: null, introduced: true })}
+        nextLabel={idx === 0 ? '다음 얼굴 보기' : '진단 마치기'}
+      />
+    )
+  }
+  if (!state.introduced) {
     return (
       <EmotionIntroduction
         feeling={item.target}
         friend={friend}
         active={active}
-        meaning={item.meaning}
-        example={item.example}
-        onNext={() => onUpdate({ placement: { ...state, index: idx, introduced: true } })}
+        text={state.showExample ? item.example : item.meaning}
+        onNext={() => update(state.showExample ? { introduced: true } : { showExample: true })}
       />
     )
   }
   return (
-    <Board title={item.prompt} voiceLine={state.choice && !solved ? item.hint : item.prompt}>
+    <Board title={item.prompt}>
       <div className="edu-placement-prompt">
         <div className="edu-placement">
           {item.alternatives.map((key) => (
             <button
               type="button"
               key={key}
-              aria-pressed={state.choice === key}
               aria-label={FEELINGS[key].clue}
-              disabled={solved}
-              className={'edu-picture-choice' + (state.choice === key ? ' is-selected' : '')}
-              onClick={() => choose(key)}
+              className="edu-picture-choice"
+              onClick={() => update({ choice: key, usedHint: Boolean(state.usedHint) || key !== item.target })}
             >
               <EmotionCard feeling={key} alt="" />
-              {state.choice === key && (
-                <span className="edu-picture-check" aria-hidden="true">
-                  ✓
-                </span>
-              )}
             </button>
           ))}
         </div>
         <GuidePortrait friend={friend} className="edu-placement-guide" active={active} />
       </div>
-      <div className="edu-action-row">
-        <p role="status">
-          {solved ? '찾았어요! ' + FEELINGS[item.target].clue : state.choice ? item.hint : ''}
-        </p>
-        {solved && (
-          <Action onClick={advance}>{idx === 0 ? '다음 얼굴 보기' : '학습 시작하기'}</Action>
-        )}
-      </div>
     </Board>
   )
 }
+
 function EmotionActivity({ fact, feeling, friend, state, update, next, expanded, active }) {
   const practice = feelingPractice[feeling]
   // Older walks saved word choices before the introductory scenes existed.
   const phase = state.practicePhase || (state.selected || state.solved ? 'words' : 'intro')
-  const cueFound = state.cue === practice.target
-  const card = (
-    <figure className="edu-figure">
-      <EmotionCard feeling={feeling} />
-    </figure>
-  )
-  if (phase === 'intro') {
+  const guide = <GuidePortrait friend={friend} active={active} />
+  const card = <figure className="edu-figure"><EmotionCard feeling={feeling} /></figure>
+  if (phase === 'intro' || phase === 'example') {
     return (
       <EmotionIntroduction
         feeling={feeling}
         friend={friend}
         active={active}
-        meaning={practice.meaning}
-        example={practice.example}
-        onNext={() => update({ practicePhase: 'experiment' })}
+        text={phase === 'intro' ? practice.meaning : practice.example}
+        onNext={() => update({ practicePhase: phase === 'intro' ? 'example' : 'experiment' })}
       />
     )
   }
-  if (phase === 'experiment' || phase === 'discovery') {
-    const revealed = phase === 'discovery'
+  if (phase === 'experiment' || phase === 'reaction') {
+    const revealed = phase === 'reaction'
     return (
       <Board
         title={revealed ? practice.afterTitle : practice.beforeTitle}
-        description={revealed ? practice.reaction : practice.before}
-        voiceLine={revealed ? practice.reaction + ' ' + practice.cueQuestion : practice.before}
-        guide={revealed && <GuidePortrait friend={friend} active={active} />}
+        description={revealed ? undefined : practice.before}
+        voiceLine={revealed ? practice.reaction : practice.before}
+        className={feeling === 'surprise' && !revealed ? 'edu-surprise-box' : undefined}
         illustration={
           <div className="edu-figure practice-field">
-            {revealed ? <FaceDetail feeling={feeling} /> : (
-              <figure className="practice-field-friend">
-                <Portrait friend={friend} feeling="neutral" active={active} gesture="listen" />
-              </figure>
-            )}
+            <figure className="practice-field-friend">
+              <Portrait friend={friend} feeling={revealed ? feeling : 'neutral'} active={active} gesture={revealed ? 'speak' : 'listen'} />
+            </figure>
             <PracticeObject
               feeling={feeling}
               revealed={revealed}
-              onAct={revealed ? undefined : () => update({ practicePhase: 'discovery' })}
+              onAct={revealed ? undefined : () => update({ practicePhase: 'reaction' })}
             />
           </div>
         }
       >
         {revealed && (
           <>
-            <p className="edu-prompt">
-              {practice.cueQuestion}
-            </p>
-            <div className="practice-cue-options" role="group" aria-label="표정 단서">
-              {practice.cues.map((cue) => (
-                <Choice
-                  key={cue}
-                  selected={state.cue === cue}
-                  disabled={cueFound}
-                  onClick={() => update(cue === practice.target ? { cue, practicePhase: 'words' } : { cue })}
-                >
-                  {cue}
-                </Choice>
-              ))}
-            </div>
-            <p className="edu-feedback" role="status">
-              {cueFound ? fact.clue : state.cue ? practice.cueHint : ''}
-            </p>
-            {cueFound && (
-              <Action onClick={() => update({ practicePhase: 'words' })}>마음 낱말 고르기</Action>
-            )}
+            <blockquote className="edu-speech">{practice.reaction}</blockquote>
+            <Action onClick={() => update({ practicePhase: 'discovery' })}>표정 살펴보기</Action>
           </>
         )}
       </Board>
+    )
+  }
+  if (phase === 'discovery') {
+    return (
+      <Board
+        title={practice.cueQuestion}
+        guide={guide}
+        illustration={
+          <div className="edu-figure practice-field practice-field-detail">
+            <FaceDetail feeling={feeling} />
+            <PracticeObject feeling={feeling} revealed />
+          </div>
+        }
+      >
+        <div className="practice-cue-options" role="group" aria-label="표정 단서">
+          {practice.cues.map((cue) => (
+            <Choice
+              key={cue}
+              onClick={() => update({ cue, practicePhase: 'cue-result' })}
+            >
+              {cue}
+            </Choice>
+          ))}
+        </div>
+      </Board>
+    )
+  }
+  if (phase === 'cue-result' || phase === 'word-result') {
+    const cueResult = phase === 'cue-result'
+    const correct = cueResult ? state.cue === practice.target : state.solved === true
+    return (
+      <QuizFeedback
+        correct={correct}
+        hint={!correct && cueResult ? practice.cueHint : fact.clue}
+        illustration={cueResult ? <figure className="edu-figure"><FaceDetail feeling={feeling} /></figure> : card}
+        friend={friend}
+        active={active}
+        onContinue={() => {
+          if (cueResult) update({ practicePhase: correct ? 'words' : 'discovery', cue: null })
+          else if (correct) next()
+          else update({ practicePhase: 'words', selected: [], solved: false })
+        }}
+        nextLabel={cueResult ? '마음 낱말 고르기' : '감정 탐색 마치기'}
+      />
     )
   }
   const words = expanded ? [fact.word, fact.kin, fact.opposite] : [fact.word, fact.opposite]
@@ -391,50 +414,29 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
   const selected = Array.isArray(state.selected)
     ? state.selected.filter((x) => words.includes(x))
     : []
-  const done = Boolean(state.solved)
-  function pick(word) {
-    if (done) return
-    if (!expanded && word === fact.word) return next()
-    if (!expanded) return update({ selected: [word], feedback: fact.clue })
-    const current = selected.includes(word) ? selected.filter((x) => x !== word) : [...selected, word]
-    update({ selected: current, feedback: '' })
+  function answer(correct, selection = selected) {
+    update({ selected: selection, solved: correct, practicePhase: 'word-result' })
   }
-  function submit() {
-    const correct =
-      selected.length > 0 && selected.every((word) => word === fact.word || word === fact.kin)
-    if (correct) return next()
-    update({ feedback: '그림을 다시 볼까요? ' + fact.clue })
+  function pick(word) {
+    if (!expanded) return answer(word === fact.word, [word])
+    update({ selected: selected.includes(word) ? selected.filter((x) => x !== word) : [...selected, word] })
   }
   return (
     <Board
       title="어떤 마음일까요?"
-      className="edu-word-choice"
-      description={
-        expanded
-          ? '맞는 말을 하나나 두 개 골라요.'
-          : '맞는 말 하나를 골라요.'
-      }
+      description={expanded ? '맞는 말을 하나나 두 개 골라요.' : '맞는 말 하나를 골라요.'}
       illustration={card}
-      guide={<GuidePortrait friend={friend} active={active} />}
+      guide={guide}
     >
-      <div
-        className={expanded ? 'edu-choices edu-multiple' : 'edu-choices'}
-        role="group"
-        aria-label="마음 낱말"
-      >
-        {words.map((w) => (
-          <Choice key={w} selected={selected.includes(w)} disabled={done} onClick={() => pick(w)}>
-            {w}
+      <div className="edu-choices edu-word-options" role="group" aria-label="마음 낱말">
+        {words.map((word) => (
+          <Choice bubble key={word} selected={selected.includes(word)} onClick={() => pick(word)}>
+            {word}
           </Choice>
         ))}
       </div>
-      <p role="status" className="edu-feedback">
-        {state.feedback}
-      </p>
-      {done ? (
-        <Action onClick={next}>표정 연습으로</Action>
-      ) : (
-        expanded && <Action onClick={submit} disabled={selected.length === 0}>
+      {expanded && (
+        <Action disabled={selected.length === 0} onClick={() => answer(selected.every((word) => word === fact.word || word === fact.kin))}>
           선택 확인하기
         </Action>
       )}
@@ -536,12 +538,17 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
   const camera = useCamera(active)
   const [demonstration, setDemonstration] = useState(0)
   const ways = feelingPractice[feeling].expression
-  if (state.mirrorPhase === 'express' || state.mirrorPhase === 'response') {
-    const chosen = state.mirrorPhase === 'response' ? ways[state.mirrorChoice] : null
+  const chosen = ways[state.mirrorChoice]
+  if (state.mirrorPhase === 'express' || (chosen && ['response', 'answer'].includes(state.mirrorPhase))) {
+    const showingAnswer = state.mirrorPhase === 'answer'
+    const showingPractice = state.mirrorPhase === 'response'
+    const title = showingAnswer ? '친구가 이렇게 답했어요' : '내 마음을 전해 봐요'
+    const description = showingAnswer ? chosen.answer : showingPractice ? chosen.practice : '말이나 몸짓을 골라요.'
     return (
       <Board
-        title={chosen ? '친구가 이렇게 답했어요' : '내 마음을 전해 봐요'}
-        description={chosen ? chosen.practice : '말이나 몸짓을 골라요.'}
+        title={title}
+        description={description}
+        focusKey={state.mirrorPhase}
         guide={<GuidePortrait friend={friend} active={active} />}
         illustration={
           <figure className="edu-figure">
@@ -549,13 +556,10 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
           </figure>
         }
       >
-        {chosen ? (
-          <>
-            <p className="edu-response-copy">
-              {chosen.answer}
-            </p>
-            <Action onClick={next}>연습 마치기</Action>
-          </>
+        {showingAnswer ? (
+          <Action onClick={next}>연습 마치기</Action>
+        ) : showingPractice ? (
+          <Action onClick={() => update({ mirrorPhase: 'answer' })}>친구의 답 보기</Action>
         ) : (
           <div className="edu-choices" role="group" aria-label="마음을 전하는 방법">
             {ways.map((way, index) => (
@@ -573,6 +577,12 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
       </Board>
     )
   }
+  const cameraOn = camera.status === 'on' || camera.status === 'waiting'
+  const cameraLabel = {
+    on: '카메라 끄기',
+    waiting: '카메라 요청 취소',
+    unavailable: '카메라 다시 켜기',
+  }[camera.status] || '카메라로 내 모습 보기'
   return (
     <Board
       title="표정을 따라 해 봐요"
@@ -599,25 +609,6 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
           <video ref={camera.video} muted autoPlay playsInline aria-label="이 기기의 내 모습" />
         </div>
       )}
-      <div className="edu-mirror-actions">
-        {camera.status === 'on' || camera.status === 'waiting' ? (
-          <button className="edu-secondary" type="button" onClick={camera.off}>
-            {camera.status === 'waiting' ? '카메라 요청 취소' : '카메라 끄기'}
-          </button>
-        ) : (
-          <button className="edu-secondary" type="button" onClick={camera.start}>
-            {camera.status === 'unavailable' ? '카메라 다시 켜기' : '카메라로 내 모습 보기'}
-          </button>
-        )}
-        <Action
-          onClick={() => {
-            camera.off()
-            update({ mirrorPhase: 'express' })
-          }}
-        >
-          표정 연습 마쳤어요
-        </Action>
-      </div>
       <p role="status" className="edu-note edu-camera-status">
         {camera.status === 'on'
           ? camera.facePresent
@@ -629,6 +620,25 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next }) 
               ? '카메라가 꺼져 있어요. 그림을 봐요.'
               : null}
       </p>
+      <div className="edu-mirror-actions">
+        <button
+          className="edu-secondary edu-camera-toggle"
+          type="button"
+          onClick={cameraOn ? camera.off : camera.start}
+          aria-label={cameraLabel}
+          title={cameraLabel}
+        >
+          {cameraOn ? <CameraOff aria-hidden="true" /> : <Camera aria-hidden="true" />}
+        </button>
+        <Action
+          onClick={() => {
+            camera.off()
+            update({ mirrorPhase: 'express' })
+          }}
+        >
+          표정 연습 마쳤어요
+        </Action>
+      </div>
     </Board>
   )
 }
@@ -656,6 +666,7 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
     'situation',
     'act',
     'consequence',
+    'consequence-line',
     'question',
     'reply',
     'extra',
@@ -666,10 +677,15 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
   const savedPage = Number.isInteger(state.bookPage) ? state.bookPage : 0
   const page =
     phase === 'book' ? Math.max(0, Math.min(pages.length - 1, savedPage)) : pages.length - 1
+  const reaction = phase === 'book' && page === pages.length - 1 && tale.finalPageReaction
+  const showingReaction = Boolean(reaction && state.showBookReaction)
+  const bookText = showingReaction ? reaction : pages[page]
+  const sceneKey = phase + '-' + page + (showingReaction ? '-reaction' : '')
   const chosen = state.branch === 0 || state.branch === 1 ? state.branch : null
   const outcome = chosen == null ? null : tale.actions[chosen]
   const friendName = friend?.name || '숲속 친구'
   const inDialogue = ['question', 'reply', 'extra', 'ending'].includes(phase)
+  const isConsequence = phase === 'consequence' || phase === 'consequence-line'
   // A conversation saved before the picture books existed keeps its original replies.
   const conversation = outcome ? tale.talk : fact
   const isExtra = phase === 'extra'
@@ -682,28 +698,29 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
   let title = tale.title
   if (phase === 'situation') title = tale.situation
   if (phase === 'act') title = '이때 어떻게 할까요?'
-  if (phase === 'consequence' && outcome) title = outcome.title
+  if (isConsequence && outcome) title = outcome.title
   if (inDialogue) title = isEnding ? '이야기를 마쳤어요' : withFriend(friendName) + ' 나누는 이야기'
-  const showActions = phase === 'act' || (phase === 'consequence' && !outcome)
-  const afterChoice = (phase === 'consequence' || inDialogue) && outcome != null
+  const showActions = phase === 'act' || (isConsequence && !outcome)
+  const afterChoice = (isConsequence || inDialogue) && outcome != null
   let expression = feeling
-  if (phase === 'book' && page < 2) expression = 'neutral'
+  if (phase === 'book' && (page < pages.length - 1 || (reaction && !showingReaction))) expression = 'neutral'
   if (afterChoice) expression = outcome.expression
   return (
     <Board
       title={title}
-      voiceLine={phase === 'book' ? pages[page].replaceAll('{친구}', '숲 친구')
+      className={isConsequence || inDialogue ? 'edu-tale-dialogue' : undefined}
+      voiceLine={phase === 'book' ? bookText.replaceAll('{친구}', '숲 친구')
         : phase === 'situation' ? tale.explanation
-        : phase === 'consequence' && outcome ? outcome.event + ' ' + outcome.line
+        : isConsequence && outcome ? (phase === 'consequence' ? outcome.event : outcome.line)
         : phase === 'question' ? conversation.ask
         : isExtra ? conversation.again
         : phase === 'reply' || isEnding ? replyText : title}
-      focusKey={phase + '-' + page}
+      focusKey={sceneKey}
       illustration={
         <TaleScene
           feeling={feeling}
           page={page}
-          branch={phase === 'consequence' || inDialogue ? chosen : null}
+          branch={isConsequence || inDialogue ? chosen : null}
           active={active}
         >
           <Portrait
@@ -711,7 +728,7 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
             feeling={expression}
             active={active}
             gesture={phase === 'act' ? 'listen' : phase === 'consequence' ? 'nod' : 'speak'}
-            actionKey={phase + '-' + page}
+            actionKey={sceneKey}
           />
         </TaleScene>
       }
@@ -719,10 +736,12 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
       {phase === 'book' && (
         <>
           <p className="edu-story">
-            {pages[page].replaceAll('{친구}', friend?.familiar || friendName)}
+            {bookText.replaceAll('{친구}', friend?.familiar || friendName)}
           </p>
           {page + 1 < pages.length ? (
             <Action onClick={() => update({ phase: 'book', bookPage: page + 1 })}>다음 장</Action>
+          ) : reaction && !showingReaction ? (
+            <Action onClick={() => update({ showBookReaction: true })}>다음 문장</Action>
           ) : (
             <Action onClick={() => update({ phase: 'situation' })}>장면 살펴보기</Action>
           )}
@@ -744,14 +763,19 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
       )}
       {phase === 'consequence' && outcome && (
         <>
-          <p className="edu-story">
-            {outcome.event}
-          </p>
-          <blockquote>“{outcome.line}”</blockquote>
-          <Action onClick={() => update({ phase: 'question' })}>친구와 대화하기</Action>
-          <button type="button" className="edu-link" onClick={() => update({ phase: 'act' })}>
-            다른 방법 해 보기
-          </button>
+          <p className="edu-story">{outcome.event}</p>
+          <Action onClick={() => update({ phase: 'consequence-line' })}>친구의 말 듣기</Action>
+        </>
+      )}
+      {phase === 'consequence-line' && outcome && (
+        <>
+          <blockquote className="edu-speech">“{outcome.line}”</blockquote>
+          <div className="edu-tale-actions">
+            <Action onClick={() => update({ phase: 'question' })}>친구와 대화하기</Action>
+            <button type="button" className="edu-secondary" onClick={() => update({ phase: 'act' })}>
+              다른 방법 해 보기
+            </button>
+          </div>
         </>
       )}
       {(phase === 'question' || isExtra) && (
@@ -769,12 +793,14 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
           <p className="edu-story" role="status">
             {replyText}
           </p>
-          <Action onClick={onComplete}>산책 마무리하기</Action>
-          {phase === 'reply' && (
-            <button type="button" className="edu-link" onClick={() => update({ phase: 'extra' })}>
-              조금 더 이야기하기
-            </button>
-          )}
+          <div className={phase === 'reply' ? 'edu-tale-actions' : undefined}>
+            <Action onClick={onComplete}>산책 마무리하기</Action>
+            {phase === 'reply' && (
+              <button type="button" className="edu-secondary" onClick={() => update({ phase: 'extra' })}>
+                조금 더 이야기하기
+              </button>
+            )}
+          </div>
         </>
       )}
     </Board>

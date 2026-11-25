@@ -120,6 +120,26 @@ svg {
   align-items: center;
   justify-items: center;
 }
+.scene-resume {
+  position: fixed;
+  z-index: 3;
+  inset-inline: 12px;
+  bottom: max(22px, env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.scene-resume > span {
+  padding: 10px 22px;
+  border: 1px solid var(--forest-card-edge);
+  border-radius: var(--forest-pill-radius);
+  background: var(--forest-card);
+  color: var(--forest-ink);
+  box-shadow: 0 3px 12px #28452b33;
+  font-size: var(--forest-body-size);
+  font-weight: 700;
+  text-align: center;
+}
 .scene-footer {
   grid-area: 1 / 1;
   justify-self: end;

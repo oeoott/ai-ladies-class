@@ -1,5 +1,6 @@
-import React, { useId } from 'react'
+import React, { useContext, useId } from 'react'
 import { FriendCharm } from './FriendLook.jsx'
+import { NarrationActive } from './narration.js'
 
 // Coordinates are in pixels of the three original, transparent cover illustrations.
 const faces = {
@@ -310,10 +311,11 @@ export function PaintedFriend({
   )
 }
 
-export function GuidePortrait({ friend, className, active = true }) {
+export function GuidePortrait({ friend, className, active }) {
+  const sceneActive = useContext(NarrationActive)
   return (
     <PaintedFriend cover kind={friend.id} src={friend.image} label={friend.name}
-      feeling="joy" active={active} charm={friend.charm} headwear={friend.headwear}
+      feeling="joy" active={active ?? sceneActive} charm={friend.charm} headwear={friend.headwear}
       className={className} />
   )
 }

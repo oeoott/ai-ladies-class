@@ -1,8 +1,8 @@
 import { useNarration } from './narration.js'
 import { GuidePortrait } from './PaintedFriend.jsx'
-import { FriendLook } from './FriendLook.jsx'
 import { GuardianGate } from './GuardianGate.jsx'
 import React, { useId, useLayoutEffect, useRef, useState } from 'react'
+import { Play } from 'lucide-react'
 import { FriendStudio } from './FriendStudio.jsx'
 import './panels.css'
 
@@ -113,7 +113,7 @@ function Account({ initialEmail, signup, onAccountDone, onDraft }) {
   return (
     <>
       <p className="forest-panel-note" id={fieldId + '-purpose'}>
-        {signup ? '이메일로 매일 학습 리포트를 보내드릴게요' : '학습 리포트를 받을 이메일을 입력해 주세요.'}
+        {signup ? '보호자 설정에서 이 주소로 학습 리포트를 보낼 수 있어요.' : '학습 리포트를 받을 이메일을 입력해 주세요.'}
       </p>
       <form className="forest-account-form" noValidate onSubmit={submit}>
         <input
@@ -273,7 +273,6 @@ function PanelDialog({
   friend,
   friends = [],
   onFriend,
-  onChooseFirstFriend,
   onStartPlacement,
   onRetest,
   onUnlock,
@@ -333,7 +332,7 @@ function PanelDialog({
   return (
     <dialog
       ref={dialog}
-      className={'forest-panel is-' + mode}
+      className={'forest-panel is-' + mode + (mode === 'chooseFriend' ? ' is-friends' : '')}
       aria-labelledby={titleId}
       onKeyDown={wrapFocus}
       onCancel={(event) => {
@@ -367,19 +366,6 @@ function PanelDialog({
           ))}
         </div>
       )}
-      {mode === 'chooseFriend' && (
-        <div className="forest-friend-choices">
-          {friends.map((animal) => (
-            <button type="button" className="forest-panel-secondary" key={animal.id}
-              aria-label={animal.species + ' ' + animal.name}
-              onClick={() => onChooseFirstFriend(animal.id)}
-            >
-              <FriendLook friend={animal} alt="" />
-              <span>{animal.name}</span>
-            </button>
-          ))}
-        </div>
-      )}
       {mode === 'friendHello' && (
         <>
           <GuidePortrait friend={friend} className="forest-greeting-friend" />
@@ -391,7 +377,10 @@ function PanelDialog({
           </button>
         </>
       )}
-      {mode === 'friends' && <FriendStudio friend={friend} friends={friends} onFriend={onFriend} />}
+      {(mode === 'chooseFriend' || mode === 'friends') && (
+        <FriendStudio friend={friend} friends={friends} onFriend={onFriend}
+          submitLabel={mode === 'chooseFriend' ? '이 친구와 함께하기' : '꾸미기 완료'} />
+      )}
       {(mode === 'together' || mode === 'bringParent') && (
         <GuidePortrait friend={friend} className="parent-prompt-guide" />
       )}
@@ -437,7 +426,7 @@ function PanelDialog({
             <Icon name="leaf" size={40} />
           </div>
           <button className="forest-panel-primary" type="button" onClick={onClose}>
-            이어서 하기 <Icon name="next" size={18} />
+            <Play aria-hidden="true" /> 이어서 하기
           </button>
         </>
       )}

@@ -35,7 +35,7 @@ export function ForestEntrance({ friend, finished, resuming = false, onEnter, hi
   return (
     <main
       id="main-content"
-      className={'forest-entrance' + (walking ? ' is-entering' : '')}
+      className={'forest-entrance' + (walking ? ' is-entering' : '') + (hidden ? ' is-in-forest' : '')}
       style={{ '--entrance-walk-duration': walkDuration + 'ms' }}
       aria-labelledby="entrance-title"
     >

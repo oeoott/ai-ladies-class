@@ -9,7 +9,7 @@
 .friend-studio {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: center;
+  align-items: end;
   gap: clamp(18px, 3vw, 36px);
 }
 .studio-portrait {

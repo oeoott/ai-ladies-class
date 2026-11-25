@@ -73,6 +73,13 @@ test('a recorded line animates the guide and falls back if playback is blocked',
   const clip = recordings[0]
   clip.onplaying()
   assert.equal(dataset.talking, 'true')
+  clip.onwaiting()
+  assert.equal(dataset.talking, undefined)
+  clip.onplaying()
+  clip.onpause()
+  assert.equal(dataset.talking, undefined)
+  clip.onplaying()
+  assert.equal(dataset.talking, 'true')
   clip.onended()
   assert.equal(dataset.talking, undefined)
   assert.equal(ended, 1)

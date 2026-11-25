@@ -1,6 +1,6 @@
-import { NarrationActive, NarrationVoice, useNarration } from './narration.js'
+import { narrate, NarrationActive, NarrationVoice, useNarration } from './narration.js'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Pause, PawPrint, ShieldCheck, Sprout } from 'lucide-react'
+import { ArrowLeft, Pause, PawPrint, Play, ShieldCheck, Sprout } from 'lucide-react'
 import { ForestEntrance } from './ForestEntrance.jsx'
 import { GuidePortrait } from './PaintedFriend.jsx'
 import { JourneyProgress } from './JourneyProgress.jsx'
@@ -22,6 +22,7 @@ import {
 
 const asset = (file) => import.meta.env.BASE_URL + file
 const recipientKey = 'maeum-forest.report-recipient.v1'
+const resumePrompt = '이제 다시 이어가 볼까요?'
 const friends = [
   { id: 'lion', name: '라온', familiar: '라온이', species: '사자' },
   { id: 'rabbit', name: '보리', familiar: '보리', species: '토끼' },
@@ -44,13 +45,13 @@ function startSession() {
   }
 }
 
-function SceneTools({ onGuard, onRest, learning }) {
+function SceneTools({ onGuard, onRest, learning, resting }) {
   return (
     <div className="scene-tools">
       {learning && (
         <button type="button" className="scene-tool" onClick={onRest} aria-haspopup="dialog">
-          <Pause aria-hidden="true" />
-          쉬어 가기
+          {resting ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}
+          {resting ? '쉬는 중' : '쉬어 가기'}
         </button>
       )}
       <button
@@ -161,6 +162,14 @@ function App() {
   const [session, setSession] = useState(startSession)
   const [hasEntered, setHasEntered] = useState(false)
   const [panel, setPanel] = useState(null)
+  const [resuming, setResuming] = useState(false)
+  useEffect(() => {
+    if (!resuming) return
+    // Play the return cue after the scene's narration effect has resumed.
+    narrate(resumePrompt)
+    const timer = setTimeout(() => setResuming(false), 4200)
+    return () => clearTimeout(timer)
+  }, [resuming])
   const [storageUnavailable, setStorageUnavailable] = useState(false)
   const [recipient, setRecipient] = useState(() => {
     try {
@@ -224,21 +233,24 @@ function App() {
   }, [page, session.step, showEntrance])
 
   function move(values) {
+    setResuming(false)
     const { page, placement, step, activity, retestReturn, onboarded, level } = session
-    const phaseChanged = ['practicePhase', 'mirrorPhase', 'phase', 'bookPage', 'completed']
+    const phaseChanged = ['practicePhase', 'mirrorPhase', 'phase', 'bookPage', 'showBookReaction', 'completed']
       .some((field) => activity?.[field] !== values.activity?.[field])
     if ((values.page && values.page !== page) || ('step' in values && step !== values.step)
       || ('activity' in values && (phaseChanged || values.activity === null))
-      || ('placement' in values && (placement?.index !== values.placement?.index
-        || placement?.introduced !== values.placement?.introduced))) {
+      || ('placement' in values && ['index', 'introduced', 'showExample', 'choice']
+        .some((field) => placement?.[field] !== values.placement?.[field]))) {
       history.current.push({ page, placement, step, activity, retestReturn, onboarded, level })
     }
     patch(values)
   }
   function previousScene() {
+    setResuming(false)
     const previous = history.current.pop()
     if (previous) {
-      patch(previous)
+      const keepHint = page === 'placement' && previous.page === 'placement' && session.placement?.usedHint
+      patch(keepHint ? { ...previous, placement: { ...previous.placement, usedHint: true } } : previous)
       return
     }
     if (page === 'placement' && session.retestReturn) {
@@ -259,6 +271,7 @@ function App() {
     setPanel(null)
   }
   function open(mode, origin) {
+    setResuming(false)
     entry.current = origin
     setPanel(mode)
   }
@@ -287,11 +300,7 @@ function App() {
       friendNickname: nickname,
     }
     patch(appearance)
-    setPanel('guardian')
-  }
-  function chooseFirstFriend(id) {
-    patch({ friendId: id, friendCharm: null, friendHeadwear: null, friendNickname: '' })
-    setPanel('friendHello')
+    setPanel(entry.current === 'onboarding' ? 'friendHello' : 'guardian')
   }
   function startPlacement() {
     patch({ page: 'placement', placement: null })
@@ -307,6 +316,9 @@ function App() {
     })
   }
   function closePanel() {
+    if (panel === 'rest') {
+      setResuming(true)
+    }
     if (entry.current === 'guardian' && panel !== 'guardian' && panel !== 'gate') {
       setPanel('guardian')
       return
@@ -361,6 +373,7 @@ function App() {
                       progress={session}
                       onUpdate={move}
                       onComplete={() => {
+                        setResuming(false)
                         history.current = []
                         setSession(finishWalk)
                       }}
@@ -391,6 +404,9 @@ function App() {
               </CardPortrait.Provider>
             </div>
           </NarrationActive.Provider>
+          <div className="scene-resume" role="status">
+            {resuming && <span>{resumePrompt}</span>}
+          </div>
           {(learning || page === 'ready') && (
             <div className="scene-back">
               <button className="scene-tool" type="button" onClick={previousScene} aria-label="이전">
@@ -401,6 +417,7 @@ function App() {
           <div className="scene-footer">
             <SceneTools
               learning={learning}
+              resting={panel === 'rest'}
               onGuard={() => open('gate', 'guardian')}
               onRest={() => open('rest', 'rest')}
             />
@@ -415,7 +432,6 @@ function App() {
           setPanel(entry.current === 'onboarding' ? 'chooseFriend' : 'guardian')
         }}
         onUnlock={() => setPanel(entry.current === 'onboarding' ? 'portrait' : 'guardian')}
-        onChooseFirstFriend={chooseFirstFriend}
         onStartPlacement={startPlacement}
         onReview={(record) => {
           history.current = []

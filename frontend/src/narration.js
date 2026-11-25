@@ -25,6 +25,9 @@ export function narrate(text, { onStart, onEnd, recording } = {}) {
       document.documentElement.dataset.talking = 'true'
       onStart?.()
     }
+    clip.onpause = clip.onwaiting = () => {
+      if (current === clip) delete document.documentElement.dataset.talking
+    }
     clip.onended = () => {
       if (current !== clip) return
       current = null
@@ -90,7 +93,13 @@ export function useNarration(text, onComplete) {
     }
     const advanceAfter = (delay) => {
       clearTimeout(timer)
-      timer = window.setTimeout(() => { if (!document.hidden) complete() }, delay)
+      timer = window.setTimeout(() => {
+        if (document.hidden) return
+        const playing = current && (window.speechSynthesis?.speaking ||
+          (current.paused === false && current.readyState >= 3))
+        if (playing) advanceAfter(holdAfterNarration)
+        else complete()
+      }, delay)
     }
     const start = () => {
       if (document.hidden) return

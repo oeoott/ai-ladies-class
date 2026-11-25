@@ -15,7 +15,7 @@ function StudioChoice({ selected, label, onClick, children }) {
   )
 }
 
-export function FriendStudio({ friend, friends, onFriend }) {
+export function FriendStudio({ friend, friends, onFriend, submitLabel }) {
   const [id, setId] = useState(friend.id)
   const [headwear, setHeadwear] = useState(friend.headwear || null)
   const [charm, setCharm] = useState(friend.charm || null)
@@ -74,7 +74,7 @@ export function FriendStudio({ friend, friends, onFriend }) {
           <input id={field} value={name} onChange={(event) => setName(event.target.value)}
             placeholder={animal.name} maxLength={12} autoComplete="off" spellCheck={false} />
         </div>
-        <button type="submit" className="forest-panel-primary">꾸미기 완료</button>
+        <button type="submit" className="forest-panel-primary">{submitLabel}</button>
       </div>
     </form>
   )
