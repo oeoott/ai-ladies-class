@@ -1,0 +1,689 @@
+.edu-board {
+  --edu-ink: var(--forest-ink);
+  --edu-muted: var(--forest-muted);
+  --edu-green: var(--forest-action);
+  --edu-line: var(--forest-line);
+  --edu-paper: var(--forest-card);
+  width: min(100%, 1220px);
+  margin: 0 auto;
+  color: var(--edu-ink);
+  line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.edu-board,
+.edu-board * {
+  box-sizing: border-box;
+}
+.edu-board button {
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.edu-board :is(button, h1):focus-visible {
+  outline: 3px solid var(--forest-focus);
+  outline-offset: 4px;
+}
+.edu-board button:disabled {
+  cursor: default;
+}
+.edu-spread,
+.edu-intro {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--forest-scene-gap);
+  align-items: end;
+}
+.edu-spread {
+  grid-template-areas: 'illustration instruction';
+}
+.edu-intro {
+  grid-template-areas: 'illustration guide';
+}
+.edu-paper,
+.edu-preparation .edu-header {
+  background: radial-gradient(ellipse at 0% 0%, var(--forest-card-highlight), transparent 65%), var(--edu-paper);
+  border: 2px solid var(--forest-card-edge);
+  box-shadow: var(--forest-card-shadow);
+}
+.edu-paper {
+  grid-area: instruction;
+  padding: var(--forest-card-padding);
+  border-radius: var(--forest-card-radius);
+}
+.edu-paper .edu-header:not(:last-child) {
+  margin-bottom: clamp(16px, 2vw, 30px);
+}
+.edu-preparation {
+  display: grid;
+  justify-items: center;
+  row-gap: clamp(12px, 2vh, 22px);
+  width: min(100%, 860px);
+}
+.edu-preparation .edu-header {
+  padding: clamp(12px, 2.5vh, 24px) clamp(22px, 4vw, 54px);
+  border-radius: 27px 23px 28px 24px;
+  text-align: center;
+}
+.edu-board .edu-header h1 {
+  font-family: var(--display, inherit);
+  font-size: var(--forest-title-size);
+  line-height: 1.22;
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  margin: 0;
+  color: var(--edu-ink);
+}
+.edu-board :is(.edu-header p, .edu-response-copy) {
+  font-size: var(--forest-body-size);
+  color: var(--edu-muted);
+}
+.edu-board .edu-header p {
+  margin: 0.5em 0 0;
+}
+.edu-response-copy {
+  margin: 0 0 16px;
+}
+.edu-figure {
+  grid-area: illustration;
+  margin: 0;
+  text-align: center;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 7px;
+}
+.edu-portrait {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.edu-figure .edu-portrait {
+  height: clamp(265px, 54vh, 550px);
+  filter: drop-shadow(0 3px 3px #42352129);
+}
+.edu-emotion-card {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+}
+.edu-figure > .edu-emotion-card {
+  width: min(100%, 51vh, 458px);
+}
+.edu-figure > .edu-emotion-card,
+.face-detail {
+  padding: 7px;
+  border: 1px solid #b19c72;
+  border-radius: 20px;
+  background: #fff9e9;
+  box-shadow: 0 4px 0 #8c714fb3, 0 8px 16px #28452b26;
+}
+.edu-figure figcaption {
+  width: fit-content;
+  max-width: 100%;
+  padding: 5px 16px;
+  border-radius: 25px;
+  background: #fff9e9;
+  box-shadow: 0 2px 0 #9a86656b;
+  font-size: 0.98rem;
+  font-weight: 650;
+  color: var(--edu-muted);
+}
+.edu-task {
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+  min-width: 0;
+}
+.edu-task .edu-prompt,
+.edu-task .edu-story,
+.edu-task blockquote {
+  color: var(--edu-ink);
+  margin: 0 0 16px;
+  font-size: var(--forest-prompt-size);
+  font-weight: 650;
+  line-height: 1.65;
+  letter-spacing: -0.025em;
+}
+.edu-task blockquote {
+  font-size: 1.12rem;
+  font-weight: 600;
+}
+.edu-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.edu-board
+  :is(.edu-choice, .edu-reply, .edu-primary, .edu-secondary, .edu-picture-choice) {
+  min-height: var(--forest-action-height);
+  border-radius: var(--forest-button-radius);
+  font-weight: 700;
+  line-height: 1.45;
+}
+.edu-choice,
+.edu-reply {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 18px;
+  gap: 12px;
+  color: #2c4a3e;
+  background: #fffef9;
+  border: 1px solid var(--edu-line);
+  text-align: left;
+}
+.edu-choice-mark {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid #91aa99;
+  background: white;
+}
+.edu-choice.is-selected {
+  background: #edf5ec;
+  border-color: var(--edu-green);
+  box-shadow: 0 0 0 1px var(--edu-green) inset;
+}
+.edu-choice:disabled:not(.is-selected) {
+  opacity: 0.75;
+}
+.edu-board .edu-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  gap: 15px;
+  padding: 10px 22px;
+  border: 1px solid var(--edu-green);
+  background: var(--edu-green);
+  color: white;
+  font-size: 1rem;
+  box-shadow: var(--forest-action-shadow);
+}
+.edu-board .edu-primary:disabled {
+  background: #e2e8e1;
+  color: #57665d;
+  border-color: #d8dfd8;
+  box-shadow: none;
+}
+.edu-note {
+  margin: 9px 0 19px;
+  color: var(--edu-muted);
+  font-size: 1rem;
+}
+.edu-word-options {
+  gap: 14px;
+  padding-inline-start: 10px;
+}
+.edu-word-options + .edu-primary {
+  margin-top: var(--forest-action-gap);
+}
+.edu-board .edu-word-bubble {
+  position: relative;
+  justify-content: center;
+  border-radius: 22px;
+  font-size: var(--forest-body-size);
+}
+:is(.edu-word-bubble, .edu-speech)::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  bottom: 12px;
+  width: 10px;
+  height: 10px;
+  border: solid var(--edu-line);
+  border-width: 0 0 1px 1px;
+  border-radius: 1px;
+  background: inherit;
+  transform: skew(-20deg) rotate(30deg);
+}
+.edu-word-bubble.is-selected::before {
+  border-color: var(--edu-green);
+}
+.edu-board .edu-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background: transparent;
+  color: #355f4b;
+  border: 1px solid var(--edu-line);
+  padding: 10px 15px;
+  align-self: flex-start;
+  font-size: 1rem;
+}
+.edu-mirror-actions,
+.edu-tale-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--forest-action-gap);
+}
+.edu-board :is(.edu-mirror-actions, .edu-tale-actions) > button {
+  align-self: stretch;
+}
+.edu-board .edu-mirror-actions .edu-camera-toggle {
+  width: var(--forest-action-height);
+  min-height: var(--forest-touch);
+  padding: 0;
+}
+.edu-board .edu-mirror-actions .edu-primary {
+  margin-inline-start: auto;
+  min-height: var(--forest-touch);
+  padding: 7px 12px;
+  font-size: 1rem;
+}
+.edu-tale-dialogue .edu-paper {
+  padding: calc(var(--forest-card-padding) + 4px);
+}
+.edu-tale-actions > button {
+  flex: 1 1 9rem;
+}
+.edu-task .edu-speech {
+  position: relative;
+  margin-inline-start: 8px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 12px 17px;
+  border: 1px solid var(--edu-line);
+  border-radius: 17px;
+  background: #fffef9;
+  font-size: var(--forest-body-size);
+}
+@media (min-width: 651px) and (min-aspect-ratio: 1/1) {
+  .edu-tale-dialogue {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  }
+}
+.edu-camera {
+  background: #e6eeea;
+  aspect-ratio: 4/3;
+  max-height: 220px;
+  text-align: center;
+  margin-bottom: 10px;
+  border-radius: var(--forest-button-radius);
+  overflow: hidden;
+  align-self: flex-start;
+  width: min(100%, 270px);
+}
+.edu-camera video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+.edu-placement {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 3.4vw, 44px);
+  width: min(100%, 76vw, 82vh, 710px);
+}
+.edu-board .edu-picture-choice {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  padding: clamp(5px, 0.75vw, 9px);
+  border: 2px solid #b19c72;
+  background: #fff8df;
+  color: var(--edu-ink);
+  border-radius: 20px;
+  box-shadow:
+    0 4px 0 #8c714fb3,
+    0 7px 15px #28452b33;
+}
+@media (hover: hover) {
+  .edu-board .edu-primary:not(:disabled):hover {
+    background: #194d39;
+  }
+  .edu-board
+    :is(.edu-choice, .edu-reply, .edu-secondary, .edu-picture-choice):not(:disabled):hover {
+    border-color: #779a81;
+  }
+}
+@media (max-aspect-ratio: 1/1), (max-width: 650px) {
+  .edu-spread {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'illustration' 'instruction';
+    justify-items: center;
+    gap: clamp(12px, 2vh, 25px);
+  }
+  .edu-paper,
+  .edu-board-guide {
+    width: min(100%, 600px);
+  }
+  .edu-paper {
+    padding: clamp(21px, 3vw, 32px);
+  }
+  .edu-figure {
+    width: 100%;
+  }
+  .edu-figure .edu-portrait {
+    height: clamp(185px, 30vh, 410px);
+  }
+  .edu-figure > .edu-emotion-card {
+    width: min(100%, 30vh, 390px);
+  }
+  .edu-placement {
+    width: min(100%, 690px);
+  }
+  .edu-task .edu-prompt,
+  .edu-task .edu-story {
+    margin-bottom: 13px;
+  }
+}
+@media (min-width: 651px) and (max-aspect-ratio: 1/1) {
+  .edu-spread {
+    grid-template-areas: 'instruction' 'illustration';
+  }
+}
+@media (orientation: landscape) and (max-height: 680px) {
+  .edu-paper {
+    padding: clamp(17px, 2vw, 28px);
+  }
+  .edu-paper .edu-header:not(:last-child) {
+    margin-bottom: 14px;
+  }
+  .edu-board .edu-header h1 {
+    font-size: clamp(1.8rem, 3.7vw, 2.6rem);
+  }
+  .edu-figure .edu-portrait {
+    height: clamp(160px, 49vh, 340px);
+  }
+  .edu-preparation .edu-header {
+    padding: 10px 30px;
+  }
+}
+@media (max-width: 465px) {
+  .edu-figure .edu-portrait {
+    height: clamp(154px, 25vh, 210px);
+  }
+  .edu-placement {
+    gap: 8px;
+  }
+  .edu-board .edu-picture-choice {
+    padding: 4px;
+  }
+}
+.edu-board .edu-reply {
+  justify-content: flex-start;
+  padding-inline: 13px;
+}
+.edu-camera-status:empty {
+  margin: 0;
+}
+.edu-mirror-figure {
+  gap: 14px;
+}
+.edu-board .edu-mirror-figure > .edu-secondary {
+  background: var(--forest-card);
+}
+@media (prefers-reduced-motion: no-preference) {
+  :is(.edu-intro-guide, .edu-board-guide, .practice-field-friend, .tale-cast) > .edu-portrait,
+  .edu-placement-guide, .forest-greeting-friend, .praise-clearing .reward-friend {
+    animation: guide-arrive var(--forest-travel) ease-out;
+    transform-origin: center bottom;
+  }
+  .edu-character-head,
+  .edu-character-eyes,
+  .edu-character-mouth,
+  .edu-character-brow {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .edu-character-head {
+    transform-origin: 50% 88%;
+  }
+  /* Each raster eye or smile is clipped by a stationary feature-sized SVG viewport. */
+  .edu-painted-patch {
+    transform-box: view-box;
+    transform-origin: center;
+  }
+  .edu-character-paw {
+    transform-box: view-box;
+    transform-origin: 0 0;
+  }
+  .edu-portrait [data-gesture='listen'] .edu-character-head {
+    animation: edu-listen 820ms ease-in-out;
+  }
+  .edu-portrait [data-gesture='listen'] .edu-character-eyes {
+    animation: edu-blink 700ms ease-in-out;
+  }
+  .edu-portrait [data-gesture='nod'] .edu-character-head {
+    animation: edu-nod 800ms ease-in-out;
+  }
+
+  /* Show the named facial movement once, ending in the exercise's target expression. */
+  .edu-portrait [data-gesture='model']:not([data-feeling='anger']) .edu-character-mouth,
+  .edu-portrait [data-gesture='model'][data-feeling='surprise'] .edu-character-eyes {
+    animation: edu-form-expression 1250ms ease-in-out;
+  }
+  .edu-portrait [data-feeling='joy'] .edu-character-mouth {
+    transform-origin: center bottom;
+  }
+  .edu-portrait [data-feeling='sad'] .edu-character-mouth {
+    transform-origin: center top;
+  }
+  .edu-portrait [data-gesture='model'] .edu-character-brow {
+    animation: edu-draw-brows 1250ms ease-in-out;
+  }
+  .edu-portrait [data-gesture='speak'] .edu-character-paw {
+    animation: edu-raise-paw 1050ms ease-in-out;
+  }
+  .edu-portrait[data-active='false'], .edu-portrait[data-active='false'] * {
+    animation-play-state: paused !important;
+  }
+}
+@keyframes guide-arrive {
+  from { transform: translateX(-18%); }
+  24% { transform: translate(-12%, -2%) rotate(-1.5deg); }
+  48% { transform: translateX(-7%); }
+  72% { transform: translate(-3%, -1.7%) rotate(1deg); }
+  to { transform: none; }
+}
+@keyframes edu-listen {
+  45%,
+  58% {
+    transform: rotate(-5deg);
+  }
+}
+@keyframes edu-blink {
+  0%,
+  32%,
+  66%,
+  100% {
+    transform: scaleY(1);
+  }
+  49% {
+    transform: scaleY(0.18);
+  }
+}
+@keyframes edu-nod {
+  45% {
+    transform: translateY(4px) scaleY(0.95);
+  }
+}
+@keyframes edu-form-expression {
+  0%,
+  16% {
+    transform: scale(0.87, 0.18);
+  }
+  88%,
+  100% {
+    transform: none;
+  }
+}
+@keyframes edu-draw-brows {
+  0%,
+  16% {
+    transform: translateY(-2px) rotate(-28deg);
+  }
+  88%,
+  100% {
+    transform: none;
+  }
+}
+@keyframes edu-raise-paw {
+  30% {
+    transform: rotate(-2deg) scale(1.035);
+  }
+  58% {
+    transform: rotate(1.5deg) scale(1.025);
+  }
+  81% {
+    transform: rotate(-1deg) scale(1.018);
+  }
+}
+
+.face-detail {
+  width: min(100%, 41vh, 390px);
+}
+.face-detail-image {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 14px;
+}
+.face-detail img { transform: scale(1.45); transform-origin: 50% 64%; }
+.face-detail span {
+  position: absolute;
+  left: 30%; top: 55%; width: 40%; height: 18%;
+  border: 3px solid #29694f;
+  border-radius: 50%;
+}
+.face-detail-anger img, .face-detail-surprise img { transform-origin: 50% 40%; }
+.face-detail-anger span { top: 25%; left: 12%; width: 76%; }
+.face-detail-surprise span { top: 33%; left: 13%; width: 74%; height: 48%; }
+.speaking-mouth { visibility: hidden; }
+@media (prefers-reduced-motion: no-preference) {
+  .edu-portrait[data-active="true"] .edu-character-eyes {
+    animation: guide-blink 4.8s ease-in-out infinite;
+  }
+  [data-talking="true"] .edu-portrait[data-active="true"] .resting-mouth { visibility: hidden; }
+  [data-talking="true"] .edu-portrait[data-active="true"] .speaking-mouth { visibility: visible; }
+  [data-talking="true"] .edu-portrait[data-active="true"] .speaking-mouth > g {
+    transform-box: view-box;
+    transform-origin: 0 0;
+    animation: guide-articulate 440ms ease-in-out infinite;
+  }
+}
+@keyframes guide-blink {
+  0%, 14%, 18%, 100% { transform: scaleY(1); }
+  16% { transform: scaleY(.1); }
+}
+@keyframes guide-articulate {
+  0%, 100% { transform: scale(.93, .12); }
+  24% { transform: scale(.8, .98); }
+  52% { transform: scale(1, .25); }
+  76% { transform: scale(.94, .65); }
+}
+
+.forest-panel .parent-prompt-guide { height: clamp(85px, 19vh, 160px); margin: 0 auto 12px; }
+
+.edu-intro-guide {
+  grid-area: guide;
+  min-width: 0;
+}
+
+.edu-intro-guide .edu-portrait {
+  position: relative;
+  z-index: 1;
+  width: auto;
+  max-width: 100%;
+  height: clamp(86px, 22vh, 205px);
+  margin: 0 auto -7px;
+}
+
+@media (max-width: 650px) {
+  .edu-intro {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'illustration' 'guide';
+    gap: 12px;
+  }
+  .edu-intro-guide {
+    width: min(100%, 600px);
+    justify-self: center;
+  }
+  .edu-intro-guide .edu-portrait {
+    height: clamp(72px, 12vh, 110px);
+  }
+}
+
+.edu-intro-guide .edu-header {
+  padding-right: 0;
+  margin-bottom: 10px;
+}
+
+.edu-intro-guide .edu-header h1 {
+  font-size: clamp(1.6rem, 4vw, 3.4rem);
+}
+
+.edu-intro-guide p {
+  margin: 0;
+  font-size: clamp(1rem, 2.1vw, 1.45rem);
+}
+
+.edu-intro-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--forest-action-gap);
+}
+
+.edu-placement-prompt {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(70px, 19%);
+  align-items: end;
+  gap: clamp(8px, 2vw, 22px);
+  width: min(100%, 810px);
+}
+
+.edu-placement-prompt .edu-placement {
+  width: 100%;
+}
+
+.edu-placement-guide {
+  max-height: clamp(90px, 24vh, 200px);
+  align-self: end;
+}
+
+@media (max-width: 600px) {
+  .edu-placement-prompt {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+
+  .edu-placement-guide {
+    width: auto;
+    height: clamp(76px, 14vh, 116px);
+  }
+}
+
+
+.edu-board-guide {
+  grid-area: instruction;
+  min-width: 0;
+}
+
+.edu-board-guide > .edu-portrait {
+  position: relative;
+  z-index: 1;
+  width: auto;
+  max-width: 100%;
+  height: clamp(72px, 15vh, 145px);
+  margin: 0 auto -6px;
+}
+
+.edu-story-voice {
+  margin-top: 16px;
+}
+
+.edu-story-voice .edu-note {
+  margin-bottom: 0;
+}
+
+.edu-story-voice .edu-note:empty {
+  position: absolute;
+}

@@ -1,0 +1,38 @@
+import assert from 'node:assert/strict'
+import { access, readFile } from 'node:fs/promises'
+import test from 'node:test'
+import { forestTales } from '../src/forestTales.js'
+import { topics } from '../src/session.js'
+
+test('every learning topic has a WebP emotion card', async () => {
+  for (const prefix of ['', 'girl-']) {
+    for (const { id } of topics) {
+      const name = prefix + id
+      const card = await readFile(new URL('../public/art/cards/' + name + '.webp', import.meta.url))
+      assert.equal(card.toString('ascii', 0, 4), 'RIFF', name)
+      assert.equal(card.toString('ascii', 8, 12), 'WEBP', name)
+    }
+  }
+})
+
+test('every daily emotion opens an illustrated tale with two playable outcomes', async () => {
+  for (const { id } of topics) {
+    const tale = forestTales[id]
+    await access(new URL('../public/art/tale-' + id + '.webp', import.meta.url))
+    assert.ok(tale.title && tale.pages.length === 3 && tale.pages.every(Boolean), id)
+    assert.ok(tale.situation && tale.explanation, id)
+    assert.equal(tale.actions.length, 2, id)
+    const [first, second] = tale.actions
+    assert.notEqual(first.label, second.label, id)
+    assert.notEqual(first.event, second.event, id)
+    for (const action of tale.actions) {
+      assert.ok(action.line && action.event, id)
+      assert.ok(
+        action.expression === 'neutral' || topics.some((t) => t.id === action.expression),
+        id,
+      )
+    }
+    assert.equal(tale.talk.choices.length, tale.talk.replies.length, id)
+    assert.equal(tale.talk.extra.length, tale.talk.ends.length, id)
+  }
+})
