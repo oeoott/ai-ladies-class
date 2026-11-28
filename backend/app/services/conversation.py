@@ -109,14 +109,41 @@ def _ask_model(conv: dict, turn: int, said: str, deadline: float, day: str, gene
                 {"messages": messages, **prompts.GENERATION},
                 deadline,
             )
+            if data["choices"][0].get("finish_reason") == "content_filter":  # 모델 답이 Azure 필터에 걸림
+                _filtered(conv, "output")
+                return None
             output = prompts.parse(data["choices"][0]["message"]["content"])
         except Exception as error:
+            if _is_content_filter(error):  # 아이 입력(프롬프트)이 Azure 필터에 걸림 (HTTP 400 content_filter)
+                _filtered(conv, "input")
+                return None
             log.warning("Azure OpenAI 실패: %s", type(error).__name__)
             return None
         if output is not None:
             return output
         log.info("모델 응답 형식이 맞지 않음 (%d번째)", attempt + 1)
     return None
+
+
+FILTER = "AzureOpenAIContentFilter"  # 안전 기록의 범주 이름 (Content Safety 범주와 구분)
+
+
+def _is_content_filter(error: Exception) -> bool:
+    """Azure OpenAI가 프롬프트를 필터로 막으면 HTTP 400과 error.code content_filter를 돌려준다."""
+    response = getattr(error, "response", None)
+    if response is None or getattr(response, "status_code", None) != 400:
+        return False
+    try:
+        body = response.json()
+    except Exception:
+        return False
+    return isinstance(body, dict) and (body.get("error") or {}).get("code") == "content_filter"
+
+
+def _filtered(conv: dict, where: str) -> None:
+    """Foundry(Azure OpenAI) 콘텐츠 필터 차단: 문장 없이 차단 여부·범주·어느 쪽인지만 남긴다."""
+    log.info("Azure OpenAI 콘텐츠 필터 차단 (%s)", where)
+    conv.setdefault("safety", []).append({"blocked": True, "categories": [FILTER], "where": where})
 
 
 def _safe(conv: dict, text: str, max_severity: int, deadline: float) -> bool:

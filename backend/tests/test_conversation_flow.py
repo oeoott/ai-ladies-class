@@ -442,3 +442,54 @@ def test_unknown_action_index_is_422_and_other_fields_still_forbidden():
     assert talk_with(c, wid, 2).status_code == 422
     assert talk_with(c, wid, -1).status_code == 422
     assert c.post(f"/lessons/story/walks/{wid}/talk", json={"nickname": "하늘"}).status_code == 422
+
+
+# ---------- Foundry(Azure OpenAI) 콘텐츠 필터 ----------
+import httpx  # noqa: E402
+
+
+def filter_error():
+    request = httpx.Request("POST", "https://ai.example/openai")
+    response = httpx.Response(400, request=request, json={"error": {"code": "content_filter", "message": "filtered"}})
+    return httpx.HTTPStatusError("400", request=request, response=response)
+
+
+def test_prompt_blocked_by_the_azure_filter_is_recorded_as_a_safety_block(monkeypatch, with_keys):
+    fake = use(monkeypatch, FakeAzure(reply=filter_error()))
+    store = MemoryStore()
+    c = client(store)
+    _, conv_id = walk_and_talk(c)
+    out = say(c, conv_id, HEARD)
+    assert out["fallback_to_picture"] and fake.calls.count("openai") == 1  # 다시 묻지 않음
+    conv = store.get_conversation(conv_id)
+    assert conv["safety"] == [{"blocked": True, "categories": ["AzureOpenAIContentFilter"], "where": "input"}]
+    assert HEARD not in json.dumps(conv, ensure_ascii=False)
+
+
+def test_answer_cut_by_the_azure_filter_falls_back(monkeypatch, with_keys):
+    fake = FakeAzure()
+    real = fake.__call__
+
+    def call(url, headers, body, deadline=None):
+        data = real(url, headers, body, deadline)
+        if "choices" in data:
+            data["choices"][0]["finish_reason"] = "content_filter"
+        return data
+
+    use(monkeypatch, call)
+    store = MemoryStore()
+    c = client(store)
+    _, conv_id = walk_and_talk(c)
+    assert say(c, conv_id, HEARD)["fallback_to_picture"]
+    assert store.get_conversation(conv_id)["safety"][-1]["where"] == "output"
+
+
+def test_other_http_400_is_an_ordinary_failure(monkeypatch, with_keys):
+    request = httpx.Request("POST", "https://ai.example")
+    other = httpx.HTTPStatusError("400", request=request, response=httpx.Response(400, request=request, json={"error": {"code": "BadRequest"}}))
+    use(monkeypatch, FakeAzure(reply=other))
+    store = MemoryStore()
+    c = client(store)
+    _, conv_id = walk_and_talk(c)
+    assert say(c, conv_id, HEARD)["fallback_to_picture"]
+    assert store.get_conversation(conv_id)["safety"] == []
