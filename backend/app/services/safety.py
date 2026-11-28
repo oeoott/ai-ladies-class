@@ -11,6 +11,7 @@
 """
 import logging
 import re
+import unicodedata
 
 from .. import config
 from . import azure
@@ -23,6 +24,24 @@ SAFETY_CATEGORIES = ["Hate", "SelfHarm", "Sexual", "Violence"]
 
 _PHONE = re.compile(r"01[016789][-\s]?\d{3,4}[-\s]?\d{4}")
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+")
+
+
+# Local rules cover explicit profanity and standalone unclear speech only. Intent, reported harm,
+# play and negation need context: the existing Azure checks and conversation model decide those.
+# Normalize the patterns just like the input: NFKC changes compatibility jamo (ㅆㅂ/ㅋㅋ/ㅎㅎ).
+_PROFANITY = re.compile(unicodedata.normalize("NFKC", r"씨발|ㅆㅂ|병신|개새끼|시발(?!점|역|열차)"))
+_UNCLEAR = re.compile(unicodedata.normalize("NFKC", r"(?:아+)?(?:몰라)+|(?:하){3,}|ㅋ{2,}|ㅎ{2,}"))
+
+
+def input_redirect_reason(text: str) -> str | None:
+    """명확한 욕설·뜻 없는 단독 발화만 돌린다. 위협의 의미 판단은 안전 서비스와 모델로 보낸다."""
+    compact = re.sub(r"\s+", "", unicodedata.normalize("NFKC", text))
+    if _PROFANITY.search(compact):
+        return "LocalProfanity"
+    sentences = [s for s in re.split(r"[.!?。！？\n]+", compact) if s]
+    if sentences and all(_UNCLEAR.fullmatch(s) for s in sentences):
+        return "Unclear"
+    return None
 
 
 def _mask_local(text: str) -> str:

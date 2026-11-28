@@ -132,12 +132,20 @@ def run_turn(case: dict, conv: dict) -> dict:
         kind = "openai" if "/chat/completions" in url else "safety" if "/contentsafety/" in url else "language"
         row = {"ok": False}
         calls[kind].append(row)
+        began = time.monotonic()
         try:
             data = real(url, headers, body, deadline)
         except Exception as error:
             row["error"] = _error_kind(error)
+            row["seconds"] = round(time.monotonic() - began, 3)
             raise
+        row["seconds"] = round(time.monotonic() - began, 3)
         row["ok"] = True
+        if kind == "openai":  # 토큰 사용량 (max_completion_tokens를 정하는 근거)
+            usage = data.get("usage") or {}
+            row["usage"] = {"prompt": usage.get("prompt_tokens"), "completion": usage.get("completion_tokens"),
+                            "reasoning": (usage.get("completion_tokens_details") or {}).get("reasoning_tokens"),
+                            "finish": data["choices"][0].get("finish_reason")}
         if kind == "openai":
             row["roles"] = [m["role"] for m in body.get("messages", [])]
             content = data["choices"][0]["message"]["content"]
@@ -162,7 +170,10 @@ def run_turn(case: dict, conv: dict) -> dict:
     model = parsed[-1] if parsed else None
     # 실제 서비스의 입력 안전 검사 결과: 첫 Content Safety 호출이 아이 입력이다 (키가 없으면 None)
     input_check = calls["safety"][0] if calls["safety"] else None
-    input_blocked = None
+    local_blocks = [category for event in conv.get("safety", [])[safety_before:]
+                    for category in event.get("categories", [])
+                    if category in ("LocalThreat", "LocalProfanity")]
+    input_blocked = True if local_blocks else None
     if input_check is not None:
         input_blocked = (not input_check["ok"]) or any(
             v > prompts.INPUT_MAX_SEVERITY for v in input_check.get("severity", {}).values())
@@ -177,10 +188,13 @@ def run_turn(case: dict, conv: dict) -> dict:
             "answered": model is not None,
             "safety_input": None if input_check is None else input_check.get("severity", {"error": input_check.get("error")}),
             "safety_output": None if output_check is None else output_check.get("severity", {"error": output_check.get("error")}),
-            "input_blocked": input_blocked,
+            "input_blocked": input_blocked, "local_input_blocks": local_blocks,
             "filtered": [x.get("where") for x in conv.get("safety", [])[safety_before:]
                          if conversation.FILTER in x.get("categories", [])],
             "said": result.get("said"), "messages_roles": model_calls[-1].get("roles", []) if model_calls else [],
+            "model_usage": [c.get("usage") for c in model_calls if c.get("usage")],
+            "model_seconds": [c.get("seconds") for c in model_calls],
+            "safety_seconds": [c.get("seconds") for c in calls["safety"]] + [c.get("seconds") for c in calls["language"]],
             "context": case.get("context"),
             "seconds": round(took, 3), "ok": judge(case, model, outcome, result.get("reply"), input_blocked)}
 
@@ -219,6 +233,7 @@ def summarize(rows: list[dict]) -> dict:
         "model_calls": {"total": calls, "http_ok": call_ok, "parsed": parsed,
                         "format_errors": sum(r["format_errors"] for r in rows),
                         "timeouts": errors.count("timeout"), "http_errors": errors.count("http"),
+                        "content_filter": errors.count("content_filter"),
                         "other_errors": errors.count("other"),
                         "parsed_rate": _rate(parsed, calls), "timeout_rate": _rate(errors.count("timeout"), calls),
                         "failure_rate": _rate(len(errors), calls)},
@@ -230,7 +245,25 @@ def summarize(rows: list[dict]) -> dict:
         "seconds_p50": statistics.median(times) if times else None,
         "seconds_p95": times[min(len(times) - 1, int(len(times) * 0.95))] if times else None,
         "over_turn_timeout": sum(t >= conversation.TURN_TIMEOUT for t in times),
+        "tokens": _token_summary([u for r in rows for u in r.get("model_usage", [])]),
+        "model_call_seconds": _spread([t for r in rows for t in r.get("model_seconds", []) if t is not None]),
     }
+
+
+def _spread(values: list) -> dict | None:
+    if not values:
+        return None
+    v = sorted(values)
+    return {"n": len(v), "p50": statistics.median(v), "p95": v[min(len(v) - 1, int(len(v) * 0.95))], "max": v[-1]}
+
+
+def _token_summary(usages: list[dict]) -> dict | None:
+    if not usages:
+        return None
+    return {"completion": _spread([u["completion"] for u in usages if u.get("completion") is not None]),
+            "reasoning": _spread([u["reasoning"] for u in usages if u.get("reasoning") is not None]),
+            "prompt": _spread([u["prompt"] for u in usages if u.get("prompt") is not None]),
+            "finish_length": sum(1 for u in usages if u.get("finish") == "length")}
 
 
 def expects_of(case: dict) -> list[str]:
@@ -295,7 +328,8 @@ def main(argv=None) -> int:
         dialog_rows.append(run_dialog(d))
         print(f"대화 {d['id']} ok={dialog_rows[-1]['ok']}", file=sys.stderr)
     report = {"run_at": datetime.now(timezone.utc).isoformat(), "deployment": s.openai_deployment,
-              "prompt_version": prompts.PROMPT_VERSION, "cases_version": json.loads(args.cases.read_text())["version"],
+              "prompt_version": prompts.PROMPT_VERSION,
+              "generation": {k: v for k, v in prompts.GENERATION.items() if k != "response_format"}, "cases_version": json.loads(args.cases.read_text())["version"],
               "services": {"pii": s.language_enabled, "content_safety": s.content_safety_enabled},
               "summary": summarize(rows), "dialog_summary": summarize_dialogs(dialog_rows),
               "rows": rows, "dialogs": dialog_rows}

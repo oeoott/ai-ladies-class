@@ -11,7 +11,7 @@ ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
 
 @dataclass(frozen=True)
 class Settings:
-    cors_origins: list[str] = field(default_factory=lambda: ["http://localhost:5173"])
+    cors_origins: list[str] = field(default_factory=lambda: ["http://localhost:5173", "http://127.0.0.1:5173"])
     openai_endpoint: str = ""
     openai_key: str = ""
     openai_deployment: str = ""
@@ -60,7 +60,9 @@ class Settings:
 
 def load_settings(path: Path = ENV_FILE, environ: Mapping[str, str] | None = None) -> Settings:
     environ = os.environ if environ is None else environ
-    file = {k: (v or "").strip() for k, v in dotenv_values(path).items()} if path.exists() else {}
+    # 브라우저 검사(playwright)처럼 실제 키를 쓰면 안 되는 실행은 MAEUM_IGNORE_DOTENV=1로 backend/.env를 읽지 않는다.
+    use_file = path.exists() and (environ.get("MAEUM_IGNORE_DOTENV") or "").strip() not in ("1", "true")
+    file = {k: (v or "").strip() for k, v in dotenv_values(path).items()} if use_file else {}
     names = ("CORS_ORIGINS", "AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_KEY", "AZURE_OPENAI_DEPLOYMENT",
              "AZURE_LANGUAGE_ENDPOINT", "AZURE_LANGUAGE_KEY", "AZURE_CONTENT_SAFETY_ENDPOINT", "AZURE_CONTENT_SAFETY_KEY",
              "STORE", "COSMOS_ENDPOINT", "COSMOS_KEY", "COSMOS_DATABASE", "JWT_SECRET", "AI_SAFETY_REQUIRED",

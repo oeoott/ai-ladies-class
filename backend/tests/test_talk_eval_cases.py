@@ -88,8 +88,18 @@ def test_engine_routes_each_case_as_expected_with_a_model_that_answers_as_expect
     fake = use(monkeypatch, FakeAzure(safety=(4 if blocked else 0, 0), reply=fake_model_answer(case)))
     row = eval_talk.run_case(case)
     assert all(row["ok"].values()), row
-    assert ("openai" in fake.calls) is (not blocked)
-    assert row["input_blocked"] is blocked and row["safety_input"] == {"Violence": 4 if blocked else 0}
+    # 욕설·단독 불명확 발화만 로컬 처리. 위협 판정은 아래 Azure 검사와 모델을 통과한다.
+    local_profanity = {"surprise-20", "neutral-12"}
+    unclear = {"joy-14", "sad-13", "anger-13", "fear-09", "neutral-09"}
+    if case["id"] in local_profanity | unclear:
+        assert fake.calls == []
+        expected = ["LocalProfanity"] if case["id"] in local_profanity else []
+        assert row["local_input_blocks"] == expected
+        assert row["input_blocked"] is (True if expected else None)
+        assert row["safety_input"] is None  # Azure를 호출하지 않은 결과를 severity=0으로 꾸미지 않음
+    else:
+        assert ("openai" in fake.calls) is (not blocked)
+        assert row["input_blocked"] is blocked and row["safety_input"] == {"Violence": 4 if blocked else 0}
     if row["outcome"] == "script":
         talk = tales()[case["tale"]]["talk"]
         lines = talk["replies"] if case["turn"] == 0 else talk["ends"]

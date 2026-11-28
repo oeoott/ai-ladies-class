@@ -493,3 +493,39 @@ def test_other_http_400_is_an_ordinary_failure(monkeypatch, with_keys):
     _, conv_id = walk_and_talk(c)
     assert say(c, conv_id, HEARD)["fallback_to_picture"]
     assert store.get_conversation(conv_id)["safety"] == []
+
+
+
+# ---------- Azure OpenAI v1 주소 ----------
+@pytest.mark.parametrize("endpoint", [
+    "https://res.openai.azure.com", "https://res.openai.azure.com/", "https://res.openai.azure.com/openai",
+    "https://res.openai.azure.com/openai/v1/", "https://res.openai.azure.com/openai/v1",
+])
+def test_chat_url_is_v1_without_duplicate_paths_or_dated_version(endpoint):
+    assert conversation.chat_url(endpoint) == "https://res.openai.azure.com/openai/v1/chat/completions"
+
+
+def test_request_goes_to_the_v1_path_with_the_deployment_as_model(monkeypatch, with_keys):
+    seen = []
+    fake = FakeAzure()
+
+    def spy(url, headers, body, deadline=None):
+        seen.append((url, body))
+        return fake(url, headers, body, deadline)
+
+    use(monkeypatch, spy)
+    c = client()
+    _, conv_id = walk_and_talk(c)
+    say(c, conv_id, HEARD)
+    [(url, body)] = [x for x in seen if "chat" in x[0]]
+    assert url == "https://ai.example/openai/v1/chat/completions" and "api-version" not in url
+    assert body["model"] == "chat" and body["response_format"]["json_schema"]["strict"] is True
+
+
+
+def test_browser_tests_can_ignore_the_env_file(tmp_path):
+    env = tmp_path / ".env"
+    env.write_text("AZURE_OPENAI_KEY=file-key\nAZURE_SPEECH_KEY=s\nAZURE_SPEECH_REGION=koreacentral\n", encoding="utf-8")
+    assert config.load_settings(env, {}).openai_key == "file-key"
+    ignored = config.load_settings(env, {"MAEUM_IGNORE_DOTENV": "1"})
+    assert ignored.openai_key == "" and not ignored.speech_enabled

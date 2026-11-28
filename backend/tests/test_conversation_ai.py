@@ -127,7 +127,10 @@ def test_model_reply_runs_in_order_and_sends_the_json_request(monkeypatch, with_
     assert fake.calls == ["language", "safety", "openai", "safety"]
     assert fake.bodies[3]["text"] == GENERATED  # 모델이 만든 말만 출력 검사
     request = fake.bodies[2]
-    assert (request["temperature"], request["max_tokens"]) == (0.3, 150)
+    # v1 Chat Completions (gpt-6.1-terra는 max_tokens·temperature 0.3을 받지 않음, 2026-11-28 실제 응답)
+    assert request["model"] == "chat" and "temperature" not in request and "max_tokens" not in request
+    assert (request["max_completion_tokens"], request["reasoning_effort"]) == (
+        prompts.MAX_COMPLETION_TOKENS, prompts.REASONING_EFFORT)
     assert request["response_format"]["json_schema"]["schema"] == prompts.RESPONSE_SCHEMA
     assert request["response_format"]["json_schema"]["strict"] is True
     sent = json.dumps(request["messages"], ensure_ascii=False)
@@ -424,3 +427,97 @@ def test_end_reports_answered_turns_only():
     say(c, conv_id)  # 키 없음 → 그림으로
     c.post(f"/conversations/{conv_id}/turn", json={"choice_index": 0})
     assert c.post(f"/conversations/{conv_id}/end").json() == {"ended_by": "button", "turns": 1}
+
+
+@pytest.mark.parametrize("text, category", [
+    ("씨발 심심해", "LocalProfanity"),
+    ("씨 발", "LocalProfanity"),
+    ("ㅆㅂ 짜증나", "LocalProfanity"),
+    ("ᄊᄇ", "LocalProfanity"),
+    ("ㅋㅋ", None),
+    ("ㅎㅎ", None),
+    ("ᄏᄏ", None),
+    ("ᄒᄒ", None),
+    ("몰라 몰라", None),
+    ("아아아 몰라", None),
+    ("하하하", None),
+])
+def test_redirect_input_without_generation_or_storing_raw_text(monkeypatch, with_keys, text, category):
+    fake = use(monkeypatch, FakeAzure())
+    store = MemoryStore()
+    c = client(store)
+    conv_id = talk(c)
+    out = say(c, conv_id, text)
+    assert out["fallback_to_picture"] and out["choices"]
+    assert fake.calls == []
+    conv = store.conversations[conv_id]
+    assert conv["turn"] == 0 and conv["turns"] == [fallback_turn()]
+    assert conv["safety"] == ([{"blocked": True, "categories": [category]}] if category else [])
+    assert text not in json.dumps(conv, ensure_ascii=False)
+    # 그림 선택으로 계속하면 같은 턴에서 정상적으로 대본을 진행할 수 있다.
+    resumed = c.post(f"/conversations/{conv_id}/turn", json={"choice_index": 0}).json()
+    assert not resumed["fallback_to_picture"]
+
+
+@pytest.mark.parametrize("text", [
+    "화났어", "무서워", "때리고 싶어", "때리지 않을 거야", "칼로 찌르지 않을 거야",
+    "친구가 칼로 찌를 거야라고 말해서 무서웠어", "몰라서 친구에게 물어볼래",
+    "하하하 친구와 놀아서 기뻐", "이 일이 시발점이야",
+    "형이 나를 때릴 거야", "블록 탑을 부수자", "종이를 찢자", "상자를 부숴서 열자",
+    "숙제 빨리 해치우자", "ㅋㅋ 친구가 웃겨", "ㅎㅎ 같이 놀자",
+])
+def test_meaningful_feelings_negations_and_reported_speech_still_reach_model(monkeypatch, with_keys, text):
+    fake = use(monkeypatch, FakeAzure(reply=llm(reply="친구와 함께 안전하게 놀자.")))
+    c = client()
+    out = say(c, talk(c, "anger"), text)
+    assert not out["fallback_to_picture"]
+    assert fake.calls == ["language", "safety", "openai", "safety"]
+
+
+def test_model_redirect_takes_priority_over_a_conflicting_match(monkeypatch, with_keys):
+    fake = use(monkeypatch, FakeAzure(reply=llm(match=0, off_topic=True)))
+    c = client()
+    assert say(c, talk(c), "안전하지 않은 행동도 하고 싶어")["fallback_to_picture"]
+    assert fake.calls == ["language", "safety", "openai"]
+
+
+@pytest.mark.parametrize("text", [
+    "장난감을 부숴 버릴 거야", "책을 찢어 버리자", "친구를 해칠 거예요",
+    "돌로 때려 줘", "물건을 부수자", "연필로 찌르겠어", "때려서 다치게 하고 싶어",
+    "칼로 찌를 거야", "다 죽여 버릴 거야!", "나비를 잡아서 날개를 찢자",
+    "굴에 불을 질러 버리자", "때려 부수고 싶어 피 나게", "쓰레기 버린 애 때려 주자",
+])
+def test_harmful_or_ambiguous_actions_are_decided_by_semantic_checks(monkeypatch, with_keys, text):
+    # A contextual rejection from the model still returns to choices. Local regexes do not decide intent.
+    fake = use(monkeypatch, FakeAzure(reply=llm(reply=None, off_topic=True)))
+    c = client()
+    assert say(c, talk(c), text)["fallback_to_picture"]
+    assert fake.calls == ["language", "safety", "openai"]
+
+
+@pytest.mark.parametrize("text", [
+    "친구를 때리지 말자", "책을 찢지 않을 거야", "장난감을 안 부술 거야",
+    "친구가 물건을 부수자고 말해서 속상해", "넘어져서 피가 났어", "친구가 다쳐서 걱정돼",
+    "너무 화나서 때리고 싶은 마음이 들어", "그런 말은 하지 말자",
+])
+def test_new_negations_reports_and_feelings_are_not_local_threats(monkeypatch, with_keys, text):
+    fake = use(monkeypatch, FakeAzure(reply=llm(reply="친구와 함께 안전하게 놀자.")))
+    c = client()
+    assert not say(c, talk(c), text)["fallback_to_picture"]
+    assert "openai" in fake.calls
+
+
+def test_prompt_names_the_seven_emotions_and_guides_fear_and_reported_harm():
+    """friend-v0.8: 7감정 낱말, 무서운 마음 공감, 피해 경험 대응, 해치지 않는 행동 예시, 판단 순서 1~4."""
+    from app.content import EMOTION_CODES
+
+    tale = tales()["anger"]
+    system = prompts.build_messages(tale, 0, "라온이", "형이 나를 때렸어")[0]["content"]
+    for name in EMOTION_CODES.values():
+        assert name in system, name
+    assert "기쁜, 슬픈, 놀란, 화난 같은" not in system  # 예전 4감정 문구
+    assert "무섭다고 하면 그 마음을 알아준다" in system
+    assert "피해 경험" in system and "어른에게 꼭 말하자고" in system
+    assert "말로 마음 전하기, 숨 크게 쉬기, 어른에게 도와 달라고 하기" in system
+    order = [system.index(f"{n}. ") for n in (1, 2, 3, 4)]
+    assert order == sorted(order) and "1. 위협·욕설" in system and "4. 장면과의 관련성" in system

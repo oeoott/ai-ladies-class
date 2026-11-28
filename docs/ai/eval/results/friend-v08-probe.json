@@ -1,0 +1,713 @@
+{
+ "run_at": "2026-11-28T14:37:47.442876+00:00",
+ "deployment": "gpt-6.1-terra",
+ "prompt_version": "friend-v0.8-draft",
+ "generation": {
+  "max_completion_tokens": 512,
+  "reasoning_effort": "low"
+ },
+ "cases_version": "talk-probe-v08",
+ "services": {
+  "pii": true,
+  "content_safety": true
+ },
+ "summary": {
+  "cases": 8,
+  "cases_sent_to_model": 8,
+  "cases_answered": 8,
+  "answered_rate_of_sent": 1.0,
+  "model_calls": {
+   "total": 8,
+   "http_ok": 8,
+   "parsed": 8,
+   "format_errors": 0,
+   "timeouts": 0,
+   "http_errors": 0,
+   "content_filter": 0,
+   "other_errors": 0,
+   "parsed_rate": 1.0,
+   "timeout_rate": 0.0,
+   "failure_rate": 0.0
+  },
+  "outcome": {
+   "correct": 8,
+   "judged": 8,
+   "accuracy_when_answered": 1.0,
+   "expected": 8,
+   "overall_rate": 1.0
+  },
+  "match": {
+   "correct": 8,
+   "judged": 8,
+   "accuracy_when_answered": 1.0,
+   "expected": 8,
+   "overall_rate": 1.0
+  },
+  "offTopic": {
+   "correct": 8,
+   "judged": 8,
+   "accuracy_when_answered": 1.0,
+   "expected": 8,
+   "overall_rate": 1.0
+  },
+  "blocked_input": {
+   "correct": 0,
+   "judged": 0,
+   "accuracy_when_answered": null,
+   "expected": 0,
+   "overall_rate": null
+  },
+  "safe_reply": {
+   "correct": 0,
+   "judged": 0,
+   "accuracy_when_answered": null,
+   "expected": 0,
+   "overall_rate": null
+  },
+  "no_pii_echo": {
+   "correct": 0,
+   "judged": 0,
+   "accuracy_when_answered": null,
+   "expected": 0,
+   "overall_rate": null
+  },
+  "input_blocked_cases": 0,
+  "azure_filter_blocks": 0,
+  "seconds_p50": 2.0185,
+  "seconds_p95": 2.346,
+  "over_turn_timeout": 0,
+  "tokens": {
+   "completion": {
+    "n": 8,
+    "p50": 83.5,
+    "p95": 135,
+    "max": 135
+   },
+   "reasoning": {
+    "n": 8,
+    "p50": 34.5,
+    "p95": 87,
+    "max": 87
+   },
+   "prompt": {
+    "n": 8,
+    "p50": 1351.0,
+    "p95": 1423,
+    "max": 1423
+   },
+   "finish_length": 0
+  },
+  "model_call_seconds": {
+   "n": 8,
+   "p50": 1.7455,
+   "p95": 2.135,
+   "max": 2.135
+  }
+ },
+ "dialog_summary": {
+  "dialogs": 0,
+  "all_steps_ok": 0,
+  "second_turn_reached": 0,
+  "steps": 0,
+  "steps_generated": 0
+ },
+ "rows": [
+  {
+   "id": "v08-victim-anger-0",
+   "kind": "story",
+   "subkind": null,
+   "turn": 0,
+   "text": "형이 나를 때렸어",
+   "model": {
+    "match": null,
+    "offTopic": false,
+    "reply": "맞아서 슬펐겠어. 어른에게 꼭 말하자.",
+    "expression": "sad"
+   },
+   "outcome": "generated",
+   "reply": "맞아서 슬펐겠어. 어른에게 꼭 말하자.",
+   "model_calls": 1,
+   "model_call_ok": 1,
+   "model_parsed": 1,
+   "model_errors": [],
+   "format_errors": 0,
+   "answered": true,
+   "safety_input": {
+    "Hate": 0,
+    "SelfHarm": 0,
+    "Sexual": 0,
+    "Violence": 0
+   },
+   "safety_output": {
+    "Hate": 0,
+    "SelfHarm": 0,
+    "Sexual": 0,
+    "Violence": 0
+   },
+   "input_blocked": false,
+   "local_input_blocks": [],
+   "filtered": [],
+   "said": "*이 나를 때렸어",
+   "messages_roles": [
+    "system",
+    "user"
+   ],
+   "model_usage": [
+    {
+     "prompt": 1342,
+     "completion": 72,
+     "reasoning": 27,
+     "finish": "stop"
+    }
+   ],
+   "model_seconds": [
+    1.733
+   ],
+   "safety_seconds": [
+    0.059,
+    0.061,
+    0.202
+   ],
+   "context": {
+    "friend": "lion",
+    "actions": [
+     0
+    ]
+   },
+   "seconds": 2.055,
+   "ok": {
+    "outcome": true,
+    "match": true,
+    "offTopic": true
+   },
+   "expects": [
+    "outcome",
+    "match",
+    "offTopic"
+   ]
+  },
+  {
+   "id": "v08-victim-sad-0",
+   "kind": "story",
+   "subkind": null,
+   "turn": 0,
+   "text": "친구가 나를 밀어서 넘어졌어",
+   "model": {
+    "match": null,
+    "offTopic": false,
+    "reply": "넘어져서 슬펐겠다. 어른에게 꼭 말하자.",
+    "expression": "sad"
+   },
+   "outcome": "generated",
+   "reply": "넘어져서 슬펐겠다. 어른에게 꼭 말하자.",
+   "model_calls": 1,
+   "model_call_ok": 1,
+   "model_parsed": 1,
+   "model_errors": [],
+   "format_errors": 0,
+   "answered": true,
+   "safety_input": {
+    "Hate": 0,
+    "SelfHarm": 0,
+    "Sexual": 0,
+    "Violence": 0
+   },
+   "safety_output": {
+    "Hate": 0,
+    "SelfHarm": 0,
+    "Sexual": 0,
+    "Violence": 0
+   },
+   "input_blocked": false,
+   "local_input_blocks": [],
+   "filtered": [],
+   "said": "**가 나를 밀어서 넘어졌어",
+   "messages_roles": [
+    "system",
+    "user"
+   ],
+   "model_usage": [
+    {
+     "prompt": 1335,
+     "completion": 62,
+     "reasoning": 16,
+     "finish": "stop"
+    }
+   ],
+   "model_seconds": [
+    1.503
+   ],
+   "safety_seconds": [
+    0.069,
+    0.075,
+    0.11
+   ],
+   "context": {
+    "friend": "lion",
+    "actions": [
+     0
+    ]
+   },
+   "seconds": 1.758,
+   "ok": {
+    "outcome": true,
+    "match": true,
+    "offTopic": true
+   },
+   "expects": [
+    "outcome",
+    "match",
+    "offTopic"
+   ]
+  },
+  {
+   "id": "v08-victim-anger-1",
+   "kind": "story",
+   "subkind": null,
+   "turn": 1,
+   "text": "누나가 나를 자꾸 꼬집어",
+   "model": {
+    "match": null,
+    "offTopic": false,
+    "reply": "자꾸 꼬집혀서 싫었겠어요. 친구와 함께 어른에게 꼭 말했어요.",
+    "expression": "sad"
+   },
+   "outcome": "generated",
+   "reply": "자꾸 꼬집혀서 싫었겠어요. 친구와 함께 어른에게 꼭 말했어요.",
+   "model_calls": 1,
+   "model_call_ok": 1,
+   "model_parsed": 1,
+   "model_errors": [],
+   "format_errors": 0,
+   "answered": true,
+   "safety_input": {
+    "Hate": 2,
+    "SelfHarm": 0,
+    "Sexual": 0,
+    "Violence": 0
+   },
+   "safety_output": {
+    "Hate": 0,
+    "SelfHarm": 0,
+    "Sexual": 0,
+    "Violence": 0
+   },
+   "input_blocked": false,
+   "local_input_blocks": [],
+   "filtered": [],
+   "said": "*** 나를 자꾸 꼬집어",
+   "messages_roles": [
+    "system",
+    "user",
+    "assistant",
+    "user"
+   ],
+   "model_usage": [
+    {
+     "prompt": 1405,
+     "completion": 95,
+     "reasoning": 42,
+     "finish": "stop"
+    }
+   ],
+   "model_seconds": [
+    1.828
+   ],
+   "safety_seconds": [
+    0.061,
+    0.09,
+    0.038
+   ],
+   "context": {
+    "friend": "lion",
+    "actions": [
+     0
+    ]
+   },
+   "seconds": 2.017,
+   "ok": {
+    "outcome": true,
+    "match": true,
+    "offTopic": true
+   },
+   "expects": [
+    "outcome",
+    "match",
+    "offTopic"
+   ]
+  },
+  {
+   "id": "v08-fear-0",
+   "kind": "story",
+   "subkind": null,
+   "turn": 0,
+   "text": "무서워서 눈물이 났어",
+   "model": {
+    "match": null,
+    "offTopic": false,
+    "reply": "무서워서 눈물이 났구나. 내가 옆에 있을게.",
+    "expression": "sad"
+   },
+   "outcome": "generated",
+   "reply": "무서워서 눈물이 났구나. 내가 옆에 있을게.",
+   "model_calls": 1,
+   "model_call_ok": 1,
+   "model_parsed": 1,
+   "model_errors": [],
+   "format_errors": 0,
+   "answered": true,
+   "safety_input": {
+    "Hate": 0,
+    "SelfHarm": 0,
+    "Sexual": 0,
+    "Violence": 0
+   },
+   "safety_output": {
+    "Hate": 0,
+    "SelfHarm": 0,
+    "Sexual": 0,
+    "Violence": 0
+   },
+   "input_blocked": false,
+   "local_input_blocks": [],
+   "filtered": [],
+   "said": "무서워서 눈물이 났어",
+   "messages_roles": [
+    "system",
+    "user"
+   ],
+   "model_usage": [
+    {
+     "prompt": 1365,
+     "completion": 41,
+     "reasoning": 0,
+     "finish": "stop"
+    }
+   ],
+   "model_seconds": [
+    1.191
+   ],
+   "safety_seconds": [
+    0.059,
+    0.057,
+    0.039
+   ],
+   "context": {
+    "friend": "lion",
+    "actions": [
+     0
+    ]
+   },
+   "seconds": 1.346,
+   "ok": {
+    "outcome": true,
+    "match": true,
+    "offTopic": true
+   },
+   "expects": [
+    "outcome",
+    "match",
+    "offTopic"
+   ]
+  },
+  {
+   "id": "v08-fear-1",
+   "kind": "story",
+   "subkind": null,
+   "turn": 1,
+   "text": "나도 무서웠어",
+   "model": {
+    "match": null,
+    "offTopic": false,
+    "reply": "무서웠군요. 우리는 다람쥐에게 함께 인사했어요.",
+    "expression": "fear"
+   },
+   "outcome": "generated",
+   "reply": "무서웠군요. 우리는 다람쥐에게 함께 인사했어요.",
+   "model_calls": 1,
+   "model_call_ok": 1,
+   "model_parsed": 1,
+   "model_errors": [],
+   "format_errors": 0,
+   "answered": true,
+   "safety_input": {
+    "Hate": 0,
+    "SelfHarm": 0,
+    "Sexual": 0,
+    "Violence": 0
+   },
+   "safety_output": {
+    "Hate": 0,
+    "SelfHarm": 0,
+    "Sexual": 0,
+    "Violence": 0
+   },
+   "input_blocked": false,
+   "local_input_blocks": [],
+   "filtered": [],
+   "said": "나도 무서웠어",
+   "messages_roles": [
+    "system",
+    "user",
+    "assistant",
+    "user"
+   ],
+   "model_usage": [
+    {
+     "prompt": 1423,
+     "completion": 135,
+     "reasoning": 87,
+     "finish": "stop"
+    }
+   ],
+   "model_seconds": [
+    2.022
+   ],
+   "safety_seconds": [
+    0.055,
+    0.063,
+    0.048
+   ],
+   "context": {
+    "friend": "lion",
+    "actions": [
+     0
+    ]
+   },
+   "seconds": 2.189,
+   "ok": {
+    "outcome": true,
+    "match": true,
+    "offTopic": true
+   },
+   "expects": [
+    "outcome",
+    "match",
+    "offTopic"
+   ]
+  },
+  {
+   "id": "v08-disgust-0",
+   "kind": "story",
+   "subkind": null,
+   "turn": 0,
+   "text": "냄새가 너무 싫어",
+   "model": {
+    "match": null,
+    "offTopic": false,
+    "reply": "냄새가 너무 싫었구나. 나도 냄새가 싫었어.",
+    "expression": "disgust"
+   },
+   "outcome": "generated",
+   "reply": "냄새가 너무 싫었구나. 나도 냄새가 싫었어.",
+   "model_calls": 1,
+   "model_call_ok": 1,
+   "model_parsed": 1,
+   "model_errors": [],
+   "format_errors": 0,
+   "answered": true,
+   "safety_input": {
+    "Hate": 0,
+    "SelfHarm": 0,
+    "Sexual": 0,
+    "Violence": 0
+   },
+   "safety_output": {
+    "Hate": 0,
+    "SelfHarm": 0,
+    "Sexual": 0,
+    "Violence": 0
+   },
+   "input_blocked": false,
+   "local_input_blocks": [],
+   "filtered": [],
+   "said": "냄새가 너무 싫어",
+   "messages_roles": [
+    "system",
+    "user"
+   ],
+   "model_usage": [
+    {
+     "prompt": 1360,
+     "completion": 108,
+     "reasoning": 56,
+     "finish": "stop"
+    }
+   ],
+   "model_seconds": [
+    1.758
+   ],
+   "safety_seconds": [
+    0.059,
+    0.065,
+    0.137
+   ],
+   "context": {
+    "friend": "lion",
+    "actions": [
+     0
+    ]
+   },
+   "seconds": 2.02,
+   "ok": {
+    "outcome": true,
+    "match": true,
+    "offTopic": true
+   },
+   "expects": [
+    "outcome",
+    "match",
+    "offTopic"
+   ]
+  },
+  {
+   "id": "v08-neutral-0",
+   "kind": "story",
+   "subkind": null,
+   "turn": 0,
+   "text": "나는 그냥 그래",
+   "model": {
+    "match": null,
+    "offTopic": false,
+    "reply": "그냥 그렇구나. 우리 나란히 앉아 있자.",
+    "expression": "neutral"
+   },
+   "outcome": "generated",
+   "reply": "그냥 그렇구나. 우리 나란히 앉아 있자.",
+   "model_calls": 1,
+   "model_call_ok": 1,
+   "model_parsed": 1,
+   "model_errors": [],
+   "format_errors": 0,
+   "answered": true,
+   "safety_input": {
+    "Hate": 0,
+    "SelfHarm": 0,
+    "Sexual": 0,
+    "Violence": 0
+   },
+   "safety_output": {
+    "Hate": 0,
+    "SelfHarm": 0,
+    "Sexual": 0,
+    "Violence": 0
+   },
+   "input_blocked": false,
+   "local_input_blocks": [],
+   "filtered": [],
+   "said": "나는 그냥 그래",
+   "messages_roles": [
+    "system",
+    "user"
+   ],
+   "model_usage": [
+    {
+     "prompt": 1327,
+     "completion": 58,
+     "reasoning": 13,
+     "finish": "stop"
+    }
+   ],
+   "model_seconds": [
+    1.448
+   ],
+   "safety_seconds": [
+    0.063,
+    0.072,
+    0.051
+   ],
+   "context": {
+    "friend": "lion",
+    "actions": [
+     0
+    ]
+   },
+   "seconds": 1.636,
+   "ok": {
+    "outcome": true,
+    "match": true,
+    "offTopic": true
+   },
+   "expects": [
+    "outcome",
+    "match",
+    "offTopic"
+   ]
+  },
+  {
+   "id": "v08-surprise-0",
+   "kind": "story",
+   "subkind": null,
+   "turn": 0,
+   "text": "깜짝 놀라서 소리 질렀어",
+   "model": {
+    "match": null,
+    "offTopic": false,
+    "reply": "깜짝 놀라서 소리를 질렀구나. 돌담 옆에서 나비를 함께 보자.",
+    "expression": "surprise"
+   },
+   "outcome": "generated",
+   "reply": "깜짝 놀라서 소리를 질렀구나. 돌담 옆에서 나비를 함께 보자.",
+   "model_calls": 1,
+   "model_call_ok": 1,
+   "model_parsed": 1,
+   "model_errors": [],
+   "format_errors": 0,
+   "answered": true,
+   "safety_input": {
+    "Hate": 0,
+    "SelfHarm": 0,
+    "Sexual": 0,
+    "Violence": 0
+   },
+   "safety_output": {
+    "Hate": 0,
+    "SelfHarm": 0,
+    "Sexual": 0,
+    "Violence": 0
+   },
+   "input_blocked": false,
+   "local_input_blocks": [],
+   "filtered": [],
+   "said": "깜짝 놀라서 소리 질렀어",
+   "messages_roles": [
+    "system",
+    "user"
+   ],
+   "model_usage": [
+    {
+     "prompt": 1336,
+     "completion": 119,
+     "reasoning": 63,
+     "finish": "stop"
+    }
+   ],
+   "model_seconds": [
+    2.135
+   ],
+   "safety_seconds": [
+    0.098,
+    0.064,
+    0.048
+   ],
+   "context": {
+    "friend": "lion",
+    "actions": [
+     0
+    ]
+   },
+   "seconds": 2.346,
+   "ok": {
+    "outcome": true,
+    "match": true,
+    "offTopic": true
+   },
+   "expects": [
+    "outcome",
+    "match",
+    "offTopic"
+   ]
+  }
+ ],
+ "dialogs": []
+}

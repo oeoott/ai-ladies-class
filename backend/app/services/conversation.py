@@ -3,7 +3,7 @@
 한 턴 (resolved_by: 친구 답을 무엇으로 정했는지, 대화 기록과 리포트에 남긴다)
 - 보기 버튼(choice_index, input_mode picture)                      → 대본 답 (button)
 - 기기에서 알아들은 말이 보기와 같음(choice_index, input_mode voice) → 대본 답 (exact)
-- 말·글(text): mask_pii → safety.check(입력 기준)
+- 말·글(text): 명확한 욕설·단독 불명확 발화는 그림 선택, 위협은 안전 서비스와 모델이 문맥으로 판단, 그 밖은 mask_pii → safety.check(입력 기준)
     → 보기와 글자가 같으면 대본 답 (exact)
     → PII 정책 확인(_may_send): AI_SAFETY_REQUIRED인데 Azure PII로 가리지 못했으면 그림 선택
     → 하루 호출 예약(store.reserve_generation) → Azure OpenAI(JSON) → prompts.parse (형식이 틀리면 4초 안에서 한 번 다시)
@@ -25,7 +25,17 @@ log = logging.getLogger("maeum.conversation")
 MAX_TURNS = 2  # 기본 대화 1회 + 추가 대화 1회 (프론트 흐름과 동일)
 TURN_TIMEOUT = 4.0  # 한 턴의 외부 호출 전체 제한 (프론트 제한 5초보다 짧게)
 FORMAT_TRIES = 2  # 형식이 틀리면 한 번 다시 (마감 안에서만)
-OPENAI_API_VERSION = "2024-10-21"
+# Azure OpenAI v1 API: {리소스 루트}/openai/v1/chat/completions, 본문의 model = 배포 이름. 날짜형 api-version은 붙이지 않는다.
+CHAT_PATH = "/openai/v1/chat/completions"
+
+
+def chat_url(endpoint: str) -> str:
+    """AZURE_OPENAI_ENDPOINT가 리소스 루트든 .../openai·.../openai/v1이든 같은 주소로 (경로 중복 방지)."""
+    root = endpoint.rstrip("/")
+    for tail in ("/openai/v1", "/openai"):
+        if root.endswith(tail):
+            root = root[: -len(tail)]
+    return root + CHAT_PATH
 RESOLVED_BY = ("button", "exact", "llm", "fallback")
 
 
@@ -103,10 +113,9 @@ def _ask_model(conv: dict, turn: int, said: str, deadline: float, day: str, gene
             return None
         try:
             data = azure.post_json(
-                f"{s.openai_endpoint}/openai/deployments/{s.openai_deployment}/chat/completions"
-                f"?api-version={OPENAI_API_VERSION}",
+                chat_url(s.openai_endpoint),
                 {"api-key": s.openai_key},
-                {"messages": messages, **prompts.GENERATION},
+                {"model": s.openai_deployment, "messages": messages, **prompts.GENERATION},
                 deadline,
             )
             if data["choices"][0].get("finish_reason") == "content_filter":  # 모델 답이 Azure 필터에 걸림
@@ -174,6 +183,12 @@ def take_turn(conv: dict, choice_index: int | None, text: str | None, input_mode
             return fallback()
         return script(choice_index, "exact" if input_mode == "voice" else "button")
     if not text:
+        return fallback()
+
+    redirect = safety.input_redirect_reason(text)
+    if redirect:
+        if redirect != "Unclear":
+            conv.setdefault("safety", []).append({"blocked": True, "categories": [redirect]})
         return fallback()
 
     deadline = azure.deadline_in(TURN_TIMEOUT)

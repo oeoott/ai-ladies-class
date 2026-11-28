@@ -359,7 +359,7 @@ API 모양(`POST /conversations/{id}/turn`)과 프론트 연결은 그대로입�
 ```
 
 - 모델 응답 모양(`prompts.RESPONSE_SCHEMA`, Azure OpenAI structured outputs strict): `{"match": 0|1|null, "offTopic": bool, "reply": str|null, "expression": str}`
-- 요청 값(`prompts.GENERATION`): `temperature` 0.3, `max_tokens` 150, `response_format` json_schema.
+- 요청: Azure OpenAI v1 Chat Completions `POST {AZURE_OPENAI_ENDPOINT}/openai/v1/chat/completions`, 본문 `model`=배포 이름(날짜형 api-version 없음, `conversation.chat_url`). 요청 값(`prompts.GENERATION`): `max_completion_tokens` 512, `reasoning_effort` low, `response_format` json_schema strict. gpt-6.1-terra는 `max_tokens`와 `temperature` 0.3을 받지 않는다(400, 2026-11-28 확인).
 - 그림으로 돌아간 턴은 문장 없이 `{"said": null, "reply": null, "input_mode", "resolved_by": "fallback"}`만 남깁니다. 친구가 답한 턴 수(`turn`, 2턴이면 종료)는 늘지 않습니다.
 - 친구 표정: 대본 답(button·exact, llm의 match)은 `tales.json`의 `replyExpressions`·`endExpressions`, 모델 말은 JSON의 `expression`(목록에 없으면 `neutral`). 화면은 값이 없으면 고른 행동의 표정을 그대로 씁니다.
 - Content Safety에 막히면 대화 기록의 `safety`에 `{"blocked": true, "categories": [...]}`만 남깁니다. 문장은 남기지 않고 보호자 알림도 없습니다. 대본 답은 출력 검사를 하지 않습니다.
@@ -395,7 +395,7 @@ Azure로 마스킹한 뒤에도 로컬 규칙을 한 번 더 적용합니다.
 | 응답 모양 | `RESPONSE_SCHEMA` (바꾸면 `parse()`도 함께) |
 | 응답으로 친구 답 정하기 | `resolve(tale, turn, output)`: match면 대본 답·표정, match null·offTopic false면 reply, 그 밖은 None |
 | 형식 확인 | `parse(content)`: 모양이 틀리면 None (conversation.py가 한 번 다시 부름) |
-| 생성 값 | `GENERATION` (`temperature`, `max_tokens`, `response_format`) |
+| 생성 값 | `GENERATION` (`max_completion_tokens`, `reasoning_effort`, `response_format`). `MAX_COMPLETION_TOKENS`·`REASONING_EFFORT` |
 | 코드 검사 기준 | `MAX_SENTENCES`(2), `MAX_QUESTIONS`(1), `MAX_REPLY_CHARS`(60), `BANNED_WORDS`, `check_reply()` |
 | 하루 모델 호출 수 | `DAILY_GENERATION_LIMIT` (아이 한 명, 한국 날짜 기준, 지금 30) |
 | 안전 검사 기준 | `INPUT_MAX_SEVERITY`(아이 입력, 지금 2: 4 이상 막음), `OUTPUT_MAX_SEVERITY`(모델 말, 지금 0) |
@@ -428,7 +428,7 @@ Azure로 마스킹한 뒤에도 로컬 규칙을 한 번 더 적용합니다.
 3. `POST /conversations/{conversation_id}/turn`에 `{"text": "비행기가 멀리 날아갔으면 좋겠어", "input_mode": "voice"}`
    - 짧은 반말이 `reply`로 오고 `fallback_to_picture: false`이면 모델 답 성공입니다. 보기와 같은 뜻의 말(예: "같이 놀고 싶어")은 대본 답이 옵니다.
    - `fallback_to_picture: true`이면 서버 로그에서 어느 단계가 실패했는지 봅니다. 예: `Azure OpenAI 실패: HTTPStatusError`, `모델 응답 형식이 맞지 않음`, `모델 응답으로 답을 정하지 못함`
-   - 처음 연결할 때 structured outputs(`response_format` json_schema, strict)를 그 배포(모델·API 버전 `2024-10-21`)가 받는지 봅니다. 400이 오면 배포 모델을 확인합니다.
+   - v1 API(`/openai/v1/chat/completions`)에서 structured outputs(json_schema strict)·`max_completion_tokens`·`reasoning_effort`를 그 배포가 받는지 봅니다. 400이면 응답의 `param`(예: max_tokens, temperature)을 확인합니다. gpt-6.1-terra는 2026-11-28에 받는 것을 확인했습니다.
 4. 개인정보: `backend` 폴더에서 아래 명령으로 `.env`의 Language 키를 써서 가린 결과를 봅니다. 이름과 번호가 `*` 또는 `[전화번호]`로 바뀌면 정상입니다.
    ```sh
    python -c "from app.services import safety; print(safety.mask_pii('내 이름은 김하늘이고 010-1234-5678이야'))"
