@@ -109,7 +109,8 @@ def parse(content: object) -> dict | None:
     if not isinstance(data, dict) or set(data) != set(RESPONSE_SCHEMA["required"]):
         return None
     match, off_topic, reply, expression = data["match"], data["offTopic"], data["reply"], data["expression"]
-    if match is not None and (isinstance(match, bool) or match not in (0, 1)):
+    # 정수 0·1만 받는다. 0.0·1.0(float)과 True·False(bool)는 `in (0, 1)`을 통과하므로 type으로 거른다.
+    if match is not None and (type(match) is not int or match not in (0, 1)):
         return None
     if not isinstance(off_topic, bool) or not (reply is None or isinstance(reply, str)) or not isinstance(expression, str):
         return None
