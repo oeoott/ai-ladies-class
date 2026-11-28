@@ -107,7 +107,7 @@ npm run dev                                           # frontend/.env의 VITE_AP
   - `match`가 있으면 그 보기의 대본 답(replies·ends)과 대본 표정
   - `match`가 null이고 `offTopic`이 false면 `reply`
   - 그 밖은 그림 선택으로 돌아감
-- 요청 값: temperature 0.3, max_tokens 150, structured outputs(strict). 형식이 틀리면 4초 안에서 한 번 다시 묻습니다.
+- 요청: Azure OpenAI v1 Chat Completions(`/openai/v1/chat/completions`, `model`=배포 이름), `max_completion_tokens` 512, `reasoning_effort` low, structured outputs(strict). temperature는 보내지 않습니다(모델이 기본값만 받음). 형식이 틀리면 4초 안에서 한 번 다시 묻습니다.
 - 말투 규칙(첫 턴: 친구 반말 1~2문장·질문 0개, 마지막 턴: 존댓말 서술·질문 0개, 비유·반어·농담·관용구 금지, 이야기 밖 주제·개인정보 질문 금지)은 프롬프트에 있습니다. 코드는 문장 수·질문 수·길이(60자)·금지어만 검사합니다.
 - API 모양(`/conversations/{id}/turn`)과 프론트 연결은 바뀌지 않았습니다.
 - 표정 거울: `POST /lessons/mirror/walks/{id}/record`가 선택 항목 `score`, `score_version`, `stars`(0~3), `tracked_sec`, `attempts`, `end_reason`(locked·skipped·cameraDenied·exit)을 받습니다. 프론트는 요약 칸을 모두 보냅니다. 기준값이 임시(`frontend/src/mirrorBaseline.json`의 `status: provisional`)인 동안은 점수·별·`score_version`이 null입니다(`docs/ai/HANDOFF-AI.md` 학습 2).
