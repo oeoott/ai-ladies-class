@@ -1,4 +1,7 @@
-import { NarrationActive, NarrationVoice, useNarration } from './narration.js'
+import { NarrationActive, NarrationVoice, setSpeechProvider, useNarration } from './narration.js'
+import { createAzureSpeech } from './azureSpeech.js'
+import { setAzureSpeech } from './speechEngine.js'
+import { readSpeechSetting, saveSpeechSetting } from './speechSettings.js'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowLeft, Pause, PawPrint, ShieldCheck, Sprout } from 'lucide-react'
 import { ForestEntrance } from './ForestEntrance.jsx'
@@ -191,6 +194,21 @@ function App() {
   const [guardian, setGuardianState] = useState(loadGuardian)
   const guardianRef = useRef(guardian)
   const [linkNote, setLinkNote] = useState('')
+  // 음성 기능: the guardian's choice on this device and whether the server has Azure Speech.
+  // Azure is used only when both are true; otherwise the on-device recognition and browser voice, as before.
+  const [speech, setSpeech] = useState(() => readSpeechSetting())
+  const [speechServer, setSpeechServer] = useState(false)
+  useEffect(() => {
+    let live = true
+    api.speechStatus?.().then((status) => { if (live) setSpeechServer(Boolean(status?.available)) })
+    return () => { live = false }
+  }, [])
+  useEffect(() => {
+    const engine = speech.provider === 'azure' && speechServer ? createAzureSpeech({ getToken: () => api.speechToken() }) : null
+    setAzureSpeech(engine)
+    setSpeechProvider(engine && { speak: engine.speak, stopSpeaking: engine.stopSpeaking })
+    return () => engine?.cancelListening()
+  }, [speech, speechServer])
   const setGuardian = useCallback((update) => {
     const next = typeof update === 'function' ? update(guardianRef.current) : update
     guardianRef.current = next
@@ -583,6 +601,9 @@ function App() {
         onAccountDone={completeAccount}
         onRetest={retest}
         accountEnabled={api.enabled}
+        speech={speech}
+        speechServer={speechServer}
+        onSpeech={(provider, consent) => setSpeech(saveSpeechSetting(provider, { consent }))}
         guardian={guardian}
         linkNote={linkNote}
         onSignedIn={(account) => {

@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
-import { stopNarration } from './narration.js'
+import { setMicOpen, stopNarration } from './narration.js'
+import { azureSpeech } from './speechEngine.js'
 
 const language = { langs: ['ko-KR'], processLocally: true }
 const normalize = (text) => text.normalize('NFKC').replace(/[^\p{L}\p{N}]/gu, '').toLowerCase()
 
+// Azure (guardian's choice, server configured): any browser with a microphone API. Otherwise only browsers
+// that recognise Korean on the device (processLocally), as before.
 export function voiceSupported() {
+  if (azureSpeech()) return Boolean(globalThis.navigator?.mediaDevices?.getUserMedia)
   const Recognition = window.SpeechRecognition ?? window.webkitSpeechRecognition
   return Boolean(Recognition?.available && 'processLocally' in Recognition.prototype)
 }
@@ -39,6 +43,44 @@ export function StoryVoice({ choices, onReply, onHeard, onStatus, waiting = fals
     const request = pending.current
     pending.current = null
     request?.recognition?.abort()
+    setMicOpen(false)
+  }
+
+  // What was heard (best first) → a choice, a sentence for the friend, or back to the choices.
+  function heard(alternatives) {
+    const said = new Set(alternatives.map((t) => normalize(t)))
+    const index = choices.findIndex((choice) => said.has(normalize(choice)))
+    const sentence = alternatives[0]?.trim()
+    if (index >= 0) onReply(index, 'voice')
+    else if (onHeard && sentence) {
+      setStatus('idle')
+      Promise.resolve(onHeard(sentence)).then((answered) => {
+        if (!answered) useChoices(true)
+      })
+    } else useChoices()
+  }
+
+  // Azure STT: the microphone opens only now; the result is ignored if the scene moved on or was cancelled.
+  async function beginAzure(azure) {
+    const request = {}
+    pending.current = request
+    setStatus('preparing')
+    stopNarration()
+    setMicOpen(true)
+    const run = azure.listen({
+      onStart: () => {
+        if (pending.current !== request) return
+        setStatus('listening')
+        setMessage(VOICE_LINES.listening)
+      },
+    })
+    request.recognition = { abort: () => run.cancel() }
+    const sentence = await run.result
+    if (pending.current !== request) return
+    pending.current = null
+    setMicOpen(false)
+    if (sentence) heard([sentence])
+    else useChoices() // nothing heard, permission refused, no token, network: tap instead
   }
 
   useEffect(() => {
@@ -70,6 +112,8 @@ export function StoryVoice({ choices, onReply, onHeard, onStatus, waiting = fals
   async function begin() {
     if (pending.current || !supported || !active || document.hidden) return
     setMessage('')
+    const azure = azureSpeech()
+    if (azure) return beginAzure(azure)
     const request = {}
     pending.current = request
     setStatus('preparing')
@@ -108,25 +152,18 @@ export function StoryVoice({ choices, onReply, onHeard, onStatus, waiting = fals
       }
       recognition.onresult = (event) => {
         if (pending.current !== request) return
-        const alternatives = Array.from(event.results[event.resultIndex] ?? [])
-        const heard = new Set(alternatives.map(({ transcript }) => normalize(transcript)))
-        const index = choices.findIndex((choice) => heard.has(normalize(choice)))
-        const sentence = alternatives[0]?.transcript?.trim()
+        const alternatives = Array.from(event.results[event.resultIndex] ?? []).map(({ transcript }) => transcript)
         cancel()
-        if (index >= 0) onReply(index, 'voice')
-        else if (onHeard && sentence) {
-          setStatus('idle')
-          Promise.resolve(onHeard(sentence)).then((answered) => {
-            if (!answered) useChoices(true)
-          })
-        } else useChoices()
+        heard(alternatives)
       }
       recognition.onerror = recognition.onend = () => {
         if (pending.current !== request) return
         pending.current = null
+        setMicOpen(false)
         useChoices()
       }
       stopNarration()
+      setMicOpen(true)
       recognition.start()
     } catch {
       if (pending.current !== request) return

@@ -730,3 +730,19 @@
   :is(.praise-note, .sticker-book > h1) {
   visibility: hidden;
 }
+
+/* 음성 기능: 동의 체크 (터치 영역 48px 이상, 체크 표시로 선택을 알림) */
+.forest-panel-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--forest-touch);
+  color: var(--forest-ink);
+  font-size: var(--forest-body-size);
+}
+.forest-panel-check input {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  accent-color: var(--forest-action);
+}

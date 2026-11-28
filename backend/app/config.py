@@ -28,6 +28,14 @@ class Settings:
     ai_safety_required: bool = False
     # true면 검수 전 감정 초안(content/drafts)을 합친다. 미리보기·검수용. 비우면 false (아이 화면은 검수된 감정만).
     content_drafts: bool = False
+    # Azure AI Speech (한국어 STT·TTS). 키는 서버에만. 브라우저에는 /speech/token이 발급한 10분짜리 토큰만 간다.
+    speech_key: str = ""
+    speech_region: str = ""  # 예: koreacentral
+    speech_voice: str = "ko-KR-SunHiNeural"  # TTS 음성 (AZURE_SPEECH_VOICE로 바꿈)
+
+    @property
+    def speech_enabled(self) -> bool:
+        return bool(self.speech_key and self.speech_region)
 
     @property
     def openai_enabled(self) -> bool:
@@ -56,7 +64,7 @@ def load_settings(path: Path = ENV_FILE, environ: Mapping[str, str] | None = Non
     names = ("CORS_ORIGINS", "AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_KEY", "AZURE_OPENAI_DEPLOYMENT",
              "AZURE_LANGUAGE_ENDPOINT", "AZURE_LANGUAGE_KEY", "AZURE_CONTENT_SAFETY_ENDPOINT", "AZURE_CONTENT_SAFETY_KEY",
              "STORE", "COSMOS_ENDPOINT", "COSMOS_KEY", "COSMOS_DATABASE", "JWT_SECRET", "AI_SAFETY_REQUIRED",
-             "CONTENT_DRAFTS")
+             "CONTENT_DRAFTS", "AZURE_SPEECH_KEY", "AZURE_SPEECH_REGION", "AZURE_SPEECH_VOICE")
     env = {name: (environ.get(name) or "").strip() or file.get(name, "") for name in names}
     store = env.get("STORE", "").lower() or "memory"
     if store not in ("memory", "cosmos"):
@@ -78,6 +86,9 @@ def load_settings(path: Path = ENV_FILE, environ: Mapping[str, str] | None = Non
         jwt_secret=env.get("JWT_SECRET", ""),
         ai_safety_required=env.get("AI_SAFETY_REQUIRED", "").lower() in ("1", "true", "yes"),
         content_drafts=env.get("CONTENT_DRAFTS", "").lower() in ("1", "true", "yes"),
+        speech_key=env.get("AZURE_SPEECH_KEY", ""),
+        speech_region=env.get("AZURE_SPEECH_REGION", "").lower(),
+        **({"speech_voice": env["AZURE_SPEECH_VOICE"]} if env.get("AZURE_SPEECH_VOICE") else {}),
     )
 
 

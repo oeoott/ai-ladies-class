@@ -12,7 +12,7 @@ import './panels.css'
 
 // Guardian settings: groups with a heading and a two-column tile grid. Without a server address the
 // dashboard and account tiles are left out (and the account group with them); the rest fill the grid.
-function Guardian({ onOpen, cardPortrait, guardian, accountEnabled }) {
+function Guardian({ onOpen, cardPortrait, guardian, accountEnabled, speech }) {
   const groups = [
     ['아이 학습', [
       accountEnabled && { icon: 'chart', name: '학습 대시보드', open: 'dashboard',
@@ -23,6 +23,7 @@ function Guardian({ onOpen, cardPortrait, guardian, accountEnabled }) {
     ]],
     ['꾸미기', [
       { icon: 'paw', name: '숲 친구', open: 'friends' },
+      { icon: 'mic', name: '음성 기능', open: 'speech', detail: speech?.provider === 'azure' ? 'Azure 음성' : '이 기기 음성' },
       { icon: 'faceCard', name: '표정 카드', open: 'portrait', detail: cardPortrait === 'girl' ? '여자아이' : '남자아이' },
     ]],
     ['계정', [
@@ -214,6 +215,7 @@ function LearningReport({ records, recipient, onOpen }) {
 
 const titles = {
   guardian: '보호자 설정',
+  speech: '음성 기능',
   gate: '보호자 비밀번호',
   friends: '나의 숲 친구 만들기',
   chooseFriend: '어떤 친구와 함께할까요?',
@@ -266,6 +268,9 @@ function PanelDialog({
   onSignOut,
   onExpired,
   onDeleted,
+  speech = { provider: 'device' },
+  speechServer = false,
+  onSpeech,
 }) {
   const [dashboardKind, setDashboardKind] = useState('week')
   const greeting = '안녕! 나는 ' + (friend.familiar || friend.name) + '야. 나랑 같이 놀자!'
@@ -392,7 +397,7 @@ function PanelDialog({
         <button type="button" className="forest-panel-primary" onClick={() => onOpen('signup')}>부모님이 오셨어요</button>
       )}
       {mode === 'gate' && <GuardianGate onUnlock={onUnlock} />}
-      {mode === 'guardian' && <Guardian {...{ onOpen, cardPortrait, guardian, accountEnabled }} />}
+      {mode === 'guardian' && <Guardian {...{ onOpen, cardPortrait, guardian, accountEnabled, speech }} />}
       {(mode === 'login' || mode === 'signupAccount') && (
         <GuardianSignIn key={mode} signup={mode === 'signupAccount'} onOpen={onOpen} onSignedIn={onSignedIn}
           initialEmail={guardian.email || recipient || signupEmail} />
@@ -411,6 +416,9 @@ function PanelDialog({
       )}
       {mode === 'report' && <LearningReport {...{ records, recipient, onOpen }} />}
       {mode === 'records' && <RecordBook records={records} onOpen={onOpen} />}
+      {mode === 'speech' && (
+        <SpeechChoice speech={speech} available={speechServer} onSpeech={onSpeech} onBack={() => onOpen('guardian')} />
+      )}
       {mode === 'retest' && (
         <>
           <p className="forest-panel-note">
@@ -440,3 +448,53 @@ function PanelDialog({
 }
 
 export default Panel
+
+// 음성 기능: the guardian chooses where the child's voice is turned into text. Azure sends the voice to
+// Microsoft, so it needs a clear explanation and an explicit agreement. Not verified on an iPad yet.
+function SpeechChoice({ speech, available, onSpeech, onBack }) {
+  const [agree, setAgree] = useState(false)
+  const azure = speech.provider === 'azure'
+  return (
+    <>
+      <p className="forest-panel-note">
+        동화 대화에서 ‘말로 답하기’를 누르면 마이크를 써요. 어디에서 말을 글자로 바꿀지 골라 주세요.
+      </p>
+      <section className="forest-panel-group" aria-label="이 기기에서 인식">
+        <h3>이 기기에서 인식{!azure && ' (사용 중)'}</h3>
+        <p className="forest-panel-note">
+          목소리를 이 기기 안에서만 글자로 바꿔요. 밖으로 보내지 않아요. 기기에 따라 말로 답하기가 보이지 않을 수 있어요.
+        </p>
+        {azure && (
+          <button type="button" className="forest-panel-secondary" onClick={() => onSpeech?.('device')}>
+            이 기기 인식으로 바꾸기
+          </button>
+        )}
+      </section>
+      <section className="forest-panel-group" aria-label="Azure 음성 인식과 읽어 주기">
+        <h3>Azure 음성 인식과 읽어 주기{azure && (available ? ' (사용 중)' : ' (서버 연결 안 됨)')}</h3>
+        <p className="forest-panel-note">
+          ‘말로 답하기’를 누른 동안의 목소리가 Microsoft Azure로 전송되어 글자로 바뀌어요. 안내와 동화도 Azure 목소리로
+          읽어 줘요. 목소리와 인식된 문장은 마음숲에 저장하지 않아요. 인식된 문장 중 보기와 다른 말은 개인정보를
+          가린 뒤 대화 기록에 남아요.
+        </p>
+        <p className="forest-panel-note">아직 아이패드에서 확인하지 않은 기능이에요. 잘 안 되면 화면의 문구를 눌러 계속할 수 있어요.</p>
+        {!available ? (
+          <p className="forest-panel-note" role="status">지금은 서버에 Azure 음성 기능이 설정되어 있지 않아요.</p>
+        ) : !azure && (
+          <>
+            <label className="forest-panel-check">
+              <input type="checkbox" checked={agree} onChange={(event) => setAgree(event.target.checked)} />
+              아이 목소리가 Microsoft Azure로 전송되는 것을 이해하고 동의해요.
+            </label>
+            <button type="button" className="forest-panel-primary" disabled={!agree} onClick={() => onSpeech?.('azure', true)}>
+              Azure 음성 사용하기
+            </button>
+          </>
+        )}
+      </section>
+      <button className="forest-panel-link" type="button" onClick={onBack}>
+        설정으로 돌아가기
+      </button>
+    </>
+  )
+}

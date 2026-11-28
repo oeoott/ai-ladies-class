@@ -29,7 +29,7 @@ npm run dev                                           # frontend/.env의 VITE_AP
 
 **모두 지키는 규칙**
 - 서버가 없어도(`VITE_API_URL` 비움) 아이 화면은 지금처럼 동작합니다. API 실패는 아이 화면에 오류로 보이지 않습니다.
-- 영상·얼굴 특징·음성은 서버로 보내지 않습니다. 대화는 마스킹된 문장만 저장합니다.
+- 영상·얼굴 특징·음성은 앱 서버로 보내지 않습니다. 대화는 마스킹된 문장만 저장합니다. 보호자가 '음성 기능'에서 Azure를 고르면 음성은 브라우저에서 Microsoft Azure로 바로 갑니다(앱 서버는 10분짜리 토큰만 발급).
 - 키·비밀값은 환경 변수(App Service 앱 설정)로만 둡니다. 이름은 `backend/.env.example`에 있습니다.
 - 백엔드 응답은 snake_case, 프론트는 `frontend/src/api.js`에서 camelCase로 바꿉니다.
 - 감정·동화 내용은 `backend/app/content/emotions.json`, `tales.json` 한 곳에만 있습니다. 프론트도 같은 파일을 읽습니다.
@@ -142,7 +142,7 @@ npm run dev                                           # frontend/.env의 VITE_AP
 - 서버 연결 `src/api.js`(5초 제한, 실패하면 null), 산책·학습 1·2·3·대화 기록
 - 보호자 화면(서버 주소가 있을 때만): 로그인, 계정 만들기, 보호자 계정, 계정과 기록 삭제, 학습 대시보드(주간·월간)
 
-**채울 곳**: 실제 iPad Safari에서 음성 인식(기기 안 인식)과 카메라 권한 확인.
+**채울 곳**: 실제 iPad Safari에서 음성 인식(기기 안 인식, 그리고 Azure 음성을 골랐을 때 마이크·재생·중단)과 카메라 권한 확인.
 
 **확인 방법**: `npm test`, `npm run build`, `npm run e2e`(서버 끈 상태·켠 상태·학습 3 대화·탈퇴, 가로 1180×820·세로 820×1180). 학습 3 대화 장면 스크린샷은 `npm run e2e:shots`(저장소 밖 `screenshots-final/lesson3/`).
 

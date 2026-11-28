@@ -114,6 +114,9 @@ export function createApi(base, { send = globalThis.fetch, timeout = TIMEOUT_MS,
       learn({ path: `/conversations/${id(conversationId)}/turn`, body: { choiceIndex, text, inputMode } }, { reply: true })
     ),
     endTalk: (conversationId) => post(`/conversations/${id(conversationId)}/end`),
+    // Azure Speech: 서버에 설정이 있는지, 그리고 10분짜리 토큰 (키는 서버에만). 실패하면 null → 기존 방식으로
+    speechStatus: async () => (root ? (await call('GET', '/speech/status', {})).data : null),
+    speechToken: () => learn((who) => ({ path: '/speech/token', body: { childId: who.childId } }), { reply: true }),
 
     // 보호자 화면: 항상 보호자 토큰을 붙인다
     signup: (email, password) => call('POST', '/auth/signup', { body: { email, password } }),

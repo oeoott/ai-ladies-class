@@ -4,19 +4,38 @@ import lionAudio from './raon-audio.js'
 export const NarrationActive = createContext(true)
 export const NarrationVoice = createContext(null)
 let current
+// Azure TTS when the guardian chose Azure (speechSettings) and the server has it: { speak, stopSpeaking }.
+// Without it the browser voice reads as before. Recorded clips (raon-audio) always come first.
+let provider = null
+// While the microphone is open ('말로 답하기'), nothing is read aloud: the friend's voice must not reach it.
+let micOpen = false
+
+export function setSpeechProvider(next) {
+  stopNarration()
+  provider = next
+}
+
+export function setMicOpen(open) {
+  micOpen = Boolean(open)
+  if (micOpen) stopNarration()
+}
+
+export const isMicOpen = () => micOpen
 
 export function stopNarration() {
+  provider?.stopSpeaking?.()
   if (!current) return
   const playing = current
   current = null
   playing.pause?.()
+  playing.stop?.()
   delete document.documentElement.dataset.talking
   window.speechSynthesis?.cancel()
 }
 
 export function narrate(text, { onStart, onEnd, recording } = {}) {
   stopNarration()
-  if (!text || document.hidden) return
+  if (!text || document.hidden || micOpen) return
   if (recording && window.Audio) {
     const clip = new window.Audio(recording)
     current = clip
@@ -38,6 +57,36 @@ export function narrate(text, { onStart, onEnd, recording } = {}) {
     clip.play().catch(fallback)
     return
   }
+  if (provider) {
+    const handle = {}
+    current = handle
+    const turn = provider.speak(text, {
+      onStart: () => {
+        if (current !== handle) return
+        document.documentElement.dataset.talking = 'true'
+        onStart?.()
+      },
+      onEnd: () => {
+        if (current !== handle) return
+        current = null
+        delete document.documentElement.dataset.talking
+        onEnd?.()
+      },
+      // Azure failed (no token, network): read with the browser voice instead
+      onError: () => {
+        if (current !== handle) return
+        current = null
+        speakWithBrowser(text, { onStart, onEnd })
+      },
+    })
+    handle.stop = () => turn?.stop?.()
+    return
+  }
+  speakWithBrowser(text, { onStart, onEnd })
+}
+
+function speakWithBrowser(text, { onStart, onEnd } = {}) {
+  if (micOpen || document.hidden) return
   const synth = window.speechSynthesis
   if (!synth || !window.SpeechSynthesisUtterance) return
   const voices = synth.getVoices().filter(v => /^ko(?:[-_]|$)/i.test(v.lang))
