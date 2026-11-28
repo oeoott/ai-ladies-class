@@ -1,8 +1,12 @@
 """대화 안전 처리.
 
-- mask_pii: Azure AI Language PII 감지. 키가 없거나 실패하면 로컬 규칙만 적용한다.
-- check: Azure AI Content Safety 텍스트 분석. 키가 없으면 통과, 키가 있는데 실패하면 막는다.
+- mask_pii: Azure AI Language PII 감지. 키가 없거나 실패하면 로컬 규칙(전화번호·이메일)만 적용한다.
+  mask_pii_checked는 (가린 문장, Azure로 가렸는지)를 돌려준다. 모델을 부를지는 conversation.py가 정책으로 정한다.
+- check: Azure AI Content Safety 텍스트 분석. 키가 있는데 실패하면 막는다.
+  키가 없으면 통과. 단 AI_SAFETY_REQUIRED=true면 막는다.
   기준(max_severity)은 prompts.py의 INPUT_MAX_SEVERITY·OUTPUT_MAX_SEVERITY.
+
+정책 표는 backend/README.md '안전 서비스가 없거나 실패할 때'.
 로그에는 오류 종류만 남기고 문장은 남기지 않는다.
 """
 import logging
@@ -41,19 +45,29 @@ def _redact_azure(text: str, deadline: float | None) -> str:
     return redacted
 
 
-def mask_pii(text: str, deadline: float | None = None) -> str:
+def mask_pii_checked(text: str, deadline: float | None = None) -> tuple[str, bool]:
+    """(가린 문장, Azure PII로 가렸는지). 로컬 규칙은 항상 한 번 더 적용한다."""
+    by_azure = False
     if config.settings.language_enabled:
         try:
             text = _redact_azure(text, deadline)
+            by_azure = True
         except Exception as error:
             log.warning("Azure AI Language PII 실패, 로컬 규칙 사용: %s", type(error).__name__)
-    return _mask_local(text)
+    return _mask_local(text), by_azure
+
+
+def mask_pii(text: str, deadline: float | None = None) -> str:
+    return mask_pii_checked(text, deadline)[0]
 
 
 def check(text: str, max_severity: int, deadline: float | None = None) -> tuple[bool, list[str]]:
     """(통과 여부, 기준을 넘은 범주 이름). 호출 실패로 막을 때 범주는 빈 목록."""
     s = config.settings
     if not s.content_safety_enabled:
+        if s.ai_safety_required:
+            log.warning("Azure AI Content Safety 설정 없음, AI_SAFETY_REQUIRED라 막음")
+            return False, []
         return True, []
     try:
         data = azure.post_json(

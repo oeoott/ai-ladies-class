@@ -54,11 +54,14 @@ def empty_counts() -> dict:
 def new_conversation(walk: Walk, friend: str = "lion") -> dict:
     # turns: 턴마다 {said(마스킹), reply, input_mode, resolved_by(button·exact·llm·fallback)}. fallback 턴은 문장 없음
     # safety: Content Safety 차단 기록 {blocked, categories}. 문장은 남기지 않는다.
-    # generated: 한국 날짜별 Azure OpenAI 호출 수, limited: 하루 제한에 걸린 수 (비용 제한)
+    # generated: 한국 날짜별 Azure OpenAI 호출 수 (기록용), limited: 하루 제한에 걸린 수 (비용 제한)
+    #   제한 판단은 이 칸이 아니라 reserve_generation(아이·날짜별 카운터)으로 한다
+    # actions: 대화를 시작할 때까지 이 산책에서 고른 행동 번호(순서대로, 마지막이 지금 결과). 모델 문맥에 쓴다
+    # rev: update_conversation의 비교 값 (동시 요청 막기)
     # (이전 문서의 fallbacks 칸은 그림으로 돌아간 수였다. 리포트가 함께 센다)
     return {"id": new_id(), "child_id": walk.child_id, "walk_id": walk.id, "topic_id": walk.topic_id,
             "friend": friend, "turn": 0, "turns": [], "safety": [], "generated": {}, "limited": 0,
-            "ended_by": None, "created_at": now_iso()}
+            "actions": [], "ended_by": None, "rev": 0, "created_at": now_iso()}
 
 
 class Store(ABC):
@@ -163,10 +166,26 @@ class Store(ABC):
     def get_conversation(self, conversation_id: str) -> dict | None: ...
 
     @abstractmethod
-    def save_conversation(self, conv: dict) -> None: ...
+    def save_conversation(self, conv: dict) -> None:
+        """그대로 덮어쓴다 (시연 데이터·테스트용). 턴 기록은 update_conversation을 쓴다."""
+
+    @abstractmethod
+    def update_conversation(self, conv: dict) -> bool:
+        """읽었을 때의 rev와 저장된 rev가 같을 때만 저장하고 rev를 1 올린다 (conv["rev"]도 바뀐다).
+        그사이 다른 요청이 먼저 저장했으면 저장하지 않고 False. 동시 요청으로 턴이 덮어써지는 것을 막는다."""
 
     @abstractmethod
     def list_conversations(self, child_id: str) -> list[dict]: ...
+
+    # --- 하루 모델 호출 수 (비용 제한) ---
+    @abstractmethod
+    def reserve_generation(self, child_id: str, day: str, limit: int) -> bool:
+        """그 아이의 day(한국 날짜) 호출 수가 limit보다 적으면 1 늘리고 True, 아니면 False.
+        읽고 늘리기를 한 번에 해서, 동시에 와도 limit을 넘지 않는다."""
+
+    @abstractmethod
+    def generations_on(self, child_id: str, day: str) -> int:
+        """그 아이가 day에 예약한 모델 호출 수."""
 
     # --- 스티커: 아이별 날짜당 1장 ---
     @abstractmethod
@@ -191,6 +210,7 @@ class MemoryStore(Store):
         self.conversations: dict[str, dict] = {}
         self.stickers: dict[str, dict] = {}  # sticker_id -> 문서
         self.device_links: dict[str, dict] = {}  # 기기 child_id -> 연결
+        self.generations: dict[tuple[str, str], int] = {}  # (child_id, 날짜) -> 모델 호출 수
 
     # --- 보호자 ---
     def create_guardian(self, email, password_hash):
@@ -276,10 +296,31 @@ class MemoryStore(Store):
         return copy.deepcopy(self.conversations.get(conversation_id))
 
     def save_conversation(self, conv):
-        self.conversations[conv["id"]] = copy.deepcopy(conv)
+        with self._lock:
+            self.conversations[conv["id"]] = copy.deepcopy(conv)
+
+    def update_conversation(self, conv):
+        with self._lock:
+            stored = self.conversations.get(conv["id"])
+            if stored is None or stored.get("rev", 0) != conv.get("rev", 0):
+                return False
+            conv["rev"] = conv.get("rev", 0) + 1
+            self.conversations[conv["id"]] = copy.deepcopy(conv)
+            return True
 
     def list_conversations(self, child_id):
         return [copy.deepcopy(c) for c in self.conversations.values() if c["child_id"] == child_id]
+
+    def reserve_generation(self, child_id, day, limit):
+        with self._lock:
+            used = self.generations.get((child_id, day), 0)
+            if used >= limit:
+                return False
+            self.generations[(child_id, day)] = used + 1
+            return True
+
+    def generations_on(self, child_id, day):
+        return self.generations.get((child_id, day), 0)
 
     # --- 기기 기록 연결 ---
     def claim_device(self, device_child_id, guardian_id, child_id):
@@ -302,6 +343,9 @@ class MemoryStore(Store):
             for conv in [c for c in self.conversations.values() if c["child_id"] == from_child_id]:
                 conv["child_id"] = to_child_id
                 moved["conversations"] += 1
+            for (child, day), n in [(k, v) for k, v in self.generations.items() if k[0] == from_child_id]:
+                self.generations[(to_child_id, day)] = self.generations.get((to_child_id, day), 0) + n
+                del self.generations[(child, day)]
             for key, doc in [(k, s) for k, s in self.stickers.items() if s["child_id"] == from_child_id]:
                 target = sticker_id(to_child_id, doc["day"])
                 if target in self.stickers:
@@ -326,6 +370,8 @@ class MemoryStore(Store):
             for k in stickers:
                 del self.stickers[k]
             self.attempts = [a for a in self.attempts if a["child_id"] != child_id]
+            for key in [k for k in self.generations if k[0] == child_id]:
+                del self.generations[key]
         return {"walks": len(walks), "attempts": attempts, "conversations": len(convs), "stickers": len(stickers)}
 
     def list_device_claims(self, child_id):

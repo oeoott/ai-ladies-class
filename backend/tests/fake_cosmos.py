@@ -1,13 +1,15 @@
 """azure-cosmos DatabaseProxy·ContainerProxy를 흉내 내는 가짜. 실제 SDK 예외를 그대로 던진다.
 
 CosmosStore가 쓰는 메서드만 있다: create_container_if_not_exists, create_item, upsert_item,
-delete_item, read_item, query_items. 쿼리는 `WHERE c.이름 = @이름 AND ...` 모양만 이해한다.
+replace_item(etag 조건), delete_item, read_item, query_items. 저장할 때마다 _etag가 바뀐다. 쿼리는 `WHERE c.이름 = @이름 AND ...` 모양만 이해한다.
 """
 import copy
 import re
 import threading
 
-from azure.cosmos.exceptions import CosmosResourceExistsError, CosmosResourceNotFoundError
+from azure.core import MatchConditions
+from azure.cosmos.exceptions import (CosmosAccessConditionFailedError, CosmosResourceExistsError,
+                                     CosmosResourceNotFoundError)
 
 _WHERE = re.compile(r"c\.(\w+) = @(\w+)")
 
@@ -20,13 +22,27 @@ class FakeContainer:
         self.items: dict[tuple, dict] = {}  # (파티션 값, id) -> 문서
         self.queries: list[dict] = []
         self._lock = threading.Lock()
+        self._version = 0
 
     def _key(self, doc):
         assert self.pk_field in doc, f"{self.name}: 파티션 키 {self.pk_field}가 없는 문서"
         return doc[self.pk_field], doc["id"]
 
     def _stored(self, doc):
-        return {**copy.deepcopy(doc), "_rid": "r", "_etag": "e", "_ts": 1}
+        self._version += 1
+        return {**copy.deepcopy(doc), "_rid": "r", "_etag": f"e{self._version}", "_ts": 1}
+
+    def replace_item(self, item, body, etag=None, match_condition=None):
+        with self._lock:
+            key = self._key(body)
+            assert key[1] == item
+            current = self.items.get(key)
+            if current is None:
+                raise CosmosResourceNotFoundError(status_code=404, message="Not found")
+            if match_condition == MatchConditions.IfNotModified and current["_etag"] != etag:
+                raise CosmosAccessConditionFailedError(status_code=412, message="Precondition failed")
+            self.items[key] = self._stored(body)
+            return copy.deepcopy(self.items[key])
 
     def create_item(self, body):
         with self._lock:

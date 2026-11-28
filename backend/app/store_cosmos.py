@@ -13,12 +13,18 @@ child_id_날짜)을 id로 쓰고, 그 값이 곧 파티션이 되거나(guardian
 
 stickers 문서 id는 child_id_날짜다. 같은 파티션에 같은 id는 하나만 만들어지므로
 동시에 완료 요청이 와도 스티커는 한 장만 생긴다.
+
+conversations 파티션에는 대화 문서 말고 하루 모델 호출 수 문서도 있다
+(id = usage_날짜, kind = usage, count). 늘릴 때는 etag가 같을 때만 바꾸는 조건부 교체로 한다.
+대화 턴 저장(update_conversation)도 etag 조건부 교체라 동시 요청이 서로 덮어쓰지 않는다.
 """
 import logging
 from urllib.parse import urlparse
 
+from azure.core import MatchConditions
 from azure.cosmos import CosmosClient, PartitionKey
-from azure.cosmos.exceptions import CosmosResourceExistsError, CosmosResourceNotFoundError
+from azure.cosmos.exceptions import (CosmosAccessConditionFailedError, CosmosResourceExistsError,
+                                     CosmosResourceNotFoundError)
 
 from . import config
 from .schemas import Walk
@@ -26,6 +32,17 @@ from .store import (Store, device_claim, empty_counts, latest, new_conversation,
                     placement_doc, sticker_id)
 
 log = logging.getLogger("maeum.store")
+
+USAGE = "usage"  # conversations 파티션 안의 하루 모델 호출 수 문서 kind
+CAS_TRIES = 8  # 조건부 교체가 다른 요청과 부딪혔을 때 다시 읽고 해 보는 횟수
+
+
+def usage_id(day: str) -> str:
+    return f"usage_{day}"
+
+
+def _is_usage(doc: dict) -> bool:
+    return doc.get("kind") == USAGE
 
 CONTAINERS = {
     "guardian_emails": {"partition_key": "/id"},
@@ -175,14 +192,92 @@ class CosmosStore(Store):
         return conv
 
     def get_conversation(self, conversation_id):
-        found = self._query("conversations", id=conversation_id)
+        found = [d for d in self._query("conversations", id=conversation_id) if not _is_usage(d)]
         return found[0] if found else None
 
     def save_conversation(self, conv):
         self._c["conversations"].upsert_item(conv)
 
+    def update_conversation(self, conv):
+        container = self._c["conversations"]
+        try:
+            raw = container.read_item(item=conv["id"], partition_key=conv["child_id"])
+        except CosmosResourceNotFoundError:
+            return False
+        if raw.get("rev", 0) != conv.get("rev", 0):
+            return False
+        body = {**conv, "rev": conv.get("rev", 0) + 1}
+        try:
+            container.replace_item(item=conv["id"], body=body, etag=raw["_etag"],
+                                   match_condition=MatchConditions.IfNotModified)
+        except (CosmosAccessConditionFailedError, CosmosResourceNotFoundError):
+            return False
+        conv["rev"] = body["rev"]
+        return True
+
     def list_conversations(self, child_id):
-        return self._query("conversations", partition_key=child_id)
+        return [d for d in self._query("conversations", partition_key=child_id) if not _is_usage(d)]
+
+    # --- 하루 모델 호출 수 ---
+    def _add_usage(self, child_id: str, day: str, n: int, limit: int | None) -> bool:
+        """usage 문서의 count에 n을 더한다. limit이 있고 넘게 되면 더하지 않고 False."""
+        container = self._c["conversations"]
+        for _ in range(CAS_TRIES):
+            try:
+                raw = container.read_item(item=usage_id(day), partition_key=child_id)
+            except CosmosResourceNotFoundError:
+                if limit is not None and n > limit:
+                    return False
+                try:
+                    container.create_item({"id": usage_id(day), "child_id": child_id, "kind": USAGE,
+                                           "day": day, "count": n})
+                    return True
+                except CosmosResourceExistsError:  # 다른 요청이 먼저 만들었다 → 다시 읽는다
+                    continue
+            if limit is not None and raw.get("count", 0) + n > limit:
+                return False
+            try:
+                container.replace_item(item=raw["id"], body={**_clean(raw), "count": raw.get("count", 0) + n},
+                                       etag=raw["_etag"], match_condition=MatchConditions.IfNotModified)
+                return True
+            except CosmosAccessConditionFailedError:  # 그사이 다른 요청이 늘렸다 → 다시 읽는다
+                continue
+        log.warning("하루 호출 수를 늘리지 못함 (계속 부딪힘)")
+        return False  # 정하지 못하면 부르지 않는 쪽으로
+
+    def _merge_usage(self, from_child_id: str, to_child_id: str, source: dict) -> None:
+        """기기 파티션의 usage 문서(source)를 프로필의 같은 날짜 문서에 더한다.
+        더한 원본은 프로필 문서의 merged_from에 남겨, 더한 뒤 원본 삭제가 실패해 다시 옮겨도 두 번 더하지 않는다.
+        정하지 못하면 예외를 던진다 (부르는 쪽이 원본을 지우지 않고 실패로 끝나며, 다시 하면 이어서 한다)."""
+        container, day, n = self._c["conversations"], source["day"], source.get("count", 0)
+        for _ in range(CAS_TRIES):
+            try:
+                raw = container.read_item(item=usage_id(day), partition_key=to_child_id)
+            except CosmosResourceNotFoundError:
+                try:
+                    container.create_item({"id": usage_id(day), "child_id": to_child_id, "kind": USAGE, "day": day,
+                                           "count": n, "merged_from": [from_child_id]})
+                    return
+                except CosmosResourceExistsError:
+                    continue
+            merged = raw.get("merged_from") or []
+            if from_child_id in merged:  # 앞선 시도에서 이미 더했다
+                return
+            body = {**_clean(raw), "count": raw.get("count", 0) + n, "merged_from": [*merged, from_child_id]}
+            try:
+                container.replace_item(item=raw["id"], body=body, etag=raw["_etag"],
+                                       match_condition=MatchConditions.IfNotModified)
+                return
+            except CosmosAccessConditionFailedError:
+                continue
+        raise RuntimeError("하루 호출 수를 옮기지 못함 (계속 부딪힘)")
+
+    def reserve_generation(self, child_id, day, limit):
+        return self._add_usage(child_id, day, 1, limit)
+
+    def generations_on(self, child_id, day):
+        doc = self._read("conversations", usage_id(day), child_id)
+        return doc.get("count", 0) if doc else 0
 
     # --- 기기 기록 연결 ---
     def claim_device(self, device_child_id, guardian_id, child_id):
@@ -208,6 +303,10 @@ class CosmosStore(Store):
         moved = empty_counts()
         for name in ("walks", "attempts", "conversations"):
             for doc in self._query(name, partition_key=from_child_id):
+                if _is_usage(doc):  # 하루 호출 수는 프로필의 같은 날짜 수에 더한다 (한 번만)
+                    self._merge_usage(from_child_id, to_child_id, doc)  # 실패하면 예외 → 원본을 지우지 않음
+                    self._delete(name, doc["id"], from_child_id)
+                    continue
                 self._c[name].upsert_item({**doc, "child_id": to_child_id})
                 self._delete(name, doc["id"], from_child_id)
                 moved[name] += 1
@@ -228,7 +327,7 @@ class CosmosStore(Store):
             docs = self._query(name, partition_key=child_id)
             for doc in docs:
                 self._delete(name, doc["id"], child_id)
-            deleted[name] = len(docs)
+            deleted[name] = sum(1 for d in docs if not _is_usage(d))
         return deleted
 
     def list_device_claims(self, child_id):

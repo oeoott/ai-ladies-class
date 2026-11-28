@@ -101,7 +101,7 @@ tests/
 | 학습 3 | GET | /lessons/story/{topic} | 동화 3장, 상황, 행동 보기 |
 | 학습 3 | POST | /lessons/story/walks/{id}/action | 행동 선택 → 결과 장면 |
 | 학습 3 | POST | /lessons/story/walks/{id}/talk | 대화 시작 → 질문, 보기. 본문(선택) `{character: lion·rabbit·bear}`로 질문의 `{친구}`를 정함 (없으면 라온). 아이가 붙인 별명은 받지 않음 |
-| 학습 3 | POST | /conversations/{id}/turn | {choice_index 또는 text, input_mode} → 친구 답과 표정 `expression`(joy·surprise·sad·anger·neutral, 그림 선택으로 돌아갈 때는 null) (2턴 후 종료). 기록에는 턴마다 `resolved_by`(button·exact·llm·fallback) |
+| 학습 3 | POST | /conversations/{id}/turn | {choice_index 또는 text, input_mode} → 친구 답과 표정 `expression`(joy·surprise·sad·anger·neutral, 그림 선택으로 돌아갈 때는 null) (2턴 후 종료). 기록에는 턴마다 `resolved_by`(button·exact·llm·fallback). 산책이 완료·중단됐거나, 같은 대화의 다른 턴이 먼저 저장됐으면 409 (프론트는 대본으로 이어 감) |
 | 학습 3 | POST | /conversations/{id}/end | 대화 종료 버튼 |
 
 ## 프론트 연결 메모
@@ -366,15 +366,19 @@ API 모양(`POST /conversations/{id}/turn`)과 프론트 연결은 그대로입�
 - 아이 한 명이 하루(한국 날짜)에 모델을 부를 수 있는 횟수는 `prompts.DAILY_GENERATION_LIMIT`(30)입니다. 넘으면 부르지 않고 `fallback_to_picture: true`로 돌아갑니다. 아이 화면은 지금처럼 보기 버튼으로 돌아갑니다.
 - 셉니다: 키가 있어 실제로 부른 호출. 형식 오류로 다시 부른 호출, 실패·시간 초과도 비용이 들 수 있어 셉니다.
 - 세지 않습니다: 보기 선택, 보기와 같은 말(대본으로 답함), 키가 없을 때, 모델 전에 입력 안전 검사에서 막힌 경우.
-- 횟수는 대화 문서의 `generated`(날짜별)에 두고, 턴마다 그 아이 대화들의 오늘 값을 더해 봅니다. 제한에 걸리면 그 대화의 `limited`를 늘리고 리포트 `story.generation_limited`에 나옵니다.
+- 제한 판단은 아이·날짜별 카운터(`Store.reserve_generation`)로 합니다. 확인과 늘리기를 한 번에 해서(메모리: 잠금, Cosmos: `conversations` 파티션의 `usage_날짜` 문서를 etag 조건부 교체) 동시에 와도 넘지 않습니다. 대화 문서의 `generated`(날짜별)는 기록용으로 함께 셉니다. 제한에 걸리면 그 대화의 `limited`를 늘리고 리포트 `story.generation_limited`에 나옵니다.
 - 기기 기록을 프로필로 옮기면 대화 문서가 함께 옮겨지므로 그날 센 횟수도 이어집니다.
-- 알려진 한계: 같은 아이의 말 턴이 정확히 동시에 오면 둘 다 같은 횟수를 읽어 한두 번 넘을 수 있습니다. 로그아웃으로 기기 id를 새로 만들면 새 아이로 셉니다.
+- 기기 기록을 옮길 때 카운터는 프로필의 같은 날짜 수에 더합니다. 더한 원본 id를 프로필 문서의 `merged_from`에 남겨, 더한 뒤 원본 삭제가 실패해 다시 옮겨도 두 번 더하지 않습니다. 더하기가 실패하면 원본을 지우지 않고 실패로 끝나며, 다시 하면 이어서 합니다.
+- 대화 턴 저장은 `Store.update_conversation`(읽은 `rev`가 그대로일 때만 저장)으로 합니다. 모델을 기다리는 사이 같은 대화에 다른 턴이 저장되면 늦은 턴은 409로 버립니다(그 턴의 호출은 하루 수에 남음).
+- 알려진 한계: 로그아웃으로 기기 id를 새로 만들면 새 아이로 셉니다.
 
-| 서비스 | 키가 없을 때 | 키가 있는데 실패·시간 초과일 때 |
+안전 서비스가 없거나 실패할 때 (`AI_SAFETY_REQUIRED`, 기본 false. 배포에서는 true 권장):
+
+| 서비스 | 키가 없을 때 | 키가 있는데 실패·시간 초과일 때 | `AI_SAFETY_REQUIRED=true`일 때 |
 | --- | --- | --- |
-| Azure OpenAI (`conversation._ask_model`) | 부르지 않음 → 그림 선택 | 그림 선택 (형식 오류만 한 번 다시) |
-| Azure AI Language PII (`mask_pii`) | 로컬 규칙(전화번호·이메일) | 로컬 규칙 |
-| Azure AI Content Safety (`check`) | 통과 | 막음 |
+| Azure OpenAI (`conversation._ask_model`) | 부르지 않음 → 그림 선택 | 그림 선택 (형식 오류만 한 번 다시) | 같음 |
+| Azure AI Language PII (`mask_pii_checked`) | 로컬 규칙(전화번호·이메일)으로 가리고 계속 | 로컬 규칙으로 가리고 계속 | 키가 없거나 실패하면 모델을 부르지 않음 → 그림 선택 (보기와 같은 말은 대본 답) |
+| Azure AI Content Safety (`check`) | 통과 | 막음 | 키가 없어도 막음 |
 
 Azure로 마스킹한 뒤에도 로컬 규칙을 한 번 더 적용합니다.
 
@@ -383,7 +387,7 @@ Azure로 마스킹한 뒤에도 로컬 규칙을 한 번 더 적용합니다.
 | 하고 싶은 일 | 고칠 부분 |
 | --- | --- |
 | 친구 역할·말투 규칙·장면 제한 | `SYSTEM_PROMPT` (1~2문장, 질문 최대 1개, 반말, 비유·반어·농담·관용구 금지, 이야기 밖 주제·개인정보 질문 금지) |
-| 모델에 넘기는 정보 | `build_messages(tale, turn, friend_name, transcript)`. `turn` 0은 첫 질문과 choices, 1은 again과 extra. `friend_name`은 받침에 따라 라온이·보리·두리(`content.friend_name`). `transcript`는 마스킹된 아이 말 |
+| 모델에 넘기는 정보 | `build_messages(tale, turn, friend_name, transcript, context)`. `turn` 0은 첫 질문과 choices, 1은 again과 extra. `context`는 고른 행동 번호(`conv["actions"]`, `/talk` 때 그 산책의 story_action 기록에서 읽음)와 이전 턴의 마스킹된 말·답(그림으로 돌아간 턴 제외). 마지막 턴(1)은 `REPLY_RULES[1]`: 대본 ends처럼 일어난 일을 짧은 존댓말로 서술하고 질문하지 않음(`MAX_QUESTIONS_BY_TURN`). `friend_name`은 받침에 따라 라온이·보리·두리(`content.friend_name`). `transcript`는 마스킹된 아이 말 |
 | 응답 모양 | `RESPONSE_SCHEMA` (바꾸면 `parse()`도 함께) |
 | 응답으로 친구 답 정하기 | `resolve(tale, turn, output)`: match면 대본 답·표정, match null·offTopic false면 reply, 그 밖은 None |
 | 형식 확인 | `parse(content)`: 모양이 틀리면 None (conversation.py가 한 번 다시 부름) |

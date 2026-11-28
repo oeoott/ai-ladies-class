@@ -83,3 +83,13 @@ def conversation_or_404(conversation_id: str, guardian: dict | None = Depends(cu
         raise HTTPException(404, "대화를 찾을 수 없어요.")
     check_child(conv["child_id"], guardian, store)
     return conv
+
+
+def open_conversation(conv: dict = Depends(conversation_or_404), store: Store = Depends(get_store)) -> dict:
+    """턴을 받을 대화: 그 산책이 아직 진행 중이어야 한다. 완료·중단된 산책이면 409 (프론트는 로컬 대본으로 이어 감)."""
+    walk = store.get_walk(conv["walk_id"])
+    if walk is None:
+        raise HTTPException(404, "산책 기록을 찾을 수 없어요.")
+    if walk.status != "inProgress":
+        raise HTTPException(409, "이미 끝난 산책이에요.")
+    return conv
