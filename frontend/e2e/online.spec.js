@@ -60,7 +60,7 @@ test('서버를 켜면 학습 1·2·3과 대화 턴이 기록되고, 가입하�
   expect(Object.keys(mirror).sort()).toEqual(
     ['attempts', 'end_reason', 'mode', 'score', 'score_version', 'skipped', 'stars', 'tracked_sec'])
   expect(mirror).toEqual({
-    mode: 'camera', score: null, skipped: false, score_version: mirrorBaseline.status === 'measured' ? mirrorBaseline.version : null, stars: null,
+    mode: 'camera', score: null, skipped: false, score_version: mirrorBaseline.approval?.approved ? mirrorBaseline.version : null, stars: null,
     tracked_sec: 0, attempts: 1, end_reason: 'exit',
   })
   expect(body(`/lessons/story/walks/${walkId}/action`)).toEqual({ action_index: 0 })

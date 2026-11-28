@@ -108,7 +108,12 @@ test('api.recordMirror sends every summary field in snake_case and nothing else'
 test('with the provisional baseline nothing is scored or shown, only presence time is recorded (AGENTS.md)', () => {
   assert.equal(baseline.status, 'provisional')
   assert.equal(scoringEnabled(baseline), false)
-  assert.equal(scoringEnabled({ ...baseline, status: 'measured' }), true)
+  // 계산·측정 완료(measured)만으로는 켜지지 않는다. 그 버전에 대한 사람의 승인이 있어야 한다.
+  assert.equal(scoringEnabled({ ...baseline, status: 'measured' }), false)
+  const approved = { ...baseline, status: 'measured', approval: { approved: true, version: baseline.version } }
+  assert.equal(scoringEnabled(approved), true)
+  assert.equal(scoringEnabled({ ...approved, version: 'err-v2' }), false) // 승인은 버전에 묶인다
+  assert.equal(scoringEnabled({ ...approved, status: 'measured-with-issues' }), false)
   assert.equal(scoringEnabled(baseline, true), true)
   const session = createMirrorSession(baseline, 'joy')
   assert.equal(session.scoring, false)
@@ -123,8 +128,9 @@ test('with the provisional baseline nothing is scored or shown, only presence ti
   assert.equal(record.trackedSec, 8)
 })
 
-test('a measured baseline scores without the test switch', () => {
-  const session = createMirrorSession({ ...baseline, status: 'measured' }, 'joy')
+test('an approved baseline scores without the test switch', () => {
+  const session = createMirrorSession({ ...baseline, status: 'measured',
+    approval: { approved: true, version: baseline.version } }, 'joy')
   session.cameraStarted(0)
   assert.equal(session.frame(joyFace(0), 0).phase, 'calibrating')
 })

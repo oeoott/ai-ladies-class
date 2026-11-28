@@ -2,7 +2,7 @@
  "version": "err-v1-prov",
  "method": "err",
  "status": "provisional",
- "note": "임시 기준값. 기준 사진이 없어 MediaPipe blendshape 의미를 보고 손으로 정한 값이다. 검증되지 않았다. 기준 사진(가상 성인 5명 × 7감정 + 무표정)으로 frontend/scripts/mirror-baseline.mjs를 돌리면 status가 measured인 값으로 바뀐다. 아이에게 보이는 hint 문구(feedback)도 초안이라 특수교사 검토 전이다.",
+ "note": "임시 기준값. 기준 사진이 없어 MediaPipe blendshape 의미를 보고 손으로 정한 값이다. 검증되지 않았다. 기준 사진(가상 성인 5명 × 7감정 + 무표정)으로 frontend/scripts/mirror-baseline.mjs를 돌리면 목표값·별 기준이 계산된다(status measured). 아이 화면 채점은 검토 후 approve 명령으로 승인해야 켜진다. 아이에게 보이는 hint 문구(feedback)도 초안이라 특수교사 검토 전이다.",
  "calibrationMs": 3000,
  "lockMs": 3000,
  "smoothing": 0.5,
@@ -191,5 +191,12 @@
   "noseSneer": "코를 찡그려 봐요.",
   "mouthUpperUp": "윗입술을 올려 봐요.",
   "relax": "얼굴에 힘을 빼 봐요."
+ },
+ "approval": {
+  "approved": false,
+  "by": null,
+  "at": null,
+  "version": null,
+  "note": null
  }
 }

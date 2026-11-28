@@ -9,11 +9,17 @@ import { createMirrorScorer } from './mirrorScore.js'
 
 export const END_REASONS = ['locked', 'skipped', 'cameraDenied', 'exit']
 
-// Scores are shown and recorded only with a confirmed baseline (status 'measured'). AGENTS.md: 유사도와 별 점수는
-// AI 담당의 기준이 확정되기 전까지 산출하지 않는다. `force` (the team's webcam test, ?mirrorScore=1) turns it on
-// with the provisional baseline; the record then carries the provisional score_version.
+// Scores are shown and recorded only with an APPROVED baseline: measured without issues AND approved by a person
+// for this exact version (mirrorBaselineBuild.approveBaseline). AGENTS.md: 유사도와 별 점수는 AI 담당의 기준이
+// 확정되기 전까지 산출하지 않는다. 'measured' alone is not enough. `force` (the team's webcam test, ?mirrorScore=1)
+// turns it on with any baseline; the record then carries that score_version (e.g. err-v1-prov).
+export function baselineApproved(baseline) {
+  return baseline?.status === 'measured' && baseline.approval?.approved === true
+    && baseline.approval.version === baseline.version
+}
+
 export function scoringEnabled(baseline, force = false) {
-  return baseline?.status === 'measured' || force === true
+  return baselineApproved(baseline) || force === true
 }
 
 export function createMirrorSession(baseline, feeling, { force = false } = {}) {
