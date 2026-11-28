@@ -699,7 +699,7 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
   useEffect(() => {
     if (phase !== 'question' || !serverTalk || talkId) return
     let current = true
-    startServerTalk(api, walkId, undefined, friend?.id).then((id) => {
+    startServerTalk(api, walkId, undefined, friend?.id, chosen).then((id) => {
       if (current && id && latest.current.state.phase === 'question') latest.current.update({ talkId: id })
     })
     return () => {
@@ -807,7 +807,8 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
           actions={tale.actions}
           onChoose={(branch) => {
             if (walkId) api.pickStoryAction(walkId, branch)
-            update({ phase: 'consequence', branch })
+            // A new action starts a new talk about its result (an earlier talk was about the other action).
+            update({ phase: 'consequence', branch, talkId: null })
           }}
         />
       )}

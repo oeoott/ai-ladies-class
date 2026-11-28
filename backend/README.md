@@ -100,7 +100,7 @@ tests/
 | 학습 2 | POST | /lessons/mirror/walks/{id}/record | {mode: camera·touch, score: null, skipped} 기록. 선택: `score_version`, `stars`(0~3), `tracked_sec`, `attempts`, `end_reason`(locked·skipped·cameraDenied·exit). 영상·얼굴 특징·blendshape 값 등 다른 칸은 422 |
 | 학습 3 | GET | /lessons/story/{topic} | 동화 3장, 상황, 행동 보기 |
 | 학습 3 | POST | /lessons/story/walks/{id}/action | 행동 선택 → 결과 장면 |
-| 학습 3 | POST | /lessons/story/walks/{id}/talk | 대화 시작 → 질문, 보기. 본문(선택) `{character: lion·rabbit·bear}`로 질문의 `{친구}`를 정함 (없으면 라온). 아이가 붙인 별명은 받지 않음 |
+| 학습 3 | POST | /lessons/story/walks/{id}/talk | 대화 시작 → 질문, 보기. 본문(선택) `{character: lion·rabbit·bear}`로 질문의 `{친구}`를 정함 (없으면 라온), `action_index`는 화면에서 지금 고른 행동(대화 문맥의 지금 결과. 없으면 행동 기록의 마지막). 아이가 붙인 별명은 받지 않음 |
 | 학습 3 | POST | /conversations/{id}/turn | {choice_index 또는 text, input_mode} → 친구 답과 표정 `expression`(joy·surprise·sad·anger·neutral, 그림 선택으로 돌아갈 때는 null) (2턴 후 종료). 기록에는 턴마다 `resolved_by`(button·exact·llm·fallback). 산책이 완료·중단됐거나, 같은 대화의 다른 턴이 먼저 저장됐으면 409 (프론트는 대본으로 이어 감) |
 | 학습 3 | POST | /conversations/{id}/end | 대화 종료 버튼 |
 
@@ -386,7 +386,7 @@ Azure로 마스킹한 뒤에도 로컬 규칙을 한 번 더 적용합니다.
 
 | 하고 싶은 일 | 고칠 부분 |
 | --- | --- |
-| 친구 역할·말투 규칙·장면 제한 | `SYSTEM_PROMPT` (1~2문장, 질문 최대 1개, 반말, 비유·반어·농담·관용구 금지, 이야기 밖 주제·개인정보 질문 금지) |
+| 친구 역할·말투 규칙·장면 제한 | `SYSTEM_PROMPT`·`REPLY_RULES` (첫 턴 친구 반말 1~2문장·마지막 턴 존댓말 서술, 질문 0개, 비유·반어·농담·관용구 금지, 이야기 밖 주제·개인정보 질문 금지) |
 | 모델에 넘기는 정보 | `build_messages(tale, turn, friend_name, transcript, context)`. `turn` 0은 첫 질문과 choices, 1은 again과 extra. `context`는 고른 행동 번호(`conv["actions"]`, `/talk` 때 그 산책의 story_action 기록에서 읽음)와 이전 턴의 마스킹된 말·답(그림으로 돌아간 턴 제외). 마지막 턴(1)은 `REPLY_RULES[1]`: 대본 ends처럼 일어난 일을 짧은 존댓말로 서술하고 질문하지 않음(`MAX_QUESTIONS_BY_TURN`). `friend_name`은 받침에 따라 라온이·보리·두리(`content.friend_name`). `transcript`는 마스킹된 아이 말 |
 | 응답 모양 | `RESPONSE_SCHEMA` (바꾸면 `parse()`도 함께) |
 | 응답으로 친구 답 정하기 | `resolve(tale, turn, output)`: match면 대본 답·표정, match null·offTopic false면 reply, 그 밖은 None |

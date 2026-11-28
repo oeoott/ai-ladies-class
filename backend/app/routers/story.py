@@ -29,17 +29,23 @@ def pick_action(body: StoryActionPick, walk: Walk = Depends(open_walk), store: S
 @router.post("/lessons/story/walks/{walk_id}/talk", response_model=TalkStart)
 def start_talk(body: TalkStartIn | None = None, walk: Walk = Depends(open_walk), store: Store = Depends(get_store)):
     """body는 선택. 숲 친구 id(character)로 질문의 {친구}와 AI 응답의 친구 이름을 정한다 (없으면 라온)."""
-    character = (body or TalkStartIn()).character
-    conv = store.create_conversation(walk, friend=character)
-    # 고른 행동은 /action이 story_action 기록으로 남긴다. 대화를 시작할 때 그 기록을 읽어 대화 문서에 둔다
-    # (모델 문맥: 마지막이 지금 결과). 화면은 바뀌지 않는다.
-    picked = sorted((a for a in store.list_attempts(walk.child_id)
-                     if a.get("walk_id") == walk.id and a.get("kind") == "story_action"), key=lambda a: a["created_at"])
+    body = body or TalkStartIn()
+    if body.action_index is not None and body.action_index >= len(tales()[walk.topic_id]["actions"]):
+        raise HTTPException(422, "없는 행동이에요.")
+    conv = store.create_conversation(walk, friend=body.character)
+    # 모델 문맥의 고른 행동 (마지막이 지금 결과):
+    # - 화면이 보낸 action_index가 지금 결과다. /action 기록이 늦거나 순서가 바뀌거나 실패해도 이 값을 쓴다.
+    # - 그 앞은 이 산책의 story_action 기록(먼저 해 본 행동). 화면이 번호를 보내지 않으면 기록의 마지막을 쓴다.
+    picked = [a["action_index"] for a in sorted(
+        (a for a in store.list_attempts(walk.child_id) if a.get("walk_id") == walk.id and a.get("kind") == "story_action"),
+        key=lambda a: a["created_at"])]
+    if body.action_index is not None:
+        picked = [i for i in picked if i != body.action_index] + [body.action_index]
     if picked:
-        conv["actions"] = [a["action_index"] for a in picked]
+        conv["actions"] = picked
         store.update_conversation(conv)  # 방금 만든 문서라 다른 요청과 부딪히지 않는다
     ask, choices = conversation.opening(walk.topic_id)
-    return TalkStart(conversation_id=conv["id"], ask=named(ask, character), choices=choices)
+    return TalkStart(conversation_id=conv["id"], ask=named(ask, body.character), choices=choices)
 
 
 CONFLICT = "다른 요청이 먼저 이 대화를 이어 갔어요."

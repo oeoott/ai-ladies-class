@@ -20,8 +20,13 @@ export function namedTalk(talk, name) {
 }
 
 // character: the forest friend's id (lion, rabbit, bear); the server names the friend from it.
-export async function startServerTalk(api, walkId, turns = talkTurns, character = undefined) {
-  const talk = await api.startTalk(walkId, character ? { character } : {})
+// actionIndex: the action chosen on screen now. Sent with the talk so the friend talks about this result
+// even when the separate action record arrived late, out of order or not at all.
+export async function startServerTalk(api, walkId, turns = talkTurns, character = undefined, actionIndex = undefined) {
+  const talk = await api.startTalk(walkId, {
+    ...(character ? { character } : {}),
+    ...(Number.isInteger(actionIndex) ? { actionIndex } : {}),
+  })
   if (!talk?.conversationId) return null
   turns.set(talk.conversationId, 0)
   return talk.conversationId

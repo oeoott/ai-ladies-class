@@ -85,7 +85,7 @@ npm run dev                                           # frontend/.env의 VITE_AP
 ## 백엔드 3 (학습 3 동화·AI 대화)
 
 **이미 된 것**
-- 학습 3 API: 행동 선택, 대화 시작(`/talk`, 선택 본문 `{character}`), 턴(`/conversations/{id}/turn`), 종료
+- 학습 3 API: 행동 선택, 대화 시작(`/talk`, 선택 본문 `{character, action_index}`), 턴(`/conversations/{id}/turn`), 종료
 - 대화 엔진 `services/conversation.py`: 보기와 보기와 같은 말은 대본. 보기와 다른 말은 마스킹 → 입력 안전 검사 → Azure OpenAI(JSON `{match, offTopic, reply, expression}`) → `prompts.resolve` → (모델 말이면) 출력 안전 검사. 형식이 틀리면 한 번 다시 묻고, 한 턴의 외부 호출 전체는 4초(`TURN_TIMEOUT`). 정하지 못하면 `fallback_to_picture`
 - 대화 기록 턴마다 `resolved_by`(button·exact·llm·fallback). 그림으로 돌아간 턴은 문장 없이 남기고, 리포트 `story.resolved_by`·`fallback_to_picture`가 이 값으로 셉니다
 - Azure OpenAI·AI Language PII·Content Safety 호출 자리(`services/azure.py`, `safety.py`). 키가 없으면 대본·로컬 규칙으로 동작
@@ -108,7 +108,7 @@ npm run dev                                           # frontend/.env의 VITE_AP
   - `match`가 null이고 `offTopic`이 false면 `reply`
   - 그 밖은 그림 선택으로 돌아감
 - 요청 값: temperature 0.3, max_tokens 150, structured outputs(strict). 형식이 틀리면 4초 안에서 한 번 다시 묻습니다.
-- 말투 규칙(1~2문장, 질문 최대 1개, 반말, 비유·반어·농담·관용구 금지, 이야기 밖 주제·개인정보 질문 금지)은 프롬프트에 있습니다. 코드는 문장 수·질문 수·길이(60자)·금지어만 검사합니다.
+- 말투 규칙(첫 턴: 친구 반말 1~2문장·질문 0개, 마지막 턴: 존댓말 서술·질문 0개, 비유·반어·농담·관용구 금지, 이야기 밖 주제·개인정보 질문 금지)은 프롬프트에 있습니다. 코드는 문장 수·질문 수·길이(60자)·금지어만 검사합니다.
 - API 모양(`/conversations/{id}/turn`)과 프론트 연결은 바뀌지 않았습니다.
 - 표정 거울: `POST /lessons/mirror/walks/{id}/record`가 선택 항목 `score`, `score_version`, `stars`(0~3), `tracked_sec`, `attempts`, `end_reason`(locked·skipped·cameraDenied·exit)을 받습니다. 프론트는 지금 `score: null`만 보냅니다.
 

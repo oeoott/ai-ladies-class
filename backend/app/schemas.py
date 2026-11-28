@@ -330,9 +330,10 @@ class TodayWalk(BaseModel):
 
 
 class TalkStartIn(BaseModel):
-    """대화 시작 (선택). 숲 친구 id만 받는다. 아이가 붙인 별명은 받지 않는다."""
+    """대화 시작 (선택). 숲 친구 id와 화면에서 지금 고른 행동 번호만 받는다. 아이가 붙인 별명은 받지 않는다."""
     model_config = ConfigDict(extra="forbid")
     character: Character = "lion"
+    action_index: int | None = Field(default=None, ge=0)  # 없으면 story_action 기록의 마지막 행동
 
 
 class DeleteAccountIn(BaseModel):

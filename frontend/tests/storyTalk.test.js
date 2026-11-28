@@ -160,6 +160,24 @@ test('the server talk starts with the forest friend id only', async () => {
   assert.deepEqual(sent, [{ character: 'rabbit' }, {}])
 })
 
+test('the talk is started with the action chosen on screen, so a late or failed action record does not matter', async () => {
+  const sent = []
+  const api = createApi('http://server', {
+    send: async (url, init) => {
+      sent.push([url, JSON.parse(init.body)])
+      return { ok: true, status: 200, json: async () => ({ conversation_id: 'c9', ask: '', choices: [] }) }
+    },
+    learner: () => ({ childId: 'kid', token: null }),
+  })
+  assert.equal(await startServerTalk(api, 'w1', new Map(), 'bear', 1), 'c9')
+  assert.equal(await startServerTalk(api, 'w1', new Map(), undefined, 0), 'c9')
+  assert.equal(await startServerTalk(api, 'w1', new Map(), 'lion', null), 'c9') // no action: not sent
+  assert.deepEqual(sent.map(([, body]) => body), [
+    { character: 'bear', action_index: 1 }, { action_index: 0 }, { character: 'lion' },
+  ])
+  assert.ok(sent.every(([url]) => url.endsWith('/lessons/story/walks/w1/talk')))
+})
+
 test('the friend moves once when the face changes at a result, a reply or the ending, not while it stays', () => {
   const walk = (steps) => steps.reduce((acc, [phase, face, page = null]) => {
     const next = nextEmote(acc.last, phase, face, page)

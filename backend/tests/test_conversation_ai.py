@@ -146,7 +146,7 @@ def test_messages_name_the_friend_and_show_the_choices_of_that_turn():
     assert f"0: {tale['talk']['choices'][0]}" in system and f"1: {tale['talk']['choices'][1]}" in system
     second = prompts.build_messages(tale, 1, "라온이", "또 타자")[0]["content"]
     assert tale["talk"]["again"] in second and f"0: {tale['talk']['extra'][0]}" in second
-    for rule in ("1~2문장", "질문은 많아야 1개", "반말", "비유, 반어, 농담, 관용구", "장면 밖의 주제", "개인정보"):
+    for rule in ("1~2문장", "질문하지 않는다", "반말", "비유, 반어, 농담, 관용구", "장면 밖의 주제", "개인정보"):
         assert rule in system, rule
 
 
@@ -347,6 +347,7 @@ def test_safety_failure_blocks(monkeypatch, with_keys):
 @pytest.mark.parametrize("reply", [
     "좋아! 같이 접자. 내일도 하자.",  # 세 문장
     "어디로 날릴까? 언덕은 어때?",  # 질문 두 개
+    "멀리 날아갔구나. 어디까지 갔을까?",  # 질문 하나 (생성 답은 질문 0개: 화면이 다음 질문을 정해 둠)
     "바람이 아주 멀리멀리 불어서 우리 비행기가 숲 끝까지 날아가고 또 날아가서 하늘 위 구름까지 닿으면 정말 좋겠다.",  # 60자 넘음
     "그것도 모르다니 바보 같아.",  # 금지어
     "",
@@ -360,7 +361,6 @@ def test_unsuitable_model_reply_falls_back(monkeypatch, with_keys, reply):
 @pytest.mark.parametrize("reply, expected", [
     (GENERATED, GENERATED),
     ("좋아! 다음 비행기는 우리 함께 접자.", "좋아! 다음 비행기는 우리 함께 접자."),  # 두 문장
-    ("멀리 날아갔구나. 어디까지 갔을까?", "멀리 날아갔구나. 어디까지 갔을까?"),  # 질문 하나
     ("“나도 기뻐.”", "나도 기뻐."),  # 따옴표는 뗌
     ("나도\n기뻐.", "나도 기뻐."),  # 줄바꿈은 한 칸으로
 ])

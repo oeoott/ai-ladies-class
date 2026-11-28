@@ -158,3 +158,34 @@ test('말로 답해 받은 서버 답은 새로고침 뒤에도 남고, 내가 �
   const stored = await page.evaluate(() => JSON.stringify({ ...localStorage }))
   expect(stored).not.toContain(HEARD)
 })
+
+test('행동 기록 요청이 실패해도 대화 시작에 지금 고른 행동을 보내고, 다른 행동을 고르면 새 대화를 시작한다', async ({ page, request }) => {
+  const deviceId = newDeviceId()
+  const walkId = await startWalk(request, { deviceId, topicId })
+  await seedSession(page, { topicId, walkId, deviceId, activity: { phase: 'act' } })
+  await prepare(page)
+  await page.route(BACKEND + '/lessons/story/walks/*/action', (route) => route.abort()) // 행동 기록 실패
+  const starts = []
+  page.on('request', (r) => {
+    if (r.method() === 'POST' && /\/lessons\/story\/walks\/[^/]+\/talk$/.test(r.url())) starts.push(r.postDataJSON())
+  })
+  await page.goto(ONLINE)
+  await page.getByRole('button', { name: '산책 이어가기' }).click()
+  await page.getByRole('button', { name: tale.actions[0].label }).click()
+  await page.getByRole('button', { name: '친구와 대화하기' }).click()
+  await expect.poll(() => starts.length).toBe(1)
+  await expect.poll(async () => (await readStored(page, STORAGE_KEY)).activity.talkId).toBeTruthy()
+  const first = (await readStored(page, STORAGE_KEY)).activity.talkId
+
+  // 이전으로 돌아가 다른 행동을 고르면, 그 결과에 대한 새 대화를 시작한다
+  await page.getByRole('button', { name: '이전' }).click()
+  await expect(page.getByRole('heading', { name: tale.actions[0].title })).toBeVisible()
+  await page.getByRole('button', { name: '다른 방법 해 보기' }).click()
+  await page.getByRole('button', { name: tale.actions[1].label }).click()
+  await expect.poll(async () => (await readStored(page, STORAGE_KEY)).activity.talkId ?? null).toBe(null)
+  await page.getByRole('button', { name: '친구와 대화하기' }).click()
+  await expect.poll(() => starts.length).toBe(2)
+  await expect.poll(async () => (await readStored(page, STORAGE_KEY)).activity.talkId).toBeTruthy()
+  expect((await readStored(page, STORAGE_KEY)).activity.talkId).not.toBe(first)
+  expect(starts.map((body) => body.action_index)).toEqual([0, 1])
+})
