@@ -1,0 +1,2453 @@
+{
+ "format": "asset-manifest-v1",
+ "note": "앱이 쓰는 생성 자산의 이력. 저장소 문서로 확인한 값만 채웠고, 모르는 칸은 null이며 unknown에 적었다. 새 자산은 생성할 때 모델·버전·프롬프트·생성일·의도한 감정을 적고, 검수 후 review를 채운다.",
+ "assets": [
+  {
+   "file": "art/backup/tale-anger.webp",
+   "kind": "backup",
+   "intendedEmotion": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "3170afa",
+    "date": "2026-11-24"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/backup/tale-joy.webp",
+   "kind": "backup",
+   "intendedEmotion": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "3170afa",
+    "date": "2026-11-24"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/backup/tale-sad.webp",
+   "kind": "backup",
+   "intendedEmotion": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "3170afa",
+    "date": "2026-11-24"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/backup/tale-surprise.webp",
+   "kind": "backup",
+   "intendedEmotion": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "3170afa",
+    "date": "2026-11-24"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/bear-walk.webp",
+   "kind": "friendOrScene",
+   "intendedEmotion": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "87e5480",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/bear.webp",
+   "kind": "friendOrScene",
+   "intendedEmotion": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "d73cd4e",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/cards/anger.webp",
+   "kind": "emotionCard",
+   "intendedEmotion": "anger",
+   "model": {
+    "name": "ImageGen",
+    "version": null
+   },
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": "2026-11-20",
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "a372490",
+    "date": "2026-11-20"
+   },
+   "sources": [
+    "PRD.md '감정 카드와 화면 설계' (11월 20일 카드 네 장은 ImageGen으로 제작)"
+   ],
+   "unknown": [
+    "prompt",
+    "promptRef",
+    "model.version",
+    "review"
+   ]
+  },
+  {
+   "file": "art/cards/girl-anger.webp",
+   "kind": "emotionCard",
+   "intendedEmotion": "anger",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/cards/girl-joy.webp",
+   "kind": "emotionCard",
+   "intendedEmotion": "joy",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/cards/girl-sad.webp",
+   "kind": "emotionCard",
+   "intendedEmotion": "sad",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/cards/girl-surprise.webp",
+   "kind": "emotionCard",
+   "intendedEmotion": "surprise",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/cards/joy.webp",
+   "kind": "emotionCard",
+   "intendedEmotion": "joy",
+   "model": {
+    "name": "ImageGen",
+    "version": null
+   },
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": "2026-11-20",
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "a372490",
+    "date": "2026-11-20"
+   },
+   "sources": [
+    "PRD.md '감정 카드와 화면 설계' (11월 20일 카드 네 장은 ImageGen으로 제작)"
+   ],
+   "unknown": [
+    "prompt",
+    "promptRef",
+    "model.version",
+    "review"
+   ]
+  },
+  {
+   "file": "art/cards/sad.webp",
+   "kind": "emotionCard",
+   "intendedEmotion": "sad",
+   "model": {
+    "name": "ImageGen",
+    "version": null
+   },
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": "2026-11-20",
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "a372490",
+    "date": "2026-11-20"
+   },
+   "sources": [
+    "PRD.md '감정 카드와 화면 설계' (11월 20일 카드 네 장은 ImageGen으로 제작)"
+   ],
+   "unknown": [
+    "prompt",
+    "promptRef",
+    "model.version",
+    "review"
+   ]
+  },
+  {
+   "file": "art/cards/surprise.webp",
+   "kind": "emotionCard",
+   "intendedEmotion": "surprise",
+   "model": {
+    "name": "ImageGen",
+    "version": null
+   },
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": "2026-11-20",
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "a372490",
+    "date": "2026-11-20"
+   },
+   "sources": [
+    "PRD.md '감정 카드와 화면 설계' (11월 20일 카드 네 장은 ImageGen으로 제작)"
+   ],
+   "unknown": [
+    "prompt",
+    "promptRef",
+    "model.version",
+    "review"
+   ]
+  },
+  {
+   "file": "art/forest-gate.webp",
+   "kind": "friendOrScene",
+   "intendedEmotion": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "87e5480",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/forest.webp",
+   "kind": "friendOrScene",
+   "intendedEmotion": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "d73cd4e",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/lion-walk.webp",
+   "kind": "friendOrScene",
+   "intendedEmotion": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "87e5480",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/lion.webp",
+   "kind": "friendOrScene",
+   "intendedEmotion": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "d73cd4e",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/practice/anger-after.webp",
+   "kind": "practiceScene",
+   "intendedEmotion": "anger",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8cebc09",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/practice/anger-before.webp",
+   "kind": "practiceScene",
+   "intendedEmotion": "anger",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8cebc09",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/practice/joy-after.webp",
+   "kind": "practiceScene",
+   "intendedEmotion": "joy",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8cebc09",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/practice/joy-before.webp",
+   "kind": "practiceScene",
+   "intendedEmotion": "joy",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8cebc09",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/practice/sad-after.webp",
+   "kind": "practiceScene",
+   "intendedEmotion": "sad",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8cebc09",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/practice/sad-before.webp",
+   "kind": "practiceScene",
+   "intendedEmotion": "sad",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8cebc09",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/practice/surprise-after.webp",
+   "kind": "practiceScene",
+   "intendedEmotion": "surprise",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8cebc09",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/practice/surprise-before.webp",
+   "kind": "practiceScene",
+   "intendedEmotion": "surprise",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8cebc09",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/rabbit-walk.webp",
+   "kind": "friendOrScene",
+   "intendedEmotion": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "87e5480",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/rabbit.webp",
+   "kind": "friendOrScene",
+   "intendedEmotion": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "d73cd4e",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/studio/flower-pin.webp",
+   "kind": "friendStudio",
+   "intendedEmotion": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "f3a08e5",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/studio/sky-hat.webp",
+   "kind": "friendStudio",
+   "intendedEmotion": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "f3a08e5",
+    "date": "2026-11-20"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/tale/anger-playground.webp",
+   "kind": "taleBackground",
+   "intendedEmotion": "anger",
+   "model": null,
+   "prompt": null,
+   "promptRef": "prompts/tale-backgrounds.md",
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "3170afa",
+    "date": "2026-11-24"
+   },
+   "sources": [
+    "prompts/tale-backgrounds.md"
+   ],
+   "unknown": [
+    "model",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/tale/joy-yard.webp",
+   "kind": "taleBackground",
+   "intendedEmotion": "joy",
+   "model": null,
+   "prompt": null,
+   "promptRef": "prompts/tale-backgrounds.md",
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "3170afa",
+    "date": "2026-11-24"
+   },
+   "sources": [
+    "prompts/tale-backgrounds.md"
+   ],
+   "unknown": [
+    "model",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/tale/sad-shore.webp",
+   "kind": "taleBackground",
+   "intendedEmotion": "sad",
+   "model": null,
+   "prompt": null,
+   "promptRef": "prompts/tale-backgrounds.md",
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "3170afa",
+    "date": "2026-11-24"
+   },
+   "sources": [
+    "prompts/tale-backgrounds.md"
+   ],
+   "unknown": [
+    "model",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "art/tale/surprise-garden.webp",
+   "kind": "taleBackground",
+   "intendedEmotion": "surprise",
+   "model": null,
+   "prompt": null,
+   "promptRef": "prompts/tale-backgrounds.md",
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "3170afa",
+    "date": "2026-11-24"
+   },
+   "sources": [
+    "prompts/tale-backgrounds.md"
+   ],
+   "unknown": [
+    "model",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/anger-activity.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "anger",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/anger-discovery.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "anger",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/anger-intro.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "anger",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/anger-mirror.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "anger",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/anger-question.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "anger",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/anger-reply-1.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "anger",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/anger-reply-2.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "anger",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/anger-story-1.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "anger",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/anger-story-2.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "anger",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/anger-story-3.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "anger",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/choose-card.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/choose-friend.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/complete-mirror.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/complete-search.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/complete-story.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/express.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/hello.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/joy-activity.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "joy",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/joy-discovery.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "joy",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/joy-intro.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "joy",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/joy-mirror.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "joy",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/joy-question.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "joy",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/joy-reply-1.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "joy",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/joy-reply-2.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "joy",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/joy-story-1.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "joy",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/joy-story-2.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "joy",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/joy-story-3.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "joy",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/parent.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/ready.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/sad-activity.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "sad",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/sad-discovery.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "sad",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/sad-intro.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "sad",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/sad-mirror.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "sad",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/sad-question.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "sad",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/sad-reply-1.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "sad",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/sad-reply-2.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "sad",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/sad-story-1.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "sad",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/sad-story-2.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "sad",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/sad-story-3.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "sad",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/story-action.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/surprise-activity.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "surprise",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/surprise-discovery.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "surprise",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/surprise-intro.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "surprise",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/surprise-mirror.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "surprise",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/surprise-question.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "surprise",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/surprise-reply-1.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "surprise",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/surprise-reply-2.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "surprise",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/surprise-story-1.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "surprise",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/surprise-story-2.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "surprise",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/surprise-story-3.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "surprise",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/tap-joy.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "joy",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/tap-surprise.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "surprise",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/test-surprise.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": "surprise",
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  },
+  {
+   "file": "audio/raon/together.mp3",
+   "kind": "voice",
+   "intendedEmotion": null,
+   "topic": null,
+   "model": null,
+   "prompt": null,
+   "promptRef": null,
+   "createdAt": null,
+   "review": {
+    "result": null,
+    "reviewer": null,
+    "reviewedAt": null,
+    "note": null
+   },
+   "addedToRepo": {
+    "commit": "8668b27",
+    "date": "2026-11-21"
+   },
+   "sources": [],
+   "unknown": [
+    "model",
+    "prompt",
+    "promptRef",
+    "createdAt",
+    "review"
+   ]
+  }
+ ],
+ "removed": []
+}

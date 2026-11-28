@@ -158,7 +158,7 @@ except ImportError:
 ## 전달 절차
 1. 내려받은 `photo_tags_*.json`을 AI 담당에게 전달한다 (사진 원본은 팀 드라이브, 저장소에 넣지 않음).
 2. AI 담당은 `docs/ai/tagging/`에 결과를 두고, **confirmedTag가 있고 reject가 아닌 사진만** 콘텐츠 후보로 쓴다.
-3. 앱에 넣을 때는 `docs/ai/HANDOFF-AI.md` '학습 1 — 앱 콘텐츠 반영'을 따르고 `frontend/public/art/manifest.json`에 기록한다.
+3. 앱에 넣을 때는 `docs/ai/HANDOFF-AI.md` '학습 1 — 앱 콘텐츠 반영'을 따르고 `docs/ai/content/asset-manifest.json`에 기록한다 (`python ai/content/asset_manifest.py`).
 4. 요약의 agreeWithIntended(추천과 의도의 일치)는 정확도가 아니다. 사람 검수 후 agreeWithConfirmed를 본다.
 """),
 ]
