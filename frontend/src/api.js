@@ -94,7 +94,13 @@ export function createApi(base, { send = globalThis.fetch, timeout = TIMEOUT_MS,
     // 학습 1 감정 탐색
     answerEmotion: (walkId, { selected, usedHint = false }) => post(`/lessons/emotion/walks/${id(walkId)}/answer`, { selected, usedHint }),
     // 학습 2 표정 거울
-    recordMirror: (walkId, { mode, score = null, skipped = false }) => post(`/lessons/mirror/walks/${id(walkId)}/record`, { mode, score, skipped }),
+    // 요약 값만 보낸다 (영상·얼굴 특징·blendshape 값은 보내지 않음, 서버도 받지 않음)
+    recordMirror: (walkId, {
+      mode, score = null, skipped = false, scoreVersion = null, stars = null, trackedSec = null, attempts = null,
+      endReason = null,
+    }) => post(`/lessons/mirror/walks/${id(walkId)}/record`, {
+      mode, score, skipped, scoreVersion, stars, trackedSec, attempts, endReason,
+    }),
     // 학습 3 동화·대화 (대화 시작·턴은 화면이 답을 기다린다)
     pickStoryAction: (walkId, actionIndex) => post(`/lessons/story/walks/${id(walkId)}/action`, { actionIndex }),
     // actionIndex: 화면에서 지금 고른 행동. 행동 저장(pickStoryAction)이 늦거나 실패해도 대화가 이 행동으로 시작한다

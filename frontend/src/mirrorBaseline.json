@@ -1,0 +1,195 @@
+{
+ "version": "err-v1-prov",
+ "method": "err",
+ "status": "provisional",
+ "note": "임시 기준값. 기준 사진이 없어 MediaPipe blendshape 의미를 보고 손으로 정한 값이다. 검증되지 않았다. 기준 사진(가상 성인 5명 × 7감정 + 무표정)으로 frontend/scripts/mirror-baseline.mjs를 돌리면 status가 measured인 값으로 바뀐다. 아이에게 보이는 hint 문구(feedback)도 초안이라 특수교사 검토 전이다.",
+ "calibrationMs": 3000,
+ "lockMs": 3000,
+ "smoothing": 0.5,
+ "minTarget": 0.05,
+ "nearRatio": 0.8,
+ "neutralCap": 0.15,
+ "neutralExclude": [
+  "_neutral",
+  "eyeBlink",
+  "eyeLook"
+ ],
+ "unstable": {
+  "maxGapMs": 500,
+  "maxJump": 0.35
+ },
+ "emotions": {
+  "joy": {
+   "status": "provisional",
+   "source": "hand-set",
+   "features": {
+    "cheekSquintLeft": 0.35,
+    "cheekSquintRight": 0.35,
+    "mouthSmileLeft": 0.6,
+    "mouthSmileRight": 0.6
+   },
+   "stars": {
+    "err": [
+     40,
+     60,
+     80
+    ],
+    "cos": [
+     35,
+     55,
+     75
+    ]
+   }
+  },
+  "sad": {
+   "status": "provisional",
+   "source": "hand-set",
+   "features": {
+    "browInnerUp": 0.4,
+    "mouthFrownLeft": 0.25,
+    "mouthFrownRight": 0.25
+   },
+   "stars": {
+    "err": [
+     40,
+     60,
+     80
+    ],
+    "cos": [
+     35,
+     55,
+     75
+    ]
+   }
+  },
+  "surprise": {
+   "status": "provisional",
+   "source": "hand-set",
+   "features": {
+    "browOuterUpLeft": 0.4,
+    "browOuterUpRight": 0.4,
+    "browInnerUp": 0.4,
+    "eyeWideLeft": 0.3,
+    "eyeWideRight": 0.3,
+    "jawOpen": 0.4
+   },
+   "stars": {
+    "err": [
+     40,
+     60,
+     80
+    ],
+    "cos": [
+     35,
+     55,
+     75
+    ]
+   }
+  },
+  "anger": {
+   "status": "provisional",
+   "source": "hand-set",
+   "features": {
+    "browDownLeft": 0.4,
+    "browDownRight": 0.4,
+    "mouthPressLeft": 0.2,
+    "mouthPressRight": 0.2,
+    "eyeSquintLeft": 0.3,
+    "eyeSquintRight": 0.3
+   },
+   "stars": {
+    "err": [
+     40,
+     60,
+     80
+    ],
+    "cos": [
+     35,
+     55,
+     75
+    ]
+   }
+  },
+  "fear": {
+   "status": "provisional",
+   "source": "hand-set",
+   "features": {
+    "browInnerUp": 0.4,
+    "eyeWideLeft": 0.3,
+    "eyeWideRight": 0.3,
+    "mouthStretchLeft": 0.2,
+    "mouthStretchRight": 0.2
+   },
+   "stars": {
+    "err": [
+     35,
+     50,
+     70
+    ],
+    "cos": [
+     30,
+     45,
+     65
+    ]
+   },
+   "lowered": true
+  },
+  "disgust": {
+   "status": "provisional",
+   "source": "hand-set",
+   "features": {
+    "noseSneerLeft": 0.25,
+    "noseSneerRight": 0.25,
+    "mouthUpperUpLeft": 0.3,
+    "mouthUpperUpRight": 0.3
+   },
+   "stars": {
+    "err": [
+     35,
+     50,
+     70
+    ],
+    "cos": [
+     30,
+     45,
+     65
+    ]
+   },
+   "lowered": true
+  },
+  "neutral": {
+   "status": "provisional",
+   "source": "hand-set",
+   "features": {},
+   "stars": {
+    "err": [
+     50,
+     70,
+     85
+    ],
+    "cos": [
+     50,
+     70,
+     85
+    ]
+   }
+  }
+ },
+ "feedback": {
+  "status": "draft",
+  "mouthSmile": "입꼬리를 위로 올려 봐요.",
+  "cheekSquint": "볼을 위로 올리며 웃어 봐요.",
+  "browInnerUp": "눈썹 안쪽을 위로 올려 봐요.",
+  "mouthFrown": "입꼬리를 아래로 내려 봐요.",
+  "browOuterUp": "눈썹을 위로 올려 봐요.",
+  "eyeWide": "눈을 크게 떠 봐요.",
+  "jawOpen": "입을 동그랗게 벌려 봐요.",
+  "browDown": "눈썹을 가운데로 모아 봐요.",
+  "mouthPress": "입술을 꾹 다물어 봐요.",
+  "eyeSquint": "눈을 살짝 가늘게 떠 봐요.",
+  "mouthStretch": "입을 옆으로 당겨 봐요.",
+  "noseSneer": "코를 찡그려 봐요.",
+  "mouthUpperUp": "윗입술을 올려 봐요.",
+  "relax": "얼굴에 힘을 빼 봐요."
+ }
+}

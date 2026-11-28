@@ -1,6 +1,8 @@
 import { useNarration } from './narration.js'
 import React, { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, useId } from 'react'
 import { startFacePreview } from './facePreview.js'
+import mirrorBaseline from './mirrorBaseline.json'
+import { createMirrorSession, mirrorLine } from './mirrorSession.js'
 import { feelingPractice, PracticeObject } from './FeelingPractice.jsx'
 import { GuidePortrait, PaintedFriend } from './PaintedFriend.jsx'
 import './activities.css'
@@ -427,14 +429,19 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
     </Board>
   )
 }
-function useCamera(active) {
+// onCamera(event, payload): 'on' (camera opened), 'failed' (request refused or failed), 'off' (stopped,
+// rest, hidden tab, leaving), 'frame' ({ faces }, time). Frames stay on the device.
+function useCamera(active, onCamera = () => {}) {
   const [status, setStatus] = useState('off')
   const [facePresent, setFacePresent] = useState(false)
   const stopPreview = useRef(null)
   const stream = useRef(null),
     pending = useRef(0),
     video = useRef(null)
+  const notify = useRef(onCamera)
+  notify.current = onCamera
   function stop() {
+    if (stream.current) notify.current('off')
     pending.current += 1
     stopPreview.current?.()
     stopPreview.current = null
@@ -486,8 +493,12 @@ function useCamera(active) {
         ),
       )
       setStatus('on')
+      notify.current('on', performance.now()) // the stream is granted: this counts as a camera practice
     } catch {
-      if (request === pending.current) setStatus('unavailable')
+      if (request === pending.current) {
+        setStatus('unavailable')
+        notify.current('failed')
+      }
     }
   }
   useEffect(() => {
@@ -502,6 +513,8 @@ function useCamera(active) {
           try {
             stopPreview.current = startFacePreview(element, (present) => {
               if (stream.current === acquired) setFacePresent(present === true)
+            }, (frame, time) => {
+              if (stream.current === acquired) notify.current('frame', frame, time)
             })
           } catch {
             setFacePresent(false)
@@ -511,6 +524,7 @@ function useCamera(active) {
           if (stream.current === acquired) {
             stop()
             setStatus('unavailable')
+            notify.current('failed')
           }
         })
     }
@@ -519,11 +533,30 @@ function useCamera(active) {
 }
 
 function MirrorActivity({ fact, feeling, friend, active, state, update, next, walkId }) {
-  const camera = useCamera(active)
-  const cameraUsed = useRef(false)
-  useEffect(() => {
-    if (camera.status === 'on') cameraUsed.current = true
-  }, [camera.status])
+  // Score on the device (mirrorScore). Only the summary is recorded on the server.
+  const mirror = useRef(null)
+  if (!mirror.current || mirror.current.feeling !== feeling) {
+    // ?mirrorScore=1: the team's webcam test with the provisional baseline (children do not see scores before
+    // the baseline is confirmed: AGENTS.md).
+    const force = typeof location !== 'undefined' && new URLSearchParams(location.search).get('mirrorScore') === '1'
+    mirror.current = { feeling, session: createMirrorSession(mirrorBaseline, feeling, { force }) }
+  }
+  const [view, setView] = useState(null)
+  const camera = useCamera(active, (event, payload, time) => {
+    const session = mirror.current.session
+    if (event === 'on') session.cameraStarted(payload)
+    else if (event === 'failed') session.cameraFailed()
+    else if (event === 'off') {
+      session.cameraStopped()
+      setView(null)
+    } else if (event === 'frame') {
+      const next = session.frame(payload, time)
+      // Re-render only when what the child sees changes (frames arrive about 10 times a second).
+      setView((prev) => (prev && next && prev.phase === next.phase && prev.reason === next.reason
+        && prev.stars === next.stars && prev.hint === next.hint ? prev : next))
+    }
+  })
+  const scoreLine = camera.status === 'on' ? mirrorLine(view) : null
   const [demonstration, setDemonstration] = useState(0)
   const ways = feelingPractice[feeling].expression
   if (state.mirrorPhase === 'express' || state.mirrorPhase === 'response') {
@@ -602,18 +635,23 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next, wa
         <Action
           onClick={() => {
             camera.off()
-            if (walkId) api.recordMirror(walkId, { mode: cameraUsed.current ? 'camera' : 'touch', score: null })
+            if (walkId) api.recordMirror(walkId, mirror.current.session.record())
             update({ mirrorPhase: 'express' })
           }}
         >
           표정 연습 마쳤어요
         </Action>
       </div>
+      {camera.status === 'on' && view && (view.phase === 'scoring' || view.phase === 'locked') && (
+        // Stars are shown, not announced on every change; the status line below says what to do.
+        <p className="edu-note edu-mirror-stars" aria-hidden="true" data-stars={view.stars}>
+          {'★'.repeat(view.stars) + '☆'.repeat(3 - view.stars)}
+        </p>
+      )}
       <p role="status" className="edu-note edu-camera-status">
         {camera.status === 'on'
-          ? camera.facePresent
-            ? '얼굴이 화면에 보여요.'
-            : '내 모습은 이 화면에만 보여요.'
+          ? scoreLine
+            ?? (camera.facePresent ? '얼굴이 화면에 보여요.' : '내 모습은 이 화면에만 보여요.')
           : camera.status === 'waiting'
             ? '카메라를 열고 있어요.'
             : camera.status === 'unavailable'

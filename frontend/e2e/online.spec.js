@@ -1,11 +1,14 @@
 // Server on: lessons 1·2·3 are recorded on the backend, then a guardian signs up, this device's records
 // move to the child profile, and the dashboard shows the same numbers.
+import { readFileSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
 import { BACKEND, ONLINE } from './ports.js'
 import {
   GUARDIAN_KEY, STORAGE_KEY, emotionLesson, emotions, finishTalk, friendLine, mirrorLesson, onboard, openGuardian,
   placement, planVoice, prepare, readStored, saidNote, storyToTalk, tales, today, topicIds,
 } from './helpers.js'
+
+const mirrorBaseline = JSON.parse(readFileSync(new URL('../src/mirrorBaseline.json', import.meta.url)))
 
 test('서버를 켜면 학습 1·2·3과 대화 턴이 기록되고, 가입하면 대시보드에 같은 숫자가 보인다', async ({ page, request }, info) => {
   const sent = []
@@ -51,7 +54,15 @@ test('서버를 켜면 학습 1·2·3과 대화 턴이 기록되고, 가입하�
   const body = (path) => sent.find((s) => s.path === path).body
   expect(body('/walks')).toMatchObject({ topic_id: topicId, level: 'expand', day: today(), review: false })
   expect(body(`/lessons/emotion/walks/${walkId}/answer`)).toEqual({ selected: [e.word, e.kin], used_hint: false })
-  expect(body(`/lessons/mirror/walks/${walkId}/record`)).toEqual({ mode: 'camera', score: null, skipped: false })
+  // 학습 2: 요약 값만. 기준값이 임시(provisional)라 점수·별·기준 버전을 보내지 않는다 (AGENTS.md).
+  // 가짜 카메라 영상에는 얼굴이 없어 tracked_sec 0, 확정 없이 마침. blendshape·영상 칸은 없다.
+  const mirror = body(`/lessons/mirror/walks/${walkId}/record`)
+  expect(Object.keys(mirror).sort()).toEqual(
+    ['attempts', 'end_reason', 'mode', 'score', 'score_version', 'skipped', 'stars', 'tracked_sec'])
+  expect(mirror).toEqual({
+    mode: 'camera', score: null, skipped: false, score_version: mirrorBaseline.status === 'measured' ? mirrorBaseline.version : null, stars: null,
+    tracked_sec: 0, attempts: 1, end_reason: 'exit',
+  })
   expect(body(`/lessons/story/walks/${walkId}/action`)).toEqual({ action_index: 0 })
   const turns = sent.filter((s) => /^\/conversations\/[^/]+\/turn$/.test(s.path)).map((s) => s.body)
   expect(turns).toEqual([

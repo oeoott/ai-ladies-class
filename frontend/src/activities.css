@@ -433,6 +433,13 @@
 .edu-camera-status:empty {
   position: absolute;
 }
+/* 표정 거울 별 (보여 주기만, 낭독은 아래 상태 문구가 맡음). 색 말고도 채운 별·빈 별 모양으로 구분 */
+.edu-mirror-stars {
+  margin: 0;
+  color: var(--forest-ink);
+  font-size: var(--forest-prompt-size);
+  letter-spacing: 0.15em;
+}
 .edu-mirror-figure {
   gap: 14px;
 }

@@ -406,7 +406,7 @@ Azure로 마스킹한 뒤에도 로컬 규칙을 한 번 더 적용합니다.
 
 - `POST /lessons/mirror/walks/{id}/record`에 기기에서 계산한 결과만 선택 항목으로 보냅니다: `score`(0~100), `score_version`(기준 버전, 예 `face-v1.0`), `stars`(0~3), `tracked_sec`, `attempts`, `end_reason`(locked·skipped·cameraDenied·exit).
 - 영상, 얼굴 특징점, blendshape 값은 받지 않습니다. 정해지지 않은 칸을 보내면 422입니다 (`schemas.MirrorRecord`).
-- 프론트는 지금 `score: null`만 보냅니다. 기준이 정해지면 `frontend/src/Activities.jsx`의 `api.recordMirror` 호출에 값을 더합니다.
+- 프론트(`frontend/src/mirrorSession.js`의 `record()`)는 요약 칸을 모두 보냅니다. 기준값이 임시(`frontend/src/mirrorBaseline.json`의 `status: provisional`)인 동안은 `score`·`stars`·`score_version`이 null이고 `mode`·`tracked_sec`·`attempts`·`end_reason`만 채웁니다. 자세한 내용은 `docs/ai/HANDOFF-AI.md` 학습 2.
 
 ### 키 설정
 
