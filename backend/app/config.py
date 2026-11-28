@@ -26,6 +26,8 @@ class Settings:
     jwt_secret: str = ""
     # true면 안전 서비스가 빠지거나 실패할 때 모델을 부르지 않는다 (배포 권장). 비우면 false (로컬·시연).
     ai_safety_required: bool = False
+    # true면 검수 전 감정 초안(content/drafts)을 합친다. 미리보기·검수용. 비우면 false (아이 화면은 검수된 감정만).
+    content_drafts: bool = False
 
     @property
     def openai_enabled(self) -> bool:
@@ -53,7 +55,8 @@ def load_settings(path: Path = ENV_FILE, environ: Mapping[str, str] | None = Non
     file = {k: (v or "").strip() for k, v in dotenv_values(path).items()} if path.exists() else {}
     names = ("CORS_ORIGINS", "AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_KEY", "AZURE_OPENAI_DEPLOYMENT",
              "AZURE_LANGUAGE_ENDPOINT", "AZURE_LANGUAGE_KEY", "AZURE_CONTENT_SAFETY_ENDPOINT", "AZURE_CONTENT_SAFETY_KEY",
-             "STORE", "COSMOS_ENDPOINT", "COSMOS_KEY", "COSMOS_DATABASE", "JWT_SECRET", "AI_SAFETY_REQUIRED")
+             "STORE", "COSMOS_ENDPOINT", "COSMOS_KEY", "COSMOS_DATABASE", "JWT_SECRET", "AI_SAFETY_REQUIRED",
+             "CONTENT_DRAFTS")
     env = {name: (environ.get(name) or "").strip() or file.get(name, "") for name in names}
     store = env.get("STORE", "").lower() or "memory"
     if store not in ("memory", "cosmos"):
@@ -74,6 +77,7 @@ def load_settings(path: Path = ENV_FILE, environ: Mapping[str, str] | None = Non
         cosmos_database=env.get("COSMOS_DATABASE", ""),
         jwt_secret=env.get("JWT_SECRET", ""),
         ai_safety_required=env.get("AI_SAFETY_REQUIRED", "").lower() in ("1", "true", "yes"),
+        content_drafts=env.get("CONTENT_DRAFTS", "").lower() in ("1", "true", "yes"),
     )
 
 

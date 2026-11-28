@@ -133,7 +133,7 @@ npm run dev                                           # frontend/.env의 VITE_AP
 **주의할 점**
 - 영상·얼굴 특징점·blendshape 값은 서버로 보내지 않습니다. 보내면 422입니다.
 - 모델이 고른 `match`는 대본 답을 쓰므로 출력 안전 검사를 하지 않고, 모델이 만든 `reply`만 검사합니다.
-- 감정은 지금 네 가지(기쁨·놀람·슬픔·화남)입니다. 두려움·싫음·평온은 교수님 자문 회신 전이라 넣지 않았습니다. 넣을 때는 `backend/README.md`의 '감정 추가 체크리스트'를 따릅니다.
+- 아이 화면의 감정은 지금 네 가지(기쁨·놀람·슬픔·화남)입니다. 공통 7감정 코드는 anger 화남·disgust 혐오·fear 두려움·joy 기쁨·neutral 무표정·sad 슬픔·surprise 놀람입니다. 두려움·혐오·무표정은 `backend/app/content/drafts/`에 검수 전 초안으로 있고 `CONTENT_DRAFTS=true`·`VITE_CONTENT_DRAFTS=1`에서만 합쳐집니다. 넣을 때는 `backend/README.md`의 '감정 추가 체크리스트'를 따릅니다.
 
 ## 프론트
 

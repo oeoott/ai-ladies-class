@@ -101,8 +101,12 @@ export const CardPortrait = createContext('boy')
 function EmotionCard({ feeling, alt = FEELINGS[feeling].clue }) {
   const portrait = useContext(CardPortrait)
   const prefix = portrait === 'girl' ? 'girl-' : ''
+  // Draft emotions (preview builds) have no card picture yet: show the clue in a card frame instead.
+  const [missing, setMissing] = useState(false)
+  if (missing) return <div className="edu-emotion-card edu-card-missing" role="img" aria-label={alt}>{alt}</div>
   return (
     <img
+      onError={() => setMissing(true)}
       className="edu-emotion-card"
       src={import.meta.env.BASE_URL + 'art/cards/' + prefix + feeling + '.webp'}
       width="626"

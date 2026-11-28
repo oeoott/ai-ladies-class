@@ -39,7 +39,7 @@ export function localReply(choice, isExtra) {
 }
 
 // Friend faces PaintedFriend can draw. Talk lines and server replies may only use these.
-export const FACES = ['joy', 'surprise', 'sad', 'anger', 'neutral']
+export const FACES = ['joy', 'surprise', 'sad', 'anger', 'neutral', 'fear', 'disgust']
 
 // Friend's face and pose in the talk scenes (existing faces and gestures only, no new animation):
 // - question / extra (the child is choosing or speaking): listen

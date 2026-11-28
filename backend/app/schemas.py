@@ -132,7 +132,7 @@ class TalkTurnOut(BaseModel):
     ask: str | None = None  # 다음 질문 (추가 대화)
     choices: list[str] | None = None
     fallback_to_picture: bool = False  # 인식 실패·차단 시 그림 선택으로 돌아감
-    expression: str | None = None  # 친구 표정 (joy·surprise·sad·anger·neutral). 없으면 화면이 정함
+    expression: str | None = None  # 친구 표정 (joy·surprise·sad·anger·neutral·fear·disgust). 없으면 화면이 정함
 
 
 # ---------- 보호자 계정 ----------

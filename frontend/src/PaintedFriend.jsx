@@ -107,7 +107,7 @@ function Eyes({ face, feeling, imageId, softEdge }) {
               y={y}
               width={2 * rx + 6}
               height={2 * ry + 6}
-              scale={feeling === 'surprise' ? 1.16 : 1}
+              scale={feeling === 'surprise' ? 1.16 : feeling === 'fear' ? 1.1 : feeling === 'disgust' ? 0.9 : 1}
               className="edu-character-eyes"
             />
           </React.Fragment>
@@ -143,13 +143,17 @@ function Brows({ face, feeling, imageId, softEdge }) {
         <g key={index} transform={`translate(${x} ${y - face.eyeR[1] - 10})`}>
           <g transform={index === 1 ? 'scale(-1 1)' : undefined}>
             <path
-              className={feeling === 'anger' ? 'edu-character-brow' : undefined}
+              className={feeling === 'anger' || feeling === 'disgust' ? 'edu-character-brow' : undefined}
               d={
                 feeling === 'anger'
                   ? 'M-14 -7 Q-4 -2 13 5'
                   : feeling === 'sad'
                     ? 'M-14 3 Q1 2 12 -8'
-                    : 'M-14 -4 Q-3 -13 11 -8'
+                    : feeling === 'fear' // inner ends raised high, like sad but wider open
+                      ? 'M-14 2 Q-1 -1 12 -12'
+                      : feeling === 'disgust' // lowered and a little pinched toward the nose
+                        ? 'M-14 -4 Q-3 -1 12 2'
+                        : 'M-14 -4 Q-3 -13 11 -8'
               }
               fill="none"
               stroke={face.ink}
@@ -207,7 +211,11 @@ function Mouth({ face, feeling, imageId, softEdge }) {
                     ? 'M-29 13 Q-6 -9 3 -5 Q14 -7 29 11'
                     : feeling === 'neutral'
                       ? 'M-19 2 Q-8 4 0 -2 Q8 4 19 2'
-                      : 'M-24 3 Q-9 0 0 -3 Q10 0 23 1'
+                      : feeling === 'fear' // lips pulled to the sides, a small wave
+                        ? 'M-27 5 Q-15 -1 -6 4 Q3 9 12 3 Q20 -1 27 5'
+                        : feeling === 'disgust' // upper lip raised on one side
+                          ? 'M-23 6 Q-12 -6 -1 -3 Q11 2 23 4'
+                          : 'M-24 3 Q-9 0 0 -3 Q10 0 23 1'
                 }
                 fill="none"
                 stroke={face.ink}
@@ -252,7 +260,8 @@ function WavingPose({ imageId, face }) {
   )
 }
 
-const DRAWN_FEELINGS = new Set(['neutral', 'joy', 'sad', 'surprise', 'anger'])
+// The seven feelings (공통 감정 코드). fear and disgust drawings are drafts awaiting the team's review.
+export const DRAWN_FEELINGS = new Set(['neutral', 'joy', 'sad', 'surprise', 'anger', 'fear', 'disgust'])
 
 export function PaintedFriend({
   kind,

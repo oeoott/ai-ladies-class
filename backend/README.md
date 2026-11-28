@@ -101,7 +101,7 @@ tests/
 | 학습 3 | GET | /lessons/story/{topic} | 동화 3장, 상황, 행동 보기 |
 | 학습 3 | POST | /lessons/story/walks/{id}/action | 행동 선택 → 결과 장면 |
 | 학습 3 | POST | /lessons/story/walks/{id}/talk | 대화 시작 → 질문, 보기. 본문(선택) `{character: lion·rabbit·bear}`로 질문의 `{친구}`를 정함 (없으면 라온), `action_index`는 화면에서 지금 고른 행동(대화 문맥의 지금 결과. 없으면 행동 기록의 마지막). 아이가 붙인 별명은 받지 않음 |
-| 학습 3 | POST | /conversations/{id}/turn | {choice_index 또는 text, input_mode} → 친구 답과 표정 `expression`(joy·surprise·sad·anger·neutral, 그림 선택으로 돌아갈 때는 null) (2턴 후 종료). 기록에는 턴마다 `resolved_by`(button·exact·llm·fallback). 산책이 완료·중단됐거나, 같은 대화의 다른 턴이 먼저 저장됐으면 409 (프론트는 대본으로 이어 감) |
+| 학습 3 | POST | /conversations/{id}/turn | {choice_index 또는 text, input_mode} → 친구 답과 표정 `expression`(joy·surprise·sad·anger·neutral·fear·disgust, 그림 선택으로 돌아갈 때는 null) (2턴 후 종료). 기록에는 턴마다 `resolved_by`(button·exact·llm·fallback). 산책이 완료·중단됐거나, 같은 대화의 다른 턴이 먼저 저장됐으면 409 (프론트는 대본으로 이어 감) |
 | 학습 3 | POST | /conversations/{id}/end | 대화 종료 버튼 |
 
 ## 프론트 연결 메모
@@ -298,6 +298,10 @@ Cosmos의 id와 고유 키는 **논리 파티션 안에서만** 중복을 막습
 
 ## 감정 추가 체크리스트
 
+공통 7감정 코드: anger 화남 · disgust 혐오 · fear 두려움 · joy 기쁨 · neutral 무표정 · sad 슬픔 · surprise 놀람 (`app/content/__init__.py`의 `EMOTION_CODES`). 이전 표기 평온·싫음은 `aliases`에 남겨 이전 기록도 읽힌다.
+
+**검수 전 초안:** 두려움·혐오·무표정은 `app/content/drafts/emotions.json`·`tales.json`(`status: draft`, `needs`에 필요한 그림·검수)에 있다. `CONTENT_DRAFTS=true`(백엔드)와 `VITE_CONTENT_DRAFTS=1`(프론트 빌드)일 때만 기존 4개 뒤에 합쳐진다. 검수가 끝나면 항목을 아래 두 파일로 옮기고 초안에서 지운다. 친구 표정(`PaintedFriend.DRAWN_FEELINGS`), 대화 표정(`prompts.EXPRESSIONS`, `storyTalk.FACES`), 표정 거울 기준값은 이미 7개를 지원한다. 그림이 없는 감정 카드는 단서 문구 카드로, 동화 배경은 숲 입구 그림으로 대신 보인다.
+
 감정 데이터는 `app/content/emotions.json`과 `tales.json`에만 있습니다. 같은 id(영문 소문자, 예: `calm`)로 두 파일에 한 항목씩 넣으면 프론트·백엔드가 함께 늘어납니다. 코드의 감정 목록은 고치지 않습니다. `emotions.json`에서 넣은 위치가 날짜별 순환 순서입니다(맨 끝에 넣으면 기존 순서는 그대로).
 
 **`emotions.json` (감정 한 항목)**
@@ -312,7 +316,7 @@ Cosmos의 id와 고유 키는 **논리 파티션 안에서만** 중복을 막습
 - [ ] 행동 2개 `actions`: `label`, `expression`(그 뒤 친구 표정 id 또는 `neutral`), `title`, `event`, `line`
 - [ ] 대화 대본 `talk`: `ask`, `choices` 2개와 `replies` 2개(같은 순서), `again`, `extra` 2개와 `ends` 2개. 답하는 사람은 대화 제목의 숲 친구('라온과 나누는 이야기')이고, `choices`·`extra`는 아이가 친구에게 하는 말(반말)입니다.
 - [ ] 친구 이름이 필요하면 질문(`ask`·`again`)에만 `{친구}`를 씁니다(라온이·보리·두리로 바뀜). 대사(`choices`·`replies`·`extra`·`ends`)에는 쓰지 않습니다 (테스트가 확인함)
-- [ ] 대사별 친구 표정: `replyExpressions`(replies와 같은 수), `endExpressions`(ends와 같은 수). 값은 joy·surprise·sad·anger·neutral 중 하나 (테스트가 확인함)
+- [ ] 대사별 친구 표정: `replyExpressions`(replies와 같은 수), `endExpressions`(ends와 같은 수). 값은 joy·surprise·sad·anger·neutral·fear·disgust 중 하나 (테스트가 확인함)
 
 **그림 파일 (`frontend/public/art/`, WebP)**
 - [ ] 감정 카드 `cards/{id}.webp`, `cards/girl-{id}.webp` (테스트가 확인함)

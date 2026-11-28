@@ -1,0 +1,164 @@
+{
+ "status": "draft",
+ "reviewedBy": null,
+ "reviewedAt": null,
+ "note": "AI 담당 초안. 특수교사·교수님 자문과 팀 검수 전이라 아이 화면 순환에 넣지 않는다. 검수 후 emotions.json·tales.json으로 옮긴다.",
+ "needs": {
+  "art": [
+   "frontend/public/art/cards/{id}.webp",
+   "frontend/public/art/cards/girl-{id}.webp",
+   "frontend/public/art/practice/{id}-before.webp",
+   "frontend/public/art/practice/{id}-after.webp",
+   "frontend/public/art/tale/{id}-{장소}.webp (1536×1024) + frontend/src/taleBackgrounds.js 한 줄"
+  ],
+  "optional": [
+   "frontend/src/ForestTale.jsx scenery·forest-tale.css [data-world] (동화 소품)",
+   "frontend/src/raon-audio.js 녹음 음성"
+  ],
+  "review": [
+   "특수교사·교수님 자문: 낱말(word·kin·opposite), 단서·동작 문구, 동화 상황(두려움·혐오 장면의 강도)",
+   "친구 표정 그림(PaintedFriend fear·disgust 초안) 팀 확인"
+  ]
+ },
+ "entries": {
+  "fear": {
+   "label": "두려움",
+   "phrase": "무서운 마음",
+   "aliases": [
+    "fear",
+    "무서움",
+    "겁남"
+   ],
+   "word": "무서워요",
+   "kin": "겁나요",
+   "opposite": "신나요",
+   "oppositeFirst": true,
+   "clue": "눈이 커지고 눈썹 안쪽이 올라갔어요.",
+   "motion": "눈을 크게 뜨고 눈썹을 올려 봐요.",
+   "practice": {
+    "meaning": "깜깜하거나 무엇인지 모르는 소리가 나면 무서울 수 있어요.",
+    "example": "불이 꺼져서 이불을 꼭 잡았어요.",
+    "beforeTitle": "깜깜한 나무 굴 앞이에요",
+    "before": "손전등을 눌러 굴 안을 비춰 봐요.",
+    "result": "손전등 불빛",
+    "action": "손전등 켜기",
+    "beforeImage": "어두운 나무 굴과 꺼진 손전등",
+    "afterImage": "손전등 불빛에 보이는 다람쥐와 도토리",
+    "afterTitle": "굴 안이 밝아졌어요",
+    "reaction": "“깜깜해서 무서웠어. 이제 보여.”",
+    "cueQuestion": "친구 얼굴에서 크게 떠진 곳을 찾아요.",
+    "cues": [
+     "눈",
+     "귀"
+    ],
+    "target": "눈",
+    "cueHint": "눈이 평소보다 얼마나 커졌는지 살펴봐요.",
+    "expression": [
+     {
+      "action": "“나 무서워.” 말풍선",
+      "practice": "“나 무서워.” 하고 친구에게 마음을 전했어요.",
+      "answer": "“말해 줘서 고마워. 손 잡고 같이 있자.”"
+     },
+     {
+      "action": "친구 손 꼭 잡기",
+      "practice": "친구 손을 살짝 잡아 봐요. 무서울 때 곁에 있어 달라는 뜻을 보여 줄 수 있어요.",
+      "answer": "“내 손 잡아. 같이 있으니까 괜찮아.”"
+     }
+    ]
+   }
+  },
+  "disgust": {
+   "label": "혐오",
+   "phrase": "싫은 마음",
+   "aliases": [
+    "disgust",
+    "싫음",
+    "역겨움"
+   ],
+   "word": "싫어요",
+   "kin": "역겨워요",
+   "opposite": "좋아요",
+   "oppositeFirst": false,
+   "clue": "코를 찡그리고 윗입술이 올라갔어요.",
+   "motion": "코를 찡그리고 윗입술을 올려 봐요.",
+   "practice": {
+    "meaning": "냄새가 고약하거나 더러운 것을 보면 싫은 마음이 들 수 있어요.",
+    "example": "상한 우유 냄새를 맡고 코를 막았어요.",
+    "beforeTitle": "냇가에 쓰레기가 있어요",
+    "before": "집게를 눌러 쓰레기를 주워 봐요.",
+    "result": "깨끗해진 냇가",
+    "action": "쓰레기 줍기",
+    "beforeImage": "냇가에 떠 있는 과자 봉지와 상한 음식",
+    "afterImage": "봉지를 담은 쓰레기통과 맑은 냇물",
+    "afterTitle": "냇가가 깨끗해졌어요",
+    "reaction": "“냄새가 나서 싫었어. 이제 개운해.”",
+    "cueQuestion": "친구 얼굴에서 찡그린 곳을 찾아요.",
+    "cues": [
+     "코",
+     "귀"
+    ],
+    "target": "코",
+    "cueHint": "코 위에 주름이 생겼는지 살펴봐요.",
+    "expression": [
+     {
+      "action": "“이건 싫어.” 말풍선",
+      "practice": "“이건 싫어.” 하고 친구에게 마음을 전했어요.",
+      "answer": "“싫다고 말해 줘서 고마워. 다른 걸 하자.”"
+     },
+     {
+      "action": "고개 살짝 돌리기",
+      "practice": "고개를 살짝 옆으로 돌려 봐요. 싫다는 뜻을 부드럽게 보여 줄 수 있어요.",
+      "answer": "“싫구나. 저쪽으로 같이 가자.”"
+     }
+    ]
+   }
+  },
+  "neutral": {
+   "label": "무표정",
+   "phrase": "덤덤한 마음",
+   "aliases": [
+    "neutral",
+    "평온",
+    "calm",
+    "보통"
+   ],
+   "word": "그냥 그래요",
+   "kin": "괜찮아요",
+   "opposite": "신나요",
+   "oppositeFirst": false,
+   "clue": "눈썹과 입이 움직이지 않고 그대로 있어요.",
+   "motion": "얼굴에 힘을 빼고 편안히 있어 봐요.",
+   "practice": {
+    "meaning": "특별한 일이 없으면 얼굴이 편안하고 덤덤해요.",
+    "example": "창밖을 보며 가만히 앉아 있었어요.",
+    "beforeTitle": "조용한 숲속 의자예요",
+    "before": "의자를 눌러 잠깐 앉아 봐요.",
+    "result": "편안히 앉은 의자",
+    "action": "의자에 앉기",
+    "beforeImage": "나무 그늘 아래 빈 나무 의자",
+    "afterImage": "나무 의자에 앉아 하늘을 보는 모습",
+    "afterTitle": "가만히 쉬고 있어요",
+    "reaction": "“그냥 앉아 있으니 편안해.”",
+    "cueQuestion": "친구 얼굴에서 움직이지 않은 곳을 찾아요.",
+    "cues": [
+     "입",
+     "귀"
+    ],
+    "target": "입",
+    "cueHint": "입이 위나 아래로 움직이지 않았는지 살펴봐요.",
+    "expression": [
+     {
+      "action": "“그냥 그래.” 말풍선",
+      "practice": "“그냥 그래.” 하고 친구에게 마음을 전했어요.",
+      "answer": "“그렇구나. 오늘은 조용히 쉬자.”"
+     },
+     {
+      "action": "고개 끄덕이기",
+      "practice": "고개를 천천히 끄덕여 봐요. 괜찮다는 뜻을 보여 줄 수 있어요.",
+      "answer": "“괜찮구나. 같이 앉아 있자.”"
+     }
+    ]
+   }
+  }
+ }
+}

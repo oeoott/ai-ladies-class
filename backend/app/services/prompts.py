@@ -15,8 +15,8 @@
 import json
 import re
 
-# 친구 얼굴로 그릴 수 있는 표정 (frontend PaintedFriend). 모델은 이 중 하나를 고른다.
-EXPRESSIONS = ("joy", "surprise", "sad", "anger", "neutral")
+# 친구 얼굴로 그릴 수 있는 표정 (frontend PaintedFriend.DRAWN_FEELINGS, storyTalk.FACES와 같다). 모델은 이 중 하나를 고른다.
+EXPRESSIONS = ("joy", "surprise", "sad", "anger", "neutral", "fear", "disgust")
 DEFAULT_EXPRESSION = "neutral"
 
 # 모델이 돌려줄 JSON 모양 (Azure OpenAI structured outputs, strict). 보기는 동화마다 두 개다.

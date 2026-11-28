@@ -10,14 +10,40 @@ from pathlib import Path
 _DIR = Path(__file__).parent
 
 
+# 공통 7감정 코드와 화면 이름. 콘텐츠(emotions.json)에 있는 감정만 아이 순환에 나온다.
+EMOTION_CODES = {"anger": "화남", "disgust": "혐오", "fear": "두려움", "joy": "기쁨", "neutral": "무표정",
+                 "sad": "슬픔", "surprise": "놀람"}
+
+
+def _drafts_on() -> bool:
+    """검수 전 초안(drafts/)을 합칠지. 미리보기·검수용으로만 켠다 (CONTENT_DRAFTS=true)."""
+    from .. import config
+
+    return bool(getattr(config.settings, "content_drafts", False))
+
+
 @lru_cache
+def _load(name: str, drafts: bool) -> dict:
+    data = json.loads((_DIR / name).read_text(encoding="utf-8"))
+    if drafts:
+        extra = json.loads((_DIR / "drafts" / name).read_text(encoding="utf-8"))["entries"]
+        data = {**data, **{k: v for k, v in extra.items() if k not in data}}  # 검수된 항목이 우선, 초안은 뒤에
+    return data
+
+
 def emotions() -> dict:
-    return json.loads((_DIR / "emotions.json").read_text(encoding="utf-8"))
+    return _load("emotions.json", _drafts_on())
 
 
-@lru_cache
 def tales() -> dict:
-    return json.loads((_DIR / "tales.json").read_text(encoding="utf-8"))
+    return _load("tales.json", _drafts_on())
+
+
+def draft_ids() -> list[str]:
+    """초안으로만 있는 감정 id (검수 전)."""
+    data = json.loads((_DIR / "emotions.json").read_text(encoding="utf-8"))
+    extra = json.loads((_DIR / "drafts" / "emotions.json").read_text(encoding="utf-8"))["entries"]
+    return [k for k in extra if k not in data]
 
 
 def topic_ids() -> list[str]:

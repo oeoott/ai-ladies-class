@@ -1,0 +1,187 @@
+{
+ "status": "draft",
+ "reviewedBy": null,
+ "reviewedAt": null,
+ "note": "AI 담당 초안. 특수교사·교수님 자문과 팀 검수 전이라 아이 화면 순환에 넣지 않는다. 검수 후 emotions.json·tales.json으로 옮긴다.",
+ "needs": {
+  "art": [
+   "frontend/public/art/cards/{id}.webp",
+   "frontend/public/art/cards/girl-{id}.webp",
+   "frontend/public/art/practice/{id}-before.webp",
+   "frontend/public/art/practice/{id}-after.webp",
+   "frontend/public/art/tale/{id}-{장소}.webp (1536×1024) + frontend/src/taleBackgrounds.js 한 줄"
+  ],
+  "optional": [
+   "frontend/src/ForestTale.jsx scenery·forest-tale.css [data-world] (동화 소품)",
+   "frontend/src/raon-audio.js 녹음 음성"
+  ],
+  "review": [
+   "특수교사·교수님 자문: 낱말(word·kin·opposite), 단서·동작 문구, 동화 상황(두려움·혐오 장면의 강도)",
+   "친구 표정 그림(PaintedFriend fear·disgust 초안) 팀 확인"
+  ]
+ },
+ "entries": {
+  "fear": {
+   "title": "깜깜한 나무 굴",
+   "pages": [
+    "{친구}는 숲길을 걷다가 커다란 나무 굴을 만났어요.",
+    "굴 안에서 바스락 소리가 났어요. 안은 깜깜했어요.",
+    "{친구}는 몸을 움츠렸어요. 눈이 커지고 손이 떨렸어요."
+   ],
+   "situation": "깜깜한 굴에서 소리가 나서 무서워요",
+   "explanation": "무엇인지 모르는 소리가 나면 무서울 수 있어요. 무서울 때는 천천히 알아보거나 도움을 청할 수 있어요.",
+   "actions": [
+    {
+     "label": "손전등을 비춰요",
+     "expression": "neutral",
+     "title": "굴 안이 보였어요",
+     "event": "손전등을 켜자 다람쥐가 도토리를 모으고 있었어요.",
+     "line": "다람쥐였구나. 이제 덜 무서워."
+    },
+    {
+     "label": "같이 가자고 해요",
+     "expression": "joy",
+     "title": "손을 잡고 들여다봤어요",
+     "event": "친구와 손을 잡고 천천히 굴 안을 들여다보았어요.",
+     "line": "같이 있으니까 무섭지 않아."
+    }
+   ],
+   "talk": {
+    "ask": "{친구}가 아직 조금 떨려요. 어떤 말을 건넬까요?",
+    "choices": [
+     "무서웠지?",
+     "내가 옆에 있을게."
+    ],
+    "replies": [
+     "응, 깜깜해서 무서웠어.",
+     "고마워. 옆에 있으니 마음이 놓여."
+    ],
+    "replyExpressions": [
+     "fear",
+     "neutral"
+    ],
+    "again": "다람쥐에게 어떻게 인사할까요?",
+    "extra": [
+     "작게 인사하자.",
+     "도토리를 주자."
+    ],
+    "ends": [
+     "둘이 작게 인사하자 다람쥐가 꼬리를 흔들었어요.",
+     "도토리를 놓아 주자 다람쥐가 하나를 집어 갔어요."
+    ],
+    "endExpressions": [
+     "joy",
+     "joy"
+    ]
+   }
+  },
+  "disgust": {
+   "title": "냇가의 고약한 냄새",
+   "pages": [
+    "{친구}는 냇가에서 물놀이를 하려고 했어요.",
+    "그런데 물가에 과자 봉지와 상한 음식이 떠 있었어요.",
+    "고약한 냄새에 {친구}는 코를 찡그리고 뒤로 물러났어요."
+   ],
+   "situation": "냇가에 쓰레기가 있어 냄새가 나요",
+   "explanation": "더럽거나 냄새가 고약하면 싫은 마음이 들 수 있어요. 싫을 때는 말로 알리거나 깨끗하게 할 방법을 찾을 수 있어요.",
+   "actions": [
+    {
+     "label": "쓰레기를 주워요",
+     "expression": "joy",
+     "title": "냇가가 깨끗해졌어요",
+     "event": "집게로 봉지를 주워 쓰레기통에 넣었어요.",
+     "line": "냄새가 사라졌어. 이제 개운해."
+    },
+    {
+     "label": "다른 곳으로 가요",
+     "expression": "neutral",
+     "title": "맑은 물가로 갔어요",
+     "event": "둘은 위쪽의 맑은 물가로 자리를 옮겼어요.",
+     "line": "여기는 물이 맑아서 좋아."
+    }
+   ],
+   "talk": {
+    "ask": "{친구}가 아직 코를 찡그리고 있어요. 어떤 말을 건넬까요?",
+    "choices": [
+     "냄새가 싫었지?",
+     "이제 괜찮아?"
+    ],
+    "replies": [
+     "응, 냄새가 너무 싫었어.",
+     "응. 깨끗해져서 이제 괜찮아."
+    ],
+    "replyExpressions": [
+     "disgust",
+     "neutral"
+    ],
+    "again": "다음에 냇가에 오면 무엇을 할까요?",
+    "extra": [
+     "봉투를 챙기자.",
+     "표지판을 세우자."
+    ],
+    "ends": [
+     "둘은 다음에 쓸 봉투를 가방에 넣었어요.",
+     "둘은 쓰레기를 버리지 말자는 표지판을 세웠어요."
+    ],
+    "endExpressions": [
+     "joy",
+     "joy"
+    ]
+   }
+  },
+  "neutral": {
+   "title": "조용한 오후",
+   "pages": [
+    "{친구}는 숲속 의자에 앉아 있었어요.",
+    "바람이 살랑 불고 새가 가끔 지저귀었어요.",
+    "{친구}의 얼굴은 웃지도 찡그리지도 않고 편안했어요."
+   ],
+   "situation": "특별한 일 없이 조용히 쉬고 있어요",
+   "explanation": "아무 일도 없을 때 얼굴은 편안하고 덤덤해요. 그럴 때는 그대로 쉬거나 하고 싶은 일을 골라 볼 수 있어요.",
+   "actions": [
+    {
+     "label": "옆에 앉아요",
+     "expression": "neutral",
+     "title": "나란히 앉았어요",
+     "event": "둘은 의자에 나란히 앉아 구름을 보았어요.",
+     "line": "그냥 이렇게 앉아 있는 것도 좋아."
+    },
+    {
+     "label": "산책하자고 해요",
+     "expression": "joy",
+     "title": "천천히 걸었어요",
+     "event": "둘은 숲길을 따라 천천히 걸었어요.",
+     "line": "걷다 보니 기분이 조금 좋아졌어."
+    }
+   ],
+   "talk": {
+    "ask": "{친구}가 편안한 얼굴로 앉아 있어요. 어떤 말을 건넬까요?",
+    "choices": [
+     "지금 기분 어때?",
+     "같이 쉬자."
+    ],
+    "replies": [
+     "그냥 그래. 조용해서 편안해.",
+     "좋아. 같이 쉬니까 마음이 차분해."
+    ],
+    "replyExpressions": [
+     "neutral",
+     "neutral"
+    ],
+    "again": "다음에는 무엇을 할까요?",
+    "extra": [
+     "구름을 세자.",
+     "물을 마시자."
+    ],
+    "ends": [
+     "둘은 하늘의 구름을 하나, 둘 세었어요.",
+     "둘은 나무 그늘에서 시원한 물을 마셨어요."
+    ],
+    "endExpressions": [
+     "neutral",
+     "neutral"
+    ]
+   }
+  }
+ }
+}

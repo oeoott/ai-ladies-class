@@ -430,6 +430,17 @@
   gap: 12px;
   padding: 8px 13px;
 }
+/* Draft emotion without a card picture (preview builds only) */
+.edu-card-missing {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: var(--forest-card-padding);
+  background: var(--forest-card);
+  border: 2px dashed var(--forest-card-edge);
+  color: var(--forest-ink);
+  text-align: center;
+}
 .edu-camera-status:empty {
   position: absolute;
 }
@@ -520,6 +531,15 @@
     --emote-time: 700ms;
     animation: edu-emote-anger 700ms ease-in-out;
   }
+  /* Drafts (fear, disgust): small and slow, no shaking or sudden jumps. */
+  .edu-character-body[data-emote='fear'] {
+    --emote-time: 900ms;
+    animation: edu-emote-fear 900ms ease-in-out;
+  }
+  .edu-character-body[data-emote='disgust'] {
+    --emote-time: 800ms;
+    animation: edu-emote-disgust 800ms ease-in-out;
+  }
   /* More specific than the gesture rules above (their `animation` shorthand would reset the delay). */
   .edu-portrait .edu-character-body[data-emote-now] [data-gesture] * {
     animation-delay: var(--emote-time);
@@ -527,6 +547,14 @@
 }
 /* Distances are in the portrait's view-box units: 1 unit is about 1.1px (portrait) to 1.35px (landscape) in
    the tale, so joy rises 9-11px then 8-9px, sad lowers 5-6px, surprise hops 7-8px, anger lifts 6-7px. */
+@keyframes edu-emote-fear {
+  0%, 100% { transform: none; }
+  45% { transform: translateY(3px) scale(0.97); }
+}
+@keyframes edu-emote-disgust {
+  0%, 100% { transform: none; }
+  45% { transform: rotate(-3deg) translateX(-3px); }
+}
 @keyframes edu-emote-joy {
   0%, 40%, 80%, 100% { transform: none; }
   20% { transform: translateY(-8px); }
