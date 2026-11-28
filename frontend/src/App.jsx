@@ -275,6 +275,28 @@ function App() {
     window.scrollTo(0, 0)
   }, [page, session.step, showEntrance])
 
+  // A memory-backed development server can restart while this tab retains its walk/talk ids.
+  // Check once per saved walk; only 404 clears server ids. Keep local learning progress and stickers.
+  useEffect(() => {
+    if (page !== 'lesson' || !session.walkId || !api.enabled) return
+    const savedId = session.walkId
+    let live = true
+    api.getWalk(savedId).then((result) => {
+      if (!live || result.status !== 404) return
+      setSession((current) => {
+        if (current.page !== 'lesson' || current.walkId !== savedId) return current
+        const activity = current.activity ? { ...current.activity, talkId: null } : null
+        if (current.step === 2 && activity && ['question', 'reply', 'extra', 'ending'].includes(activity.phase)) {
+          // A new server conversation must start at turn 0, even if the screen was on the second turn.
+          Object.assign(activity, { phase: 'question', choice: null, extraChoice: null,
+            serverReply: null, serverEnd: null, replyFace: null, endFace: null })
+        }
+        return { ...current, walkId: null, activity }
+      })
+    })
+    return () => { live = false }
+  }, [page, session.walkId])
+
   // The walk is recorded on the server when available; the lesson never waits for it.
   const pendingWalk = useRef(null)
   const walkKey = page === 'lesson' && !session.walkId

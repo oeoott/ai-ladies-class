@@ -46,3 +46,17 @@ test('account deletion sends the password again with the guardian token', async 
   assert.deepEqual(await online.deleteAccount('tok', 'secret-pass'), { status: 403, data: null })
   assert.deepEqual(calls, [{ url: 'http://server/me', method: 'DELETE', auth: 'Bearer tok', body: { password: 'secret-pass' } }])
 })
+
+
+test('walk lookup keeps missing, forbidden and offline distinct and uses the current learner token', async () => {
+  for (const status of [200, 401, 404, 500]) {
+    const seen = []
+    const online = createApi('http://server', { learner: () => ({ childId: 'c', token: 'current' }), send: async (url, options) => {
+      seen.push({ url, method: options.method, auth: options.headers.Authorization })
+      return { ok: status === 200, status, json: async () => ({ id: 'w1', topic_id: 'joy' }) }
+    } })
+    assert.deepEqual(await online.getWalk('w 1'), { status, data: status === 200 ? { id: 'w1', topicId: 'joy' } : null })
+    assert.deepEqual(seen, [{ url: 'http://server/walks/w%201', method: 'GET', auth: 'Bearer current' }])
+  }
+  assert.deepEqual(await createApi('').getWalk('w1'), { status: 0, data: null })
+})

@@ -82,6 +82,12 @@ export function createApi(base, { send = globalThis.fetch, timeout = TIMEOUT_MS,
   return {
     enabled: Boolean(root),
     // 공통 산책
+    // Preserve status: only a confirmed missing walk (404), never offline/401/500, may be recreated.
+    getWalk: async (walkId) => {
+      const who = await whoFor(timeout)
+      if (!who || who === LATE) return { status: 0, data: null }
+      return call('GET', `/walks/${id(walkId)}`, { token: who.token })
+    },
     startWalk: ({ childId, topicId, level, day, review = false }) => learn((who) => (
       { path: '/walks', body: { childId: childId ?? who.childId, topicId, level, day, review } }
     )),

@@ -32,6 +32,19 @@ export async function startServerTalk(api, walkId, turns = talkTurns, character 
   return talk.conversationId
 }
 
+// A first answer can have stayed local while the server was starting. Before a free second
+// sentence, open a conversation and replay only the actual first choice known to this screen.
+// Never invent a previous free sentence (it is deliberately not persisted).
+export async function connectServerTalk(api, walkId, { phase, choice, inputMode = 'picture', character, actionIndex }, turns = talkTurns) {
+  if (phase !== 'question' && (phase !== 'extra' || !Number.isInteger(choice) || choice < 0 || choice > 1)) return null
+  const id = await startServerTalk(api, walkId, turns, character, actionIndex)
+  if (!id || phase === 'question') return id
+  const first = await api.sendTalkTurn(id, { choiceIndex: choice, inputMode })
+  if (!first?.reply || first.fallbackToPicture || first.finished) return null
+  turns.set(id, 1)
+  return id
+}
+
 export function localReply(choice, isExtra) {
   return isExtra
     ? { phase: 'ending', extraChoice: choice, serverEnd: null, endFace: null }

@@ -3,7 +3,7 @@ import test from 'node:test'
 import { createApi } from '../src/api.js'
 import { emptySession, readSession } from '../src/session.js'
 import { forestTales } from '../src/forestTales.js'
-import { FACES, friendFace, localReply, namedTalk, nextEmote, saidLine, startServerTalk, takeTurn, talkReply, usableTalk } from '../src/storyTalk.js'
+import { connectServerTalk, FACES, friendFace, localReply, namedTalk, nextEmote, saidLine, startServerTalk, takeTurn, talkReply, usableTalk } from '../src/storyTalk.js'
 
 const date = '2026-11-22'
 const talk = forestTales.joy.talk
@@ -201,4 +201,36 @@ test('the friend moves once when the face changes at a result, a reply or the en
     ['act', 'anger'], ['consequence', 'neutral']]), ['anger@book', 'neutral@consequence'])
   // opening at 상황 (page 3 skipped, e.g. after a reload): the movement happens there
   assert.deepEqual(walk([['situation', 'anger']]), ['anger@situation'])
+})
+
+
+test('a local first choice is restored before sending a free second sentence', async () => {
+  const turns = new Map()
+  const calls = []
+  const api = {
+    startTalk: async () => ({ conversationId: 'restored' }),
+    sendTalkTurn: async (id, body) => {
+      calls.push({ id, body })
+      return { reply: body.text ? '초대장에 별을 그렸어요.' : '좋아!', finished: Boolean(body.text) }
+    },
+  }
+  const id = await connectServerTalk(api, 'walk', { phase: 'extra', choice: 1, inputMode: 'voice', character: 'bear', actionIndex: 0 }, turns)
+  assert.equal(turns.get(id), 1)
+  const answer = await takeTurn(api, { talkId: id, phase: 'extra', text: '별을 그리자.', inputMode: 'voice' }, { turns })
+  assert.equal(answer.answered, true)
+  assert.equal(answer.patch.serverEnd, '초대장에 별을 그렸어요.')
+  assert.deepEqual(calls, [
+    { id, body: { choiceIndex: 1, inputMode: 'voice' } },
+    { id, body: { text: '별을 그리자.', inputMode: 'voice' } },
+  ])
+})
+
+test('reconnection never invents a previous free answer and stops if first-turn restore fails', async () => {
+  let starts = 0
+  const api = { startTalk: async () => { starts++; return { conversationId: 'new' } },
+    sendTalkTurn: async () => null }
+  assert.equal(await connectServerTalk(api, 'w', { phase: 'extra', choice: null }), null)
+  assert.equal(starts, 0)
+  assert.equal(await connectServerTalk(api, 'w', { phase: 'extra', choice: 0 }), null)
+  assert.equal(starts, 1)
 })

@@ -180,8 +180,8 @@ export async function mirrorLesson(page, topicId, { camera = false } = {}) {
   const way = emotions[topicId].practice.expression[0]
   await expect(heading(page, '표정을 따라 해 봐요')).toBeVisible()
   if (camera) {
-    await button(page, '카메라로 내 모습 보기').click()
-    await expect(button(page, '카메라 끄기')).toBeVisible({ timeout: 15_000 })
+    await button(page, '표정 연습하기').click()
+    await expect(button(page, '내 모습 보기')).toBeVisible({ timeout: 15_000 })
   }
   await button(page, '표정 연습 마쳤어요').click()
   await expect(heading(page, '내 마음을 전해 봐요')).toBeVisible()

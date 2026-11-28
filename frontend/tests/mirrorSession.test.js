@@ -134,3 +134,10 @@ test('an approved baseline scores without the test switch', () => {
   session.cameraStarted(0)
   assert.equal(session.frame(joyFace(0), 0).phase, 'calibrating')
 })
+
+
+test('one star is already enough to hold for success, so guidance does not demand a higher star', () => {
+  assert.equal(mirrorLine({ phase: 'scoring', stars: 1, hint: '볼을 더 올려 봐요.' }), '그 표정으로 잠깐 있어 봐요.')
+  assert.equal(mirrorLine({ phase: 'scoring', stars: 0, hint: '입꼬리를 올려 봐요.' }), '입꼬리를 올려 봐요.')
+  assert.equal(mirrorLine({ phase: 'locked', stars: 1 }), '표정을 잘 따라 했어요!')
+})

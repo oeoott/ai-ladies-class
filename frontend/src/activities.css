@@ -275,6 +275,9 @@
   margin-inline-start: auto;
   box-shadow: inset 0 -3px 0 #164a35;
 }
+.edu-camera[hidden] {
+  display: none;
+}
 .edu-camera {
   background: #e6eeea;
   aspect-ratio: 4/3;

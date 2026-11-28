@@ -152,8 +152,12 @@ test('cosine method: direction and size both count, a still face is 0 not an err
     method: 'cos',
     emotions: { joy: { features: { mouthSmileLeft: 0.5, cheekSquintLeft: 0.5 }, stars: { err: [1, 2, 3], cos: [35, 55, 75] } } },
   }
-  const { scorer, t } = calibrated(cos, 0, 0)
-  assert.equal(scorer.update(face(0), t).score, 0) // zero vector
+  const scorer = createMirrorScorer(config(cos))
+  scorer.setTarget('joy')
+  scorer.startCalibration(0)
+  const resting = { faces: [{ mouthSmileLeft: 0, cheekSquintLeft: 0 }] }
+  const { t } = run(scorer, resting, 0, 3000)
+  assert.equal(scorer.update(resting, t).score, 0) // measured zero vector, not missing features
   const both = { faces: [{ mouthSmileLeft: 0.4, cheekSquintLeft: 0.4 }] }
   assert.equal(scorer.update(both, t + 100).score, 100) // same direction, 80% size
   const half = { faces: [{ mouthSmileLeft: 0.2, cheekSquintLeft: 0.2 }] }
@@ -202,4 +206,93 @@ test('the shipped baseline covers the seven feelings with real MediaPipe names a
   for (const group of new Set([...names].map(featureGroup))) assert.ok(baseline.feedback[group], group)
   // fear and disgust lines are lower (계획서: fear·disgust는 낮게)
   assert.ok(baseline.emotions.fear.stars.err[2] < baseline.emotions.joy.stars.err[2])
+})
+
+
+test('provisional joy: a strong mouth smile can reach three stars without forcing strong cheek squint', () => {
+  const scorer = createMirrorScorer({ ...baseline, smoothing: 1 })
+  scorer.setTarget('joy')
+  scorer.startCalibration(0)
+  run(scorer, face(0, { cheekSquintLeft: 0, cheekSquintRight: 0 }), 0, 3000)
+  const result = scorer.update(face(0.6, { cheekSquintLeft: 0, cheekSquintRight: 0 }), 3100)
+  assert.equal(result.score, 80)
+  assert.equal(result.stars, 3)
+  assert.equal(baseline.status, 'provisional')
+  assert.equal(baseline.approval.approved, false)
+})
+
+test('provisional joy: cheeks alone and a tiny smile do not earn a passing star', () => {
+  for (const smile of [0, 0.1]) {
+    const scorer = createMirrorScorer({ ...baseline, smoothing: 1 })
+    scorer.setTarget('joy')
+    scorer.startCalibration(0)
+    run(scorer, face(0), 0, 3000)
+    const result = scorer.update(face(smile, { cheekSquintLeft: 0.2, cheekSquintRight: 0.2 }), 3100)
+    assert.equal(result.stars, 0)
+  }
+})
+
+test('completed one-star success can improve to three, without losing success on a weaker or missing face', () => {
+  const { scorer, t } = calibrated({}, 0, 0)
+  run(scorer, face(0.25), t, 3000) // one star is held long enough to complete
+  assert.equal(scorer.update(face(0.25), t + 3100).stars, 1)
+  const better = scorer.update(face(0.5), t + 3200)
+  assert.deepEqual([better.phase, better.stars], ['locked', 3])
+  assert.equal(scorer.update(face(0), t + 3300).stars, 3)
+  assert.equal(scorer.update({ faces: [] }, t + 3400).phase, 'locked')
+  assert.equal(scorer.summary().stars, 3)
+})
+
+test('feature weights must be positive finite values', () => {
+  for (const bad of [-1, 0, NaN, Infinity]) {
+    assert.throws(() => createMirrorScorer(config({ emotions: {
+      joy: { features: { mouthSmileLeft: .5 }, weights: { mouthSmileLeft: bad }, stars: [40, 60, 80] },
+    } })), /가중치/)
+  }
+})
+
+
+test('missing or invalid expression data never calibrates or awards neutral stars', () => {
+  for (const target of ['neutral', 'joy']) {
+    for (const raw of [{}, { eyeBlinkLeft: 0 }, { mouthSmileLeft: 0 },
+      { mouthSmileLeft: NaN, mouthSmileRight: 0 },
+      { mouthSmileLeft: 0, mouthSmileRight: Infinity },
+      { mouthSmileLeft: -0.1, mouthSmileRight: 0 },
+      { mouthSmileLeft: 0, mouthSmileRight: 1.1 }]) {
+      const scorer = createMirrorScorer(config())
+      scorer.setTarget(target)
+      scorer.startCalibration(0)
+      const { view } = run(scorer, { faces: [raw] }, 0, 7000)
+      assert.deepEqual([view.phase, view.reason, view.score, view.stars], ['paused', 'missingData', null, 0])
+      assert.deepEqual(scorer.summary(), { score: null, stars: null, locked: false, trackedSec: 0 })
+      assert.equal(scorer.update(face(0), 7100).phase, 'calibrating')
+      assert.equal(scorer.update(face(0), 7200).phase, 'calibrating')
+    }
+  }
+})
+
+test('missing data or a detector failure interrupts the hold and resumes from valid frames only', () => {
+  for (const invalid of [{ faces: [{}] }, { faces: [], analysisUnavailable: true }]) {
+    const { scorer, t } = calibrated({}, 0, 0)
+    run(scorer, face(0.3), t, 2000)
+    const paused = scorer.update(invalid, t + 2100)
+    assert.equal(paused.phase, 'paused')
+    assert.equal(paused.score, null)
+    assert.equal(scorer.summary().locked, false)
+    assert.equal(run(scorer, face(0.3), t + 2200, 2900).view.phase, 'scoring')
+    assert.equal(scorer.update(face(0.3), t + 5200).phase, 'locked')
+  }
+})
+
+test('missing data cannot inflate an already completed neutral result', () => {
+  const scorer = createMirrorScorer(config({ smoothing: 1 }))
+  scorer.setTarget('neutral')
+  scorer.startCalibration(0)
+  run(scorer, face(0), 0, 3000)
+  const { view, t } = run(scorer, face(0.1), 3100, 3000)
+  assert.equal(view.phase, 'locked')
+  const prior = scorer.summary()
+  run(scorer, { faces: [{}] }, t, 1000)
+  scorer.update({ faces: [], analysisUnavailable: true }, t + 1100)
+  assert.deepEqual(scorer.summary(), prior)
 })

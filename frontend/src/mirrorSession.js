@@ -102,14 +102,17 @@ export function createMirrorSession(baseline, feeling, { force = false } = {}) {
 // Child-facing line for the scorer view (UX-WRITING: short 존댓말, one thing to do, no countdown or score).
 export function mirrorLine(view, baselineFeedback = {}) {
   if (!view) return null
-  if (view.phase === 'calibrating') return '평소 얼굴로 잠깐 있어 봐요.'
+  if (view.phase === 'calibrating') return '얼굴에 힘을 빼고 잠깐 기다려요.'
   if (view.phase === 'paused') {
     return {
       noFace: '얼굴이 화면에 보이게 해 봐요.',
       multiFace: '한 사람만 화면에 보이게 해 봐요.',
       unstable: '잠깐 가만히 있어 봐요.',
+      missingData: '표정을 다시 살펴보고 있어요.',
+      analysisUnavailable: '표정 분석을 다시 준비하고 있어요.',
     }[view.reason] ?? null
   }
   if (view.phase === 'locked') return '표정을 잘 따라 했어요!'
-  return view.hint ?? (view.stars >= 3 ? '표정을 잘 따라 하고 있어요.' : baselineFeedback.keep ?? '표정을 따라 해 봐요.')
+  if (view.stars >= 1) return '그 표정으로 잠깐 있어 봐요.'
+  return view.hint ?? baselineFeedback.keep ?? '표정을 따라 해 봐요.'
 }

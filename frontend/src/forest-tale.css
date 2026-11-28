@@ -1,6 +1,9 @@
 /* The picture-book objects share the clearing with the selected companion. */
 .tale-figure {
   width: 100%;
+  /* Long speech must wrap inside the illustration column, not widen its implicit grid track. */
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
 }
 .tale-diorama {
   position: relative;

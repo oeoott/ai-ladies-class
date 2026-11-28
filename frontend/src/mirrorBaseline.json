@@ -1,8 +1,8 @@
 {
- "version": "err-v1-prov",
+ "version": "err-v2-prov",
  "method": "err",
  "status": "provisional",
- "note": "임시 기준값. 기준 사진이 없어 MediaPipe blendshape 의미를 보고 손으로 정한 값이다. 검증되지 않았다. 기준 사진(가상 성인 5명 × 7감정 + 무표정)으로 frontend/scripts/mirror-baseline.mjs를 돌리면 목표값·별 기준이 계산된다(status measured). 아이 화면 채점은 검토 후 approve 명령으로 승인해야 켜진다. 아이에게 보이는 hint 문구(feedback)도 초안이라 특수교사 검토 전이다.",
+ "note": "임시 기준값. 기준 사진이 없어 MediaPipe blendshape 의미를 보고 손으로 정한 값이다. 검증되지 않았다. 기준 사진(가상 성인 5명 × 7감정 + 무표정)으로 frontend/scripts/mirror-baseline.mjs를 돌리면 목표값·별 기준이 계산된다(status measured). 아이 화면 채점은 검토 후 approve 명령으로 승인해야 켜진다. 아이에게 보이는 hint 문구(feedback)도 초안이라 특수교사 검토 전이다. v2 시험 조정: 기쁨은 입꼬리 합계 80%, 볼·눈 주변 합계 20%로 계산한다. 비중은 공학적 임시 선택이며 실측으로 검증하지 않았다. 기준값·별 경계 자체는 그대로이며 승인하지 않는다.",
  "calibrationMs": 3000,
  "lockMs": 3000,
  "smoothing": 0.5,
@@ -39,6 +39,12 @@
      55,
      75
     ]
+   },
+   "weights": {
+    "mouthSmileLeft": 0.4,
+    "mouthSmileRight": 0.4,
+    "cheekSquintLeft": 0.1,
+    "cheekSquintRight": 0.1
    }
   },
   "sad": {

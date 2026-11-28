@@ -15,7 +15,7 @@ export function voiceSupported() {
 
 // Guidance lines for the one note under the choices (StoryQuestion places it).
 export const VOICE_LINES = {
-  listening: '듣고 있어요. 보기 중 하고 싶은 말을 말해 보아요.',
+  listening: '듣고 있어요. 친구에게 하고 싶은 말을 해 보아요.',
   // Recognition failed or heard nothing: tap instead.
   useChoices: '화면에서 하고 싶은 말을 눌러 보아요.',
   // A sentence was heard but got no reply (no server, or the server sent the child back to the choices).

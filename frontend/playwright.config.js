@@ -38,7 +38,8 @@ export default defineConfig({
       cwd: '../backend',
       url: BACKEND + '/health',
       reuseExistingServer: false,
-      env: { STORE: 'memory', JWT_SECRET: 'e2e-local-secret-0123456789abcdef', CORS_ORIGINS: ONLINE },
+      // MAEUM_IGNORE_DOTENV: never use the real Azure keys in backend/.env during browser tests
+      env: { STORE: 'memory', JWT_SECRET: 'e2e-local-secret-0123456789abcdef', CORS_ORIGINS: ONLINE, MAEUM_IGNORE_DOTENV: '1' },
     },
     {
       command: `npx vite --port ${PORTS.online} --strictPort`,

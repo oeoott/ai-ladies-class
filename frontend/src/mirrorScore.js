@@ -2,10 +2,10 @@
 // The server gets a summary only (score, score_version, stars, tracked_sec, attempts, end_reason).
 //
 // createMirrorScorer(config) → { setTarget, startCalibration, update, reset, summary, version, warnings }
-//   config: the baseline JSON (mirrorBaseline.json): method, per-emotion target features and star lines.
+//   config: the baseline JSON (mirrorBaseline.json): method, target features, optional positive weights and star lines.
 //   update(frame, now) with frame = { faces: [{ blendshapeName: score, ... }, ...] } (see fromMediaPipe)
 //   returns { phase, reason, score, stars, locked, feedbackKey, hint }:
-//     phase: calibrating | scoring | locked | paused, reason (paused only): noFace | multiFace | unstable
+//     phase: calibrating | scoring | locked | paused, reason (paused only): noFace | multiFace | unstable | missingData | analysisUnavailable
 //
 // Method 'err' (default): per feature, error = |calibrated − target| ÷ target clipped to 0..1, and 0 once the
 // calibrated value reaches nearRatio (80%) of the target. score = 100 × (1 − mean error).
@@ -14,11 +14,12 @@
 // neutral (both methods): 100 × (1 − overall change ÷ neutralCap), change = mean |value − calibration| over
 // the expression blendshapes (blinks and gaze excluded).
 // Calibration: the first calibrationMs (3 s) of steady single-face frames are averaged and subtracted later.
-// Lock: stars ≥ 1 held for lockMs (3 s) locks the result at the best score in that hold. There is no countdown
+// Lock: stars ≥ 1 held for lockMs (3 s) completes at the best score in that hold. Later improvement can raise
+// the result before the child presses Next; success is never taken away. There is no countdown
 // and no failure: the child can finish the practice at any time (AGENTS.md: 시간 제한·압박 없음).
 
 export const PHASES = ['calibrating', 'scoring', 'locked', 'paused']
-export const REASONS = ['noFace', 'multiFace', 'unstable']
+export const REASONS = ['noFace', 'multiFace', 'unstable', 'missingData', 'analysisUnavailable']
 
 const clamp01 = (x) => Math.min(1, Math.max(0, x))
 // 'mouthSmileLeft' → 'mouthSmile', 'browInnerUp' → 'browInnerUp'
@@ -64,14 +65,16 @@ export function scoreAgainst(config, spec, target, values, baseline) {
     return { score: 100 * (1 - clamp01(change / neutralCap)), worst: change > 0 ? 'relax' : null }
   }
   const entries = Object.entries(spec.features)
+  const weight = (name) => spec.weights?.[name] ?? 1
   if (config.method === 'cos') {
     let dot = 0, cc = 0, tt = 0, worst = null, worstGap = -Infinity
     for (const [name, t] of entries) {
       const c = calibrated(name)
-      dot += c * t
-      cc += c * c
-      tt += t * t
-      const gap = (t - c) / t
+      const w = weight(name)
+      dot += w * c * t
+      cc += w * c * c
+      tt += w * t * t
+      const gap = w * (t - c) / t
       if (gap > worstGap) [worst, worstGap] = [name, gap]
     }
     if (cc === 0 || tt === 0) return { score: 0, worst } // zero vector: no movement yet
@@ -79,14 +82,16 @@ export function scoreAgainst(config, spec, target, values, baseline) {
     const magnitude = Math.min(1, Math.sqrt(cc) / (nearRatio * Math.sqrt(tt)))
     return { score: 100 * Math.max(0, cos) * magnitude, worst: worstGap > 1 - nearRatio ? worst : null }
   }
-  let total = 0, worst = null, worstErr = 0
+  let total = 0, totalWeight = 0, worst = null, worstErr = 0
   for (const [name, t] of entries) {
     const c = calibrated(name)
     const err = c >= nearRatio * t ? 0 : clamp01(Math.abs(c - t) / t)
-    total += err
-    if (err > worstErr) [worst, worstErr] = [name, err]
+    const weightedError = weight(name) * err
+    total += weightedError
+    totalWeight += weight(name)
+    if (weightedError > worstErr) [worst, worstErr] = [name, weightedError]
   }
-  return { score: 100 * (1 - total / entries.length), worst }
+  return { score: 100 * (1 - total / totalWeight), worst }
 }
 
 // Checks the baseline JSON: star lines in order, targets near 0 left out. Exported for the baseline tool.
@@ -105,7 +110,11 @@ export function checkConfig(config) {
       if (!(Number.isFinite(v) && v >= config.minTarget)) warnings.push(`${id}.${k} 기준값 ${v}이 너무 작아 빼고 계산`)
     }
     if (id !== 'neutral' && !usable.length) throw new Error(`${id}: 쓸 수 있는 특징 기준값이 없어요`)
-    emotions[id] = { features: Object.fromEntries(usable), stars: stars.lines }
+    const weights = Object.fromEntries(usable.map(([name]) => [name, Number(spec.weights?.[name] ?? 1)]))
+    if (Object.values(weights).some((w) => !Number.isFinite(w) || w <= 0)) {
+      throw new Error(`${id}: 특징 가중치는 0보다 큰 숫자여야 해요`)
+    }
+    emotions[id] = { features: Object.fromEntries(usable), weights, stars: stars.lines }
   }
   return { emotions, warnings }
 }
@@ -182,13 +191,55 @@ export function createMirrorScorer(config) {
     return view('paused', { reason })
   }
 
+  // Face presence alone is not expression data. Require every target channel; neutral needs the
+  // expression channels used across the baseline, rather than treating an empty map as zero movement.
+  function usableData(values) {
+    if (!values || typeof values !== 'object' || Array.isArray(values)) return false
+    const names = target === 'neutral'
+      ? [...new Set(Object.values(emotions).flatMap((spec) => Object.keys(spec.features)))]
+      : Object.keys(emotions[target].features)
+    const required = names.length ? names : Object.keys(values).filter((name) =>
+      !(config.neutralExclude ?? ['_neutral', 'eyeBlink', 'eyeLook']).some((prefix) => name.startsWith(prefix)))
+    const valid = (v) => Number.isFinite(v) && v >= 0 && v <= 1
+    return required.length > 0 && required.every((name) => valid(values[name]))
+      && Object.values(values).every(valid)
+  }
+
   function update(frame, now) {
     if (!target) throw new Error('setTarget을 먼저 불러 주세요')
-    if (s.locked) return view('locked', { score: s.locked.score, stars: s.locked.stars })
+    if (frame?.analysisUnavailable && !s.locked) return pause('analysisUnavailable', now)
+    if (s.locked) {
+      // Success stays completed, but the child may keep practising before pressing Next.
+      // A later better expression can raise the result; a weaker/missing face never takes success away.
+      const faces = frame?.faces ?? []
+      if (!frame?.analysisUnavailable && faces.length === 1 && usableData(faces[0])) {
+        const raw = faces[0]
+        const names = Object.keys(emotions[target].features)
+        const jump = s.last && names.length
+          ? names.reduce((sum, name) => sum + Math.abs((raw[name] ?? 0) - (s.last[name] ?? 0)), 0) / names.length : 0
+        const stable = s.lastAt != null && now - s.lastAt <= maxGapMs && jump <= maxJump
+        s.last = raw
+        s.lastAt = now
+        if (stable) {
+          s.smooth = s.smooth
+            ? Object.fromEntries(Object.keys({ ...s.smooth, ...raw }).map((name) => [name,
+              alpha * (raw[name] ?? 0) + (1 - alpha) * (s.smooth[name] ?? 0)]))
+            : { ...raw }
+          const score = Math.round(scoreOf(s.smooth).score)
+          if (score > s.locked.score) s.locked = { score, stars: starsFor(score) }
+        } else s.smooth = null
+      } else {
+        s.last = null
+        s.lastAt = null
+        s.smooth = null
+      }
+      return view('locked', { score: s.locked.score, stars: s.locked.stars })
+    }
     const faces = frame?.faces ?? []
     if (faces.length === 0) return pause('noFace', now)
     if (faces.length > 1) return pause('multiFace', now)
     const raw = faces[0]
+    if (!usableData(raw)) return pause('missingData', now)
     const gap = s.lastAt == null ? 0 : now - s.lastAt
     const tracked = Object.keys(emotions[target].features)
     const jump = s.last && tracked.length

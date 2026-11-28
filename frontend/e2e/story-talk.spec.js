@@ -117,7 +117,7 @@ test('듣는 동안 안내와 듣기 몸짓을 보이고, 인식이 실패하면
   const turns = await openTalk(page, request)
   await planVoice(page, { error: 'no-speech', delay: 1200 })
   await page.getByRole('button', { name: '말로 답하기' }).click()
-  await expect(voiceNote(page)).toHaveText('듣고 있어요. 보기 중 하고 싶은 말을 말해 보아요.')
+  await expect(voiceNote(page)).toHaveText('듣고 있어요. 친구에게 하고 싶은 말을 해 보아요.')
   await expect(page.getByRole('button', { name: '듣기 멈추기' })).toBeVisible()
   await expect(friendFace(page)).toHaveAttribute('data-gesture', 'listen')
 

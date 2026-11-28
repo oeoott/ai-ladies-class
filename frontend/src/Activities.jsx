@@ -11,7 +11,7 @@ import { forestTales } from './forestTales.js'
 import { emotions, tales } from './content.js'
 import { StoryVoice, voiceSupported } from './StoryVoice.jsx'
 import { api } from './api.js'
-import { friendFace, localReply, namedTalk, nextEmote, saidLine, startServerTalk, takeTurn, talkReply, usableTalk } from './storyTalk.js'
+import { friendFace, localReply, namedTalk, nextEmote, saidLine, connectServerTalk, takeTurn, talkReply, usableTalk } from './storyTalk.js'
 
 // Emotion words and clues, from the shared emotions.json (one entry per emotion).
 // LEGACY_TALK keeps the conversation that sessions saved before the picture books still use;
@@ -438,6 +438,7 @@ function EmotionActivity({ fact, feeling, friend, state, update, next, expanded,
 function useCamera(active, onCamera = () => {}) {
   const [status, setStatus] = useState('off')
   const [facePresent, setFacePresent] = useState(false)
+  const [analysisRetrying, setAnalysisRetrying] = useState(false)
   const stopPreview = useRef(null)
   const stream = useRef(null),
     pending = useRef(0),
@@ -446,6 +447,7 @@ function useCamera(active, onCamera = () => {}) {
   notify.current = onCamera
   function stop() {
     if (stream.current) notify.current('off')
+    setAnalysisRetrying(false)
     pending.current += 1
     stopPreview.current?.()
     stopPreview.current = null
@@ -516,7 +518,10 @@ function useCamera(active, onCamera = () => {}) {
           if (stream.current !== acquired) return
           try {
             stopPreview.current = startFacePreview(element, (present) => {
-              if (stream.current === acquired) setFacePresent(present === true)
+              if (stream.current !== acquired) return
+              setFacePresent(present === true)
+              setAnalysisRetrying(present === null)
+              if (present === null) notify.current('frame', { faces: [], analysisUnavailable: true }, performance.now())
             }, (frame, time) => {
               if (stream.current === acquired) notify.current('frame', frame, time)
             })
@@ -533,7 +538,7 @@ function useCamera(active, onCamera = () => {}) {
         })
     }
   }, [status])
-  return { status, video, start, off, facePresent }
+  return { status, video, start, off, facePresent, analysisRetrying }
 }
 
 function MirrorActivity({ fact, feeling, friend, active, state, update, next, walkId }) {
@@ -560,7 +565,27 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next, wa
         && prev.stars === next.stars && prev.hint === next.hint ? prev : next))
     }
   })
+  const [showPreview, setShowPreview] = useState(false)
+  const previewId = useId()
+  function startPractice() {
+    setShowPreview(false)
+    camera.start()
+  }
   const scoreLine = camera.status === 'on' ? mirrorLine(view) : null
+  const succeeded = view?.phase === 'locked'
+  // The prominent instruction and narration must agree with calibration. Otherwise the child may
+  // already be smiling when that smile is stored as their resting face and subtracted from scores.
+  const calibrating = mirror.current.session.supported && camera.status === 'on'
+    && (!view || view.phase === 'calibrating')
+  // One instruction slot: calibration, tracking help, expression hint, hold, then completion.
+  // Never repeat the task instruction with a second feature hint below the camera.
+  const practiceLine = camera.status === 'off' ? null
+    : camera.status === 'waiting' ? '카메라를 열고 있어요.'
+    : camera.status === 'unavailable' ? '카메라가 꺼져 있어요. 그림을 봐요.'
+    : camera.analysisRetrying ? '표정 분석을 다시 준비하고 있어요.'
+    : calibrating ? '얼굴에 힘을 빼고 잠깐 기다려요.'
+    : succeeded ? '표정을 따라 하는 연습을 마쳤어요.'
+    : scoreLine ?? fact.motion
   const [demonstration, setDemonstration] = useState(0)
   const ways = feelingPractice[feeling].expression
   if (state.mirrorPhase === 'express' || state.mirrorPhase === 'response') {
@@ -602,8 +627,8 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next, wa
   }
   return (
     <Board
-      title="표정을 따라 해 봐요"
-      voiceLine={fact.motion}
+      title={succeeded ? '표정을 잘 따라 했어요!' : '표정을 따라 해 봐요'}
+      voiceLine={succeeded ? '표정을 잘 따라 했어요! 마음을 전해 볼까요?' : practiceLine ?? '표정을 따라 해 봐요.'}
       guide={<GuidePortrait friend={friend} active={active} />}
       illustration={
         <figure className="edu-figure edu-mirror-figure">
@@ -618,24 +643,35 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next, wa
         </figure>
       }
     >
-      <p className="edu-response-copy">
-        {fact.motion}
-      </p>
+      {practiceLine && (
+        <p className={`edu-response-copy${mirror.current.session.supported ? ' edu-camera-status' : ''}`}
+          role={mirror.current.session.supported ? 'status' : undefined}>
+          {practiceLine}
+        </p>
+      )}
       {camera.status === 'on' && (
-        <div className="edu-camera">
+        // Keep the same live video element mounted for MediaPipe even when the child hides their image.
+        // Preview visibility never opens/stops the camera or changes the scoring session.
+        <div className="edu-camera" id={previewId} hidden={!showPreview}>
           <video ref={camera.video} muted autoPlay playsInline aria-label="이 기기의 내 모습" />
         </div>
       )}
       <div className="edu-mirror-actions">
-        {camera.status === 'on' || camera.status === 'waiting' ? (
-          <button className="edu-secondary" type="button" onClick={camera.off}>
-            {camera.status === 'waiting' ? '카메라 요청 취소' : '카메라 끄기'}
-          </button>
-        ) : (
-          <button className="edu-secondary" type="button" onClick={camera.start}>
-            {camera.status === 'unavailable' ? '카메라 다시 켜기' : '카메라로 내 모습 보기'}
+        {camera.status === 'on' && (
+          <button className="edu-secondary" type="button" aria-expanded={showPreview} aria-controls={previewId}
+            onClick={() => setShowPreview((shown) => !shown)}>
+            {showPreview ? '내 모습 숨기기' : '내 모습 보기'}
           </button>
         )}
+        {camera.status === 'waiting' ? (
+          <button className="edu-secondary" type="button" onClick={camera.off}>
+            카메라 요청 취소
+          </button>
+        ) : camera.status !== 'on' ? (
+          <button className="edu-secondary" type="button" onClick={startPractice}>
+            {camera.status === 'unavailable' ? '카메라 다시 켜기' : '표정 연습하기'}
+          </button>
+        ) : null}
         <Action
           onClick={() => {
             camera.off()
@@ -643,25 +679,22 @@ function MirrorActivity({ fact, feeling, friend, active, state, update, next, wa
             update({ mirrorPhase: 'express' })
           }}
         >
-          표정 연습 마쳤어요
+          {succeeded ? '마음 전하기' : '표정 연습 마쳤어요'}
         </Action>
       </div>
       {camera.status === 'on' && view && (view.phase === 'scoring' || view.phase === 'locked') && (
-        // Stars are shown, not announced on every change; the status line below says what to do.
+        // Stars are shown, not announced on every change; the single instruction above says what to do.
         <p className="edu-note edu-mirror-stars" aria-hidden="true" data-stars={view.stars}>
           {'★'.repeat(view.stars) + '☆'.repeat(3 - view.stars)}
         </p>
       )}
-      <p role="status" className="edu-note edu-camera-status">
-        {camera.status === 'on'
-          ? scoreLine
-            ?? (camera.facePresent ? '얼굴이 화면에 보여요.' : '내 모습은 이 화면에만 보여요.')
-          : camera.status === 'waiting'
-            ? '카메라를 열고 있어요.'
-            : camera.status === 'unavailable'
-              ? '카메라가 꺼져 있어요. 그림을 봐요.'
-              : null}
-      </p>
+      {!mirror.current.session.supported && (
+        <p role="status" className="edu-note edu-camera-status">
+          {camera.status === 'on' && !camera.analysisRetrying
+            ? (camera.facePresent ? '얼굴을 찾았어요.' : '카메라가 켜져 있어요.')
+            : null}
+        </p>
+      )}
     </Board>
   )
 }
@@ -735,40 +768,69 @@ function StoryActivity({ fact, feeling, friend, state, update, onComplete, activ
   // A sentence the child said that got a reply. Memory only: never in session.js, so a reload drops it.
   const [spoken, setSpoken] = useState(null)
   const latest = useRef(null)
-  latest.current = { state, update }
+  latest.current = { state, update, walkId, active }
+  const mounted = useRef(true)
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
   const serverTalk = Boolean(walkId && outcome)
   const talkId = usableTalk(state, phase, serverTalk)
-  useEffect(() => {
-    if (phase !== 'question' || !serverTalk || talkId) return
-    let current = true
-    startServerTalk(api, walkId, undefined, friend?.id, chosen).then((id) => {
-      if (current && id && latest.current.state.phase === 'question') latest.current.update({ talkId: id })
+  const connection = useRef(null)
+  const stillHere = (expectedPhase = phase) => mounted.current && latest.current.active
+    && latest.current.walkId === walkId && latest.current.state.phase === expectedPhase
+    && latest.current.state.branch === chosen
+  function connectTalk() {
+    if (talkId) return Promise.resolve(talkId)
+    if (!serverTalk) return Promise.resolve(null)
+    const key = `${walkId}|${chosen}|${phase}`
+    if (connection.current?.key === key) return connection.current.promise
+    const promise = connectServerTalk(api, walkId, {
+      phase, choice: state.choice, inputMode: state.firstReplyMode || 'picture',
+      character: friend?.id, actionIndex: chosen,
+    }).then((id) => {
+      if (!stillHere()) return null
+      if (id) latest.current.update({ talkId: id })
+      return id
+    }).finally(() => {
+      if (connection.current?.key === key) connection.current = null
     })
-    return () => {
-      current = false
-    }
+    connection.current = { key, promise }
+    return promise
+  }
+  useEffect(() => {
+    if (phase === 'question' && serverTalk && !talkId) connectTalk()
   }, [phase, serverTalk, talkId, walkId])
-  function sendTurn(turn) {
+  function sendTurn(turn, id = talkId) {
     setWaiting(true)
-    const isCurrent = () => latest.current.state.phase === phase && latest.current.state.talkId === talkId
-    return takeTurn(api, { talkId, phase, ...turn }, { isCurrent }).then((answer) => {
+    const isCurrent = () => stillHere() && (!latest.current.state.talkId || latest.current.state.talkId === id)
+    return takeTurn(api, { talkId: id, phase, ...turn }, { isCurrent }).then((answer) => {
       setWaiting(false)
-      if (answer?.patch) latest.current.update(answer.patch)
+      if (answer?.patch) latest.current.update({ ...answer.patch,
+        ...(!isExtra && Number.isInteger(turn.choice) ? { firstReplyMode: turn.inputMode || 'picture' } : {}) })
       return answer
     })
   }
-  function chooseReply(choice, inputMode = 'picture') {
+  async function chooseReply(choice, inputMode = 'picture') {
     if (waiting) return
-    if (!talkId) return update(localReply(choice, isExtra))
-    sendTurn({ choice, inputMode })
+    setWaiting(true)
+    // Wait for an in-flight first connection rather than silently abandoning server talk on a fast tap.
+    const id = talkId || (phase === 'question' ? await connectTalk() : null)
+    if (!stillHere()) { setWaiting(false); return }
+    if (!id) {
+      setWaiting(false)
+      return update({ ...localReply(choice, isExtra), ...(!isExtra ? { firstReplyMode: inputMode } : {}) })
+    }
+    await sendTurn({ choice, inputMode }, id)
   }
-  function sayReply(text) {
-    if (waiting || !talkId) return false
+  async function sayReply(text) {
+    if (waiting) return false
+    setWaiting(true)
+    // This also restores a missing conversation at the second question using the actual first choice.
+    const id = talkId || await connectTalk()
+    if (!stillHere()) { setWaiting(false); return true }
+    if (!id) { setWaiting(false); return false }
     const next = isExtra ? 'ending' : 'reply'
-    return sendTurn({ text, inputMode: 'voice' }).then((answer) => {
-      if (answer?.answered) setSpoken({ phase: next, text })
-      return !answer || answer.answered
-    })
+    const answer = await sendTurn({ text, inputMode: 'voice' }, id)
+    if (answer?.answered) setSpoken({ phase: next, text })
+    return !answer || answer.answered
   }
   const said = saidLine(state, phase, conversation, spoken)
   let title = tale.title

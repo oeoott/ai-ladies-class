@@ -18,6 +18,8 @@ let pendingSetup = Promise.resolve()
 export function startFacePreview(video, onPresence, onFrame = null) {
   let stopped = false
   let timer
+  let retryTimer
+  let retryDelay = 1000
   let detector
   let previousPresence
   let lastVideoTime = -1
@@ -25,14 +27,26 @@ export function startFacePreview(video, onPresence, onFrame = null) {
   function stop() {
     stopped = true
     clearTimeout(timer)
-    detector?.close()
+    clearTimeout(retryTimer)
+    closeDetector()
+  }
+
+  function closeDetector() {
+    const instance = detector
     detector = undefined
+    try { instance?.close() } catch { /* A failed runtime may also fail to close. */ }
   }
 
   function unavailable() {
     if (stopped) return
-    stop()
+    clearTimeout(timer)
+    closeDetector()
+    previousPresence = undefined
+    lastVideoTime = -1
     onPresence(null)
+    // Keep the granted camera stream. Retry the detector, with a capped delay, until the visit ends.
+    retryTimer = setTimeout(queueInitialize, retryDelay)
+    retryDelay = Math.min(retryDelay * 2, 10000)
   }
 
   function sample() {
@@ -42,6 +56,7 @@ export function startFacePreview(video, onPresence, onFrame = null) {
         lastVideoTime = video.currentTime
         const now = performance.now()
         const result = detector.detectForVideo(video, now)
+        retryDelay = 1000
         const present = result.faceLandmarks.length > 0
         onFrame?.(fromMediaPipe(result), now)
         if (present !== previousPresence) {
@@ -83,6 +98,9 @@ export function startFacePreview(video, onPresence, onFrame = null) {
     sample()
   }
 
-  pendingSetup = pendingSetup.then(initialize).catch(unavailable)
+  function queueInitialize() {
+    if (!stopped) pendingSetup = pendingSetup.then(initialize).catch(unavailable)
+  }
+  queueInitialize()
   return stop
 }
